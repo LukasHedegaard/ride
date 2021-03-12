@@ -1,0 +1,11 @@
+corider
+pytorch-lightning~=1.1.7
+python-dotenv
+supers
+matplotlib
+coloredlogs
+click
+gputil
+py-cpuinfo
+ptflops
+joblib
