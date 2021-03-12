@@ -1,16 +1,18 @@
 import shutil
 from argparse import ArgumentParser
-from ride.utils.utils import AttributeDict
 from pathlib import Path
 from typing import Tuple
 
 import pytest
 import pytorch_lightning as pl
 import torch
+
 from ride.core import RideModule
+from ride.logging import experiment_logger
 from ride.optimizers import SgdOptimizer
 from ride.runner import Runner
-from ride.logging import experiment_logger
+from ride.utils.utils import AttributeDict
+
 from .dummy_dataset import DummyDataLoader
 
 pl.seed_everything(42)
@@ -42,6 +44,7 @@ def runner_and_args() -> Tuple[Runner, AttributeDict]:
     args.checkpoint_every_n_steps = 0
     args.monitor_lr = 0
     args.auto_lr_find = 0
+    args.auto_scale_batch_size = 0
     args.num_workers = 1
 
     return r, args
@@ -49,8 +52,6 @@ def runner_and_args() -> Tuple[Runner, AttributeDict]:
 
 class TestRunner:
     def test_init(self):
-        """Test that init runs validation on Runnable"""
-
         class NotARideModule:
             meaningoflife = 42
 

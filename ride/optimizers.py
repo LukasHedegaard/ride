@@ -7,7 +7,7 @@ from typing import Callable
 
 import torch
 
-from ride.core import RideMixin, Configs
+from ride.core import Configs, RideMixin
 from ride.utils.discriminative_lr import discriminative_lr
 
 

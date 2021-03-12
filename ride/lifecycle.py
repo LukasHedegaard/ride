@@ -176,7 +176,8 @@ class Lifecycle(MetricMixin):
             if k not in exclude_keys
         }
         preds, targets = zip(*[(s["pred"], s["target"]) for s in step_outputs])
-        preds, targets = torch.vstack(preds), torch.vstack(targets)
+        preds = torch.vstack([p.unsqueeze(-1) for p in preds]).squeeze(-1)
+        targets = torch.vstack([t.unsqueeze(-1) for t in targets]).squeeze(-1)
         epoch_metrics = prefix_keys(prefix, self.collect_epoch_metrics(preds, targets))
         metrics = {**mean_step_metrics, **epoch_metrics}
         LightningModule.log_dict(self, metrics, sync_dist=self._sync_dist)

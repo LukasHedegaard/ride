@@ -21,6 +21,10 @@ def patched_getLogger(name: str = None):
 
 logging.getLogger = patched_getLogger
 
+from ride.utils.logging import getLogger, init_logging, style_logging  # noqa: E402
+
+style_logging()
+
 
 from argparse import ArgumentParser  # noqa: E402
 from pathlib import Path  # noqa: E402
@@ -28,15 +32,13 @@ from typing import Any, Callable, Type  # noqa: E402
 import yaml  # noqa: E402
 import platform  # noqa: E402
 from pytorch_lightning import Trainer, seed_everything  # noqa: E402
-from ride.core import Configs  # noqa: E402
+from ride.core import Configs, RideModule  # noqa: E402
 from ride.hparamsearch import Hparamsearch  # noqa: E402
 from ride.logging import experiment_logger  # noqa: E402
-from ride.runner import Runnable, Runner  # noqa: E402
+from ride.runner import Runner  # noqa: E402
 from ride.utils.checkpoints import find_checkpoint  # noqa: E402
 from ride.utils.env import LOGS_PATH  # noqa: E402
 from ride.utils.io import bump_version, dump_yaml  # noqa: E402
-from ride.utils.logging import getLogger, init_logging  # noqa: E402
-from ride.utils.warnings import filter_warnings  # noqa: E402
 from ride.utils.utils import AttributeDict  # noqa: E402
 
 logger = getLogger(__name__)
@@ -49,7 +51,7 @@ class Main:
         Main(YourRideModule).argparse()
     """
 
-    def __init__(self, Module: Type[Runnable]):
+    def __init__(self, Module: Type[RideModule]):
         self.Module = Module
         self.module_name = Module.__name__
         self.runner = Runner(self.Module)
@@ -123,13 +125,6 @@ class Main:
             description="Name of the performance metric that should be optimized",
         )
         gen_configs.add(
-            "log_level",
-            type=str,
-            default="INFO",
-            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-            description="Global log level",
-        )
-        gen_configs.add(
             "monitor_lr",
             type=int,
             default=1,
@@ -143,11 +138,6 @@ class Main:
             description="Save models checkpoint every N steps independent of epoch and validation cycle. If `0`, this feature is unused",
         )
         gen_settings_parser = gen_configs.add_argparse_args(gen_settings_parser)
-        gen_settings_parser.add_argument(
-            "--silence_warnings",
-            action="store_true",
-            help="Silence warnings",
-        )
 
         # Pytorch Lightning args
         pl_parser = parser.add_argument_group(
@@ -198,13 +188,9 @@ class Main:
 
         seed_everything(args.seed)
         init_logging(
-            args.log_level,
             experiment_logger(args.id, args.logging_backend, self.Module).log_dir,
             args.logging_backend,
         )
-
-        if args.silence_warnings:
-            filter_warnings()
 
         if args.num_workers and platform.system() == "Windows":
             logger.warning(

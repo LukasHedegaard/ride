@@ -10,9 +10,11 @@ import click
 import coloredlogs
 import pytorch_lightning as pl
 
+from ride.utils.env import LOG_LEVEL
+
 
 def _process_rank():
-    if pl.utilities.HOROVOD_AVAILABLE:
+    if pl.utilities._HOROVOD_AVAILABLE:
         import horovod.torch as hvd
 
         hvd.init()
@@ -63,11 +65,13 @@ def getLogger(name, log_once=False):
 logger = getLogger(__name__)
 
 
-def init_logging(
-    log_level: str, logdir: str = None, logging_backend: str = "tensorboard"
-):
+def style_logging():
+
+    LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+    assert LOG_LEVEL in LOG_LEVELS, f"Specified LOG_LEVEL should be one of {LOG_LEVELS}"
+
     coloredlogs.install(
-        level=log_level,
+        level=LOG_LEVEL,
         fmt="%(name)s: %(message)s",
         level_styles={
             "debug": {"color": "white", "faint": True},
@@ -93,6 +97,14 @@ def init_logging(
     models_logger = logging.getLogger("models")
     models_logger.name = click.style(models_logger.name, fg="green", bold=True)
 
+    # Block matplotlib debug logger
+    matplotlib_logger = logging.getLogger("matplotlib")
+    matplotlib_logger.setLevel(
+        logging.INFO if LOG_LEVEL == "DEBUG" else getattr(logging, LOG_LEVEL)
+    )
+
+
+def init_logging(logdir: str = None, logging_backend: str = "tensorboard"):
     if not logdir:
         return
 

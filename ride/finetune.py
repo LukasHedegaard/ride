@@ -9,10 +9,10 @@ import pytorch_lightning as pl
 import torch
 from supers import supers
 
-from ride.core import RideMixin, Configs
+from ride.core import Configs, RideMixin
 from ride.unfreeze import UnfreezeMixin
-from ride.utils.utils import attributedict
 from ride.utils.logging import getLogger
+from ride.utils.utils import attributedict
 
 logger = getLogger(__name__)
 

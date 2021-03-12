@@ -1,10 +1,11 @@
 import inspect
 import math
 import re
-from pytorch_lightning.utilities.parsing import AttributeDict
+from argparse import Namespace
 from operator import attrgetter
 from typing import Any, Collection, Dict, Set, Union
-from argparse import Namespace
+
+from pytorch_lightning.utilities.parsing import AttributeDict
 
 AttributeDictOrDict = Union[AttributeDict, Dict[str, Any]]
 
@@ -80,9 +81,9 @@ def missing_or_not_in_other(
 
 def name(any):
     if hasattr(any, "__name__"):
-        return any.__name__.lower()
+        return any.__name__
     else:
-        return any.__class__.__name__.lower()
+        return any.__class__.__name__
 
 
 def prefix_keys(prefix: str, dictionary: Dict) -> Dict:

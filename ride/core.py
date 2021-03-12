@@ -6,15 +6,16 @@ from typing import Any, List, Sequence, Union
 import pytorch_lightning as pl
 from corider import Configs as _Configs
 from supers import supers
+from torch.utils.data import DataLoader
 
 from ride.utils.logging import getLogger
 from ride.utils.utils import (
     AttributeDict,
     AttributeDictOrDict,
+    attributedict,
     merge_attributedicts,
     missing_or_not_in_other,
     name,
-    attributedict,
     some,
 )
 
@@ -27,7 +28,7 @@ DataShape = Union[int, Sequence[int], Sequence[Sequence[int]]]
 class Configs(_Configs):
     @staticmethod
     def collect(cls: "RideModule") -> "Configs":
-        c: Configs = sum(supers(cls).configs())  # type: ignore
+        c: Configs = sum([c.configs() for c in cls.__bases__ if hasattr(c, "configs")])  # type: ignore
         return c
 
     def default_values(self):
@@ -124,9 +125,14 @@ def _init_subclass(cls):
     cls.__init__ = init
 
     # Monkeypatch derived module configs
+    orig_configs = getattr(cls, "configs", None)
+
     @staticmethod
     def configs():
-        return Configs.collect(cls)
+        c = Configs.collect(cls)
+        if orig_configs:
+            c += orig_configs()
+        return c
 
     cls.configs = configs
 
@@ -171,7 +177,7 @@ class RideMixin(ABC):
         ...
 
 
-class DatasetMixin(RideMixin):
+class Dataset(RideMixin):
     input_shape: DataShape
     output_shape: DataShape
 
@@ -187,7 +193,7 @@ class DatasetMixin(RideMixin):
             tuple,
         }, "Ride Dataset should define `output_shape` but none was found."
 
-        for n in DatasetMixin.configs().names:
+        for n in Dataset.configs().names:
             assert some(
                 self, f"hparams.{n}"
             ), "`self.hparams.{n}` not found in Dataset. Did you forget to include its `configs`?"
@@ -199,20 +205,58 @@ class DatasetMixin(RideMixin):
 
     @staticmethod
     def configs() -> Configs:
-        return Configs().add(
+        c = Configs()
+        c.add(
             name="batch_size",
             type=int,
             default=16,
             strategy="constant",
             description="Batch size for dataset.",
         )
+        c.add(
+            name="num_workers",
+            type=int,
+            default=0,
+            strategy="constant",
+            description="Number of workers in dataloader.",
+        )
+        return c
 
 
-class ClassificationDataset(DatasetMixin):
+class ClassificationDataset(Dataset):
     classes: List[str]
 
+    @property
+    def num_classes(self) -> int:
+        return len(self.classes)
+
     def validate_attributes(self):
-        DatasetMixin.validate_attributes(self)
+        Dataset.validate_attributes(self)
         assert type(getattr(self, "classes", None)) in {
             list,
         }, "Ride ClassificationDataset should define `classes` but none was found."
+
+    def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
+        """ The train dataloader """
+        assert some(
+            self, "datamodule.train_dataloader"
+        ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `train_dataloader` function."
+        return self.datamodule.train_dataloader
+
+    def val_dataloader(
+        self, *args: Any, **kwargs: Any
+    ) -> Union[DataLoader, List[DataLoader]]:
+        """ The val dataloader """
+        assert some(
+            self, "datamodule.val_dataloader"
+        ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `val_dataloader` function."
+        return self.datamodule.val_dataloader
+
+    def test_dataloader(
+        self, *args: Any, **kwargs: Any
+    ) -> Union[DataLoader, List[DataLoader]]:
+        """ The test dataloader """
+        assert some(
+            self, "datamodule.test_dataloader"
+        ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `test_dataloader` function."
+        return self.datamodule.test_dataloader

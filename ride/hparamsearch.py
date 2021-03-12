@@ -1,34 +1,22 @@
-import os
 import sys
 from functools import partial
 from pathlib import Path
 from typing import Type, Union
 
-from pytorch_lightning.loggers import TensorBoardLogger
-from ray import tune
-
-from ride.util.utils import AttributeDict
-from ride.core import Configs
-from ride.runner import Runnable, Runner
+from ride.core import AttributeDict, Configs, RideModule
+from ride.runner import Runner, is_runnable
+from ride.utils.env import NUM_CPU, TUNE_LOGS_PATH
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.io import bump_version, dump_json, dump_yaml, load_json, load_yaml
 from ride.utils.logging import getLogger
-from ride.utils.machine_info import NUM_CPU
-
-# from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 from ride.utils.tune_callbacks import TuneReportCallback
 
-TUNE_LOGS_PATH = Path(os.getenv("LOGS_PATH") / "tune_logs")
 logger = getLogger(__name__)
 
 
-def get_tensorboard_logger(dummy):
-    return TensorBoardLogger(save_dir=tune.get_trial_dir(), name="", version=".")
-
-
 class Hparamsearch:
-    def __init__(self, Module: Type[Runnable]):
-        Runnable.validate(Module)
+    def __init__(self, Module: Type[RideModule]):
+        assert is_runnable(Module)
         self.Module = Module
         self.module_name = Module.__name__
 
@@ -47,7 +35,7 @@ class Hparamsearch:
             description="Number of GPUs per trail in the hyperparameter search",
         )
         c.add(
-            name="performance_metric",
+            name="optimization_metric",
             default="loss",
             type=str,
             choices=self.Module.metric_names(),
@@ -73,6 +61,13 @@ class Hparamsearch:
         Side-effects:
             Saves logs to `TUNE_LOGS_PATH / args.id`
         """
+        try:
+            from ray import tune
+        except ModuleNotFoundError:
+            logger.error(
+                "To use hyperparameter search, first install Ray Tune: `pip install 'ray[tune]'`"
+            )
+            return
 
         if not hasattr(args, "id"):
             args.id = "hparamsearch"
@@ -96,8 +91,8 @@ class Hparamsearch:
             ),
         }
         scheduler = tune.schedulers.ASHAScheduler(
-            metric=f"val_{args.performance_metric}",
-            mode=self.Module.metrics[args.performance_metric].value,
+            metric=f"val_{args.optimization_metric}",
+            mode=self.Module.metrics[args.optimization_metric].value,
             max_t=args.max_epochs,
             grace_period=1,
             reduction_factor=2,
@@ -122,12 +117,19 @@ class Hparamsearch:
             else min(10, NUM_CPU - 2)
         )
 
+        # get_logger = partial(
+        #     singleton_experiment_logger(),
+        #     # name=args.id,
+        #     logging_backend=args.logging_backend,
+        #     Module=self.Module,
+        #     save_dir=tune.get_trial_dir(),
+        # )
         analysis = tune.run(
             partial(
                 Runner.static_train_and_val,
                 self.Module,
                 trainer_callbacks=[tune_callback],
-                get_logger=get_tensorboard_logger,
+                # get_logger=get_logger,
             ),
             name=args.id,
             local_dir=str(TUNE_LOGS_PATH),
@@ -141,8 +143,8 @@ class Hparamsearch:
         )
 
         best_hparams = analysis.get_best_config(
-            metric=f"val_{args.performance_metric}",
-            mode=self.Module.metrics[args.performance_metric].value,
+            metric=f"val_{args.optimization_metric}",
+            mode=self.Module.metrics[args.optimization_metric].value,
             scope="all",
         )
         # Select only model parameters
@@ -173,14 +175,14 @@ class Hparamsearch:
     def load(
         path: Union[Path, str],
         old_args=AttributeDict(),
-        Cls: Type[Runnable] = None,
+        Cls: Type[RideModule] = None,
         auto_scale_lr=False,
     ) -> AttributeDict:
         """Loads hparams from path
 
         Args:
             path (Union[Path, str]): Path to jsonfile containing hparams
-            old_args (Optional[AttributeDict]):The attributedict to be updated with the new hparams
+            old_args (Optional[AttributeDict]):The AttributeDict to be updated with the new hparams
             cls (Optional[RideModule]): A class whole hyperparameters can be used to select the relevant hparams to take
 
         Returns:

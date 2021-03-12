@@ -21,7 +21,7 @@ from pytorch_lightning.utilities import rank_zero_only
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
 
-from ride.core import ClassificationDataset, RideMixin, Configs
+from ride.core import ClassificationDataset, Configs, RideMixin
 from ride.utils.env import RUN_LOGS_PATH
 from ride.utils.io import dump_yaml
 from ride.utils.logging import getLogger, process_rank

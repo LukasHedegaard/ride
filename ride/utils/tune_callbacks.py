@@ -1,7 +1,11 @@
 import os
 
 from pytorch_lightning.callbacks import Callback
-from ray import tune
+
+try:
+    from ray import tune
+except ModuleNotFoundError:
+    pass
 
 
 class TuneReportCallback(Callback):

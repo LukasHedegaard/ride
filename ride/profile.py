@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from ride.utils.gpus import parse_gpus, parse_num_gpus
 from ride.utils.logging import getLogger
-from ride.utils.utils import some, name
+from ride.utils.utils import name, some
 
 logger = getLogger(__name__)
 

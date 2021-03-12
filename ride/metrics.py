@@ -1,16 +1,16 @@
 from enum import Enum
 from operator import attrgetter
-from typing import Dict, List, Sequence, Union
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from ptflops import get_model_complexity_info
 from supers import supers
 from torch import Tensor
 
 from ride.core import Configs, RideMixin
-from ptflops import get_model_complexity_info
 from ride.utils.logging import getLogger
 from ride.utils.utils import name, some
 
@@ -79,7 +79,7 @@ class MetricMixin(RideMixin):
         }
 
 
-class MeanAveragePrecisionMetricMixin(MetricMixin):
+class MeanAveragePrecisionMetric(MetricMixin):
     """Mean Average Precision (mAP) metric"""
 
     def validate_attributes(self):
@@ -152,65 +152,33 @@ def charades_mean_average_precision(preds, targets):
     return m_ap, w_ap, m_aps
 
 
-class TopKAccuracy(pl.metrics.Metric):
-    def __init__(
-        self,
-        ks: Union[int, Sequence[int]] = [1, 3, 5],
-        *args,
-        **kwargs,
-    ):
-        """
-        Computes Top-K accuracy
+def TopKAccuracyMetric(*Ks):
+    if not Ks:
+        Ks = [1, 3, 5]
 
-        Args:
-            ks {Union[int, Sequence[int]]}: a (list of) integers to compute top k for (Default: [1,3,5]])
-            other args from pytorch_lightning.metrics.pl.metrics.Metric
-        """
-        super().__init__(*args, **kwargs)
-        self.ks = [ks] if type(ks) == int else ks
-        self.__name__ = f"top{'_'.join(map(str,self.ks))}acc"
-        self._metrics = {f"top{k}acc": OptimisationDirection.MAX for k in self.ks}
-        self.add_state(
-            "correct",
-            default=torch.tensor([0.0 for _ in self.ks]),
-            dist_reduce_fx="sum",
-        )
-        self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
+    for k in Ks:
+        assert type(k) == int and k > 0
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor):
-        self.correct += torch.tensor(topks_correct(preds, target, self.ks))
-        self.total += target.numel()
+    class TopKAccuracyMetricClass(MetricMixin):
+        """Top K accuracy metrics: top1acc, top3acc, top5acc"""
 
-    def compute(self):
-        acc = self.correct.float() / self.total
-        if len(acc) == 1:
-            acc = acc[0]
-        return acc
+        # dataloader: ...
+
+        _metrics = {f"top{k}acc": OptimisationDirection.MAX for k in Ks}
+
+        def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
+            ks = [k for k in Ks]
+            accs = [torch.tensor(-1.0) for _ in ks]
+            try:
+                accs = topk_accuracies(preds, targets, ks)
+            except RuntimeError:
+                logger.error("Unable to compute top-k accuracy.")
+            return {f"top{k}acc": accs[i] for i, k in enumerate(ks)}
+
+    return TopKAccuracyMetricClass
 
 
-class TopKAccuracyMetricMixin(MetricMixin):
-    """Top K accuracy metrics: top1acc, top3acc, top5acc"""
-
-    # dataloader: ...
-
-    _metrics = {f"top{k}acc": OptimisationDirection.MAX for k in [1, 3, 5]}
-
-    def validate_attributes(self):
-        super().validate_attributes()
-        for attribute in ["dataloader.classes"]:
-            attrgetter(attribute)(self)
-
-    def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
-        ks = [k for k in [1, 3, 5]]  # if k < len(self.dataloader.classes)]
-        accs = [torch.tensor(-1.0) for _ in ks]
-        try:
-            accs = topk_accuracies(preds, targets, ks)
-        except RuntimeError:
-            logger.error("Unable to compute top-k accuracy.")
-        return {f"top{k}acc": accs[i] for i, k in enumerate(ks)}
-
-
-class FlopsMetricMixin(MetricMixin):
+class FlopsMetric(MetricMixin):
     """Computes Giga Floating Point Operations Per Second (GFLOPS) for the model and adds it as metric"""
 
     _metrics = {"flops": OptimisationDirection.MIN}
@@ -223,16 +191,16 @@ class FlopsMetricMixin(MetricMixin):
         return {"flops": torch.tensor(self.flops)}
 
 
-class FlopsWeightedAccuracyMetricMixin(FlopsMetricMixin):
+class FlopsWeightedAccuracyMetric(FlopsMetric):
     """Computes acc * (flops / target_gflops) ** (-0.07)"""
 
     _metrics = {"flops_weighted_acc": OptimisationDirection.MAX}
 
     def __init__(self, *args, **kwargs):
-        FlopsMetricMixin.__init__(self, *args, **kwargs)
+        FlopsMetric.__init__(self, *args, **kwargs)
 
     def validate_attributes(self):
-        for hparam in FlopsWeightedAccuracyMetricMixin.configs().names:
+        for hparam in FlopsWeightedAccuracyMetric.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -250,7 +218,7 @@ class FlopsWeightedAccuracyMetricMixin(FlopsMetricMixin):
     def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
         acc = topk_accuracies(preds, targets, ks=[1])[0]
         return {
-            **FlopsMetricMixin.metrics_step(self, preds, targets, **kwargs),
+            **FlopsMetric.metrics_step(self, preds, targets, **kwargs),
             "flops_weighted_acc": acc
             * (self.flops / self.hparams.target_gflops) ** (-0.07),
         }

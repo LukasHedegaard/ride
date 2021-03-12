@@ -11,6 +11,7 @@ LOGS_PATH = ROOT_PATH / os.getenv("LOGS_PATH", default="logs")
 RUN_LOGS_PATH = LOGS_PATH / "run_logs"
 TUNE_LOGS_PATH = LOGS_PATH / "tune_logs"
 CACHE_PATH = ROOT_PATH / os.getenv("CACHE_PATH", default=".cache")
+LOG_LEVEL = os.getenv("LOG_LEVEL", default="INFO")
 
 DATASETS_PATH.mkdir(exist_ok=True)
 LOGS_PATH.mkdir(exist_ok=True)

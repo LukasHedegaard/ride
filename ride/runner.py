@@ -2,13 +2,13 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Type
 
+from ptflops import get_model_complexity_info
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.utilities.cloud_io import load as pl_load
-from ptflops import get_model_complexity_info
-from ride.core import RideModule
-from ride.core import DatasetMixin
+
+from ride.core import Dataset, RideModule
 from ride.logging import (
     CheckpointEveryNSteps,
     ExperimentLoggerCreator,
@@ -16,34 +16,32 @@ from ride.logging import (
     add_experiment_logger,
     experiment_logger,
 )
-from ride.utils.utils import AttributeDict, some_callable, attributedict, name
-from ride.utils.machine_info import get_machine_info
 from ride.profile import profile_repeatedly
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger, process_rank
+from ride.utils.machine_info import get_machine_info
+from ride.utils.utils import AttributeDict, attributedict, name, some_callable
 
 EvalutationResults = Dict[str, float]
 
 logger = getLogger(__name__)
 
 
-class Runnable(RideModule, DatasetMixin, LightningModule):
-    @staticmethod
-    def validate(other):
-        assert issubclass(other, RideModule)
-        assert issubclass(other, DatasetMixin)
-        assert issubclass(other, LightningModule)
-        return True
+def is_runnable(cls):
+    assert issubclass(cls, RideModule)
+    assert issubclass(cls, Dataset)
+    assert issubclass(cls, LightningModule)
+    return True
 
 
 class Runner:
-    trained_model: Runnable
+    trained_model: RideModule
 
     def __init__(
         self,
-        Module: Type[Runnable],
+        Module: Type[RideModule],
     ):
-        Runnable.validate(Module)
+        assert is_runnable(Module)
         self.Module = Module
 
     def train(
@@ -52,7 +50,7 @@ class Runner:
         trainer_callbacks: List[Callable] = [],
         tune_checkpoint_dir: str = None,
         experiment_logger: ExperimentLoggerCreator = experiment_logger,
-    ) -> Runnable:
+    ) -> RideModule:
         args = attributedict(args)
 
         # Support for checkpoint loading in Tune
@@ -74,17 +72,18 @@ class Runner:
                 args.distributed_backend = None
 
         # Prepare logger and callbacks
-        if args.checkpoint_callback:
-            args.checkpoint_callback = ModelCheckpoint(
+        trainer_callbacks.append(
+            ModelCheckpoint(
                 save_top_k=1,
                 verbose=True,
                 monitor=f"val/{args.optimization_metric}",  # Comment out when using pl.EvalResult
                 mode=self.Module.metrics[args.optimization_metric].value,
                 prefix="",
             )
-            logger.info(
-                f"Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics[args.optimization_metric].value}"
-            )
+        )
+        logger.info(
+            f"Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics[args.optimization_metric].value}"
+        )
         if args.checkpoint_every_n_steps:
             trainer_callbacks.append(
                 CheckpointEveryNSteps(args.checkpoint_every_n_steps)
@@ -114,7 +113,7 @@ class Runner:
                 )
                 logger.info(f"Saving plot of learning rate sweep to {lr_fig_path}")
                 fig.savefig(lr_fig_path)
-        else:
+        elif args.auto_scale_batch_size:
             self.trainer.tune(model)
 
         self.trainer.fit(model)
@@ -180,7 +179,7 @@ class Runner:
 
     @staticmethod
     def static_train_and_val(
-        Module: Type[Runnable],
+        Module: Type[RideModule],
         args: AttributeDict,
         trainer_callbacks: List[Callable] = [],
         tune_checkpoint_dir: str = None,
