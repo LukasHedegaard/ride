@@ -337,7 +337,7 @@ def params_count(model: torch.nn.Module):
     return np.sum([p.numel() for p in model.parameters()])
 
 
-def make_confusion_matrix(
+def make_confusion_matrix(  # noqa: C901
     preds,
     targets,
     group_names=None,
