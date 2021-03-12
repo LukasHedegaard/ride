@@ -23,7 +23,10 @@ setup(
     author_email="lukasxhedegaard@gmail.com",
     url="https://github.com/LukasHedegaard/ride",
     install_requires=from_file("requirements.txt"),
-    extras_require={"dev": from_file("requirements-dev.txt")},
+    extras_require={
+        "dev": from_file("requirements-dev.txt"),
+        "build": ["setuptools", "wheel", "twine"],
+    },
     packages=find_packages(exclude=["test"]),
     keywords=["deep learning", "pytorch", "AI"],
     classifiers=[
