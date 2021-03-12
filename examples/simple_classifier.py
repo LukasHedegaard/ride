@@ -1,22 +1,21 @@
+import numpy as np
 import torch
 
 import ride
+from examples.mnist_dataset import MnistDataset
 
 
 class SimpleClassifier(
     ride.RideModule,
     ride.Lifecycle,
     ride.SgdOneCycleOptimizer,
-    ride.MnistDataset,
     ride.TopKAccuracyMetric(1, 3),
+    MnistDataset,
 ):
     def __init__(self, hparams):
-        # Injected via `ride.MnistDataset`
-        height, width = self.input_shape
-        num_classes = self.output_shape
-
-        self.l1 = torch.nn.Linear(height * width, self.hparams.hidden_dim)
-        self.l2 = torch.nn.Linear(self.hparams.hidden_dim, num_classes)
+        # `self.input_shape` and `self.output_shape` were injected via `ride.MnistDataset`
+        self.l1 = torch.nn.Linear(np.prod(self.input_shape), self.hparams.hidden_dim)
+        self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
 
     def forward(self, x):
         x = x.view(x.size(0), -1)
@@ -26,7 +25,7 @@ class SimpleClassifier(
 
     @staticmethod
     def configs():
-        c = ride.Configs.collect(SimpleClassifier)
+        c = ride.Configs()
         c.add(
             name="hidden_dim",
             type=int,
