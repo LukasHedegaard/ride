@@ -5,7 +5,7 @@ import ride
 
 class SimpleClassifier(
     ride.RideModule,
-    ride.ClassificationLifecycle,
+    ride.Lifecycle,
     ride.SgdOneCycleOptimizer,
     ride.MnistDataset,
     ride.TopKAccuracyMetric(1, 3),

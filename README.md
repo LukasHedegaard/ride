@@ -33,7 +33,7 @@ Suggestions and pull requests are always welcome!
 Did you ever take a peek to the source code of the [LightningModule](https://github.com/PyTorchLightning/pytorch-lightning/blob/master/pytorch_lightning/core/lightning.py)?
 This core class of the Pytorch Lightning library makes heavy use of _Mixins_ and _multiple inheritance_ to group functionalities and "inject" them in the LightningModule. 
 
-In `ride` we build up our modules the same way, _mixing in_ functionality by inheriting from multiple base classes in oue Module definition.
+In `ride` we build up our modules the same way, _mixing in_ functionality by inheriting from multiple base classes in our Module definition.
 
 
 ## Enough talk, let's `ride` 🏎💨 
@@ -48,7 +48,7 @@ import ride
 
 class SimpleClassifier(
     ride.RideModule,
-    ride.ClassificationLifecycle, 
+    ride.Lifecycle, 
     ride.SgdOneCycleOptimizer, 
     ride.MnistDataset,
     ride.TopKAccuracyMetric(1,3),
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 That's it! So what's going on, and aren't we missing a bunch of (boiler-plate) code?
 
 All of the usual boiler-plate code has been _mixed in_ using multiple inheritance:
-- `RideModule` is a base-module which includes `pl.LightningModule` and makes some behind-the-scenes python-magic work.
+- `RideModule` is a base-module which includes `pl.LightningModule` and makes some behind-the-scenes python-magic work. For instance, it modifies your `__init__` function to automatically initiate all the mixins correctly.
 - `ClassificationLifecycle` mixes in `training_step`, `validation_step`, and `test_step` alongside a `loss_fn` with [cross-entropy](https://pytorch.org/docs/stable/nn.functional.html#cross-entropy).
 - `SgdOneCycleOptimizer` mixes in the `configure_optimizers` function with SGD and [OneCycleLR scheduler](https://pytorch.org/vision/0.8/datasets.html#torchvision.datasets.MNIST).
 - `MnistDataset` mixes in `train_dataloader`, `val_dataloader`, and `test_dataloader` functions for the [MNIST dataset](https://github.com/LukasHedegaard/co-rider). Dataset mixins always provide `input_shape` and `output_shape` attributes, which are handy for defining the networking structure as seen in `__init__`.

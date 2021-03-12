@@ -82,11 +82,11 @@ def _init_subclass(cls):
             f"No lifecycle steps {missing_lifecycle_steps} found in {name(cls)}. Adding ClassificationLifecycle with CrossEntropyLoss automatically."
         )
         # Import here to break cyclical import
-        from ride.lifecycle import TrainValTestLifecycle
+        from ride.lifecycle import Lifecycle
 
         cls.__bases__ = (
             *cls.__bases__[:-1],
-            TrainValTestLifecycle,
+            Lifecycle,
             *cls.__bases__[-1:],
         )
     elif missing_lifecycle_steps:

@@ -55,7 +55,7 @@ def with_float_args(fn):
     return wrapped
 
 
-class TrainValTestLifecycle(MetricMixin):
+class Lifecycle(MetricMixin):
     """Adds train, val, and test lifecycle methods with cross_entropy loss
 
     During its `traning_epoch_end(epoch)` lifecycle method,
@@ -84,7 +84,7 @@ class TrainValTestLifecycle(MetricMixin):
         ]:
             attrgetter(attribute)(self)
 
-        for hparam in TrainValTestLifecycle.configs().names:
+        for hparam in Lifecycle.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
