@@ -26,6 +26,7 @@ from argparse import ArgumentParser  # noqa: E402
 from pathlib import Path  # noqa: E402
 from typing import Any, Callable, Type  # noqa: E402
 import yaml  # noqa: E402
+import platform  # noqa: E402
 from pytorch_lightning import Trainer, seed_everything  # noqa: E402
 from ride.core import Configs  # noqa: E402
 from ride.hparamsearch import Hparamsearch  # noqa: E402
@@ -204,6 +205,11 @@ class Main:
 
         if args.silence_warnings:
             filter_warnings()
+
+        if args.num_workers and platform.system() == "Windows":
+            logger.warning(
+                f"You have requested num_workers={args.num_workers} on Windows, but currently 0 is recommended (see https://stackoverflow.com/a/59680818)"
+            )
 
         results = []
 
