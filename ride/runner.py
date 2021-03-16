@@ -79,6 +79,7 @@ class Runner:
                 monitor=f"val/{args.optimization_metric}",  # Comment out when using pl.EvalResult
                 mode=self.Module.metrics[args.optimization_metric].value,
                 prefix="",
+                save_last=True,
             )
         )
         logger.info(
