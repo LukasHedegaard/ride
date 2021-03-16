@@ -1,8 +1,9 @@
 import logging
+import os
 import socket
 import subprocess
+import sys
 from functools import wraps
-from os import makedirs
 from pathlib import Path
 from typing import Callable
 
@@ -70,15 +71,17 @@ def style_logging():
     LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
     assert LOG_LEVEL in LOG_LEVELS, f"Specified LOG_LEVEL should be one of {LOG_LEVELS}"
 
-    coloredlogs.install(
-        level=LOG_LEVEL,
-        fmt="%(name)s: %(message)s",
-        level_styles={
-            "debug": {"color": "white", "faint": True},
-            "warning": {"bold": True},
-            "error": {"color": "red", "bold": True},
-        },
-    )
+    # Installing coloredlogs during tests doesn't work
+    if "pytest" not in sys.modules:
+        coloredlogs.install(
+            level=LOG_LEVEL,
+            fmt="%(name)s: %(message)s",
+            level_styles={
+                "debug": {"color": "white", "faint": True},
+                "warning": {"bold": True},
+                "error": {"color": "red", "bold": True},
+            },
+        )
 
     # Block pytorch_lightning from writing directly to stdout
     lightning_logger = getattr(pl, "_logger", logging.getLogger("lightning"))
@@ -109,7 +112,7 @@ def init_logging(logdir: str = None, logging_backend: str = "tensorboard"):
         return
 
     # Add root handler for redirecting run output to file
-    makedirs(logdir, exist_ok=True)
+    os.makedirs(logdir, exist_ok=True)
     getLogger("").addHandler(logging.FileHandler(Path(logdir) / "run.log"))
 
     # Write basic environment info to logs
