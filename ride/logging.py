@@ -1,12 +1,9 @@
-import itertools
 import os
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pytorch_lightning as pl
 import torch
 from matplotlib.figure import Figure
@@ -19,9 +16,8 @@ from pytorch_lightning.loggers import (
 )
 from pytorch_lightning.utilities import rank_zero_only
 from torch import Tensor
-from torch.utils.tensorboard import SummaryWriter
 
-from ride.core import ClassificationDataset, Configs, RideMixin
+from ride.core import RideMixin
 from ride.utils.env import RUN_LOGS_PATH
 from ride.utils.io import dump_yaml
 from ride.utils.logging import getLogger, process_rank
@@ -205,171 +201,6 @@ class BaseValueLoggerMixin(RideMixin):
 
     def log_values(self, values: PredTargetPair):
         ...
-
-
-class TensorboardClassificationPlotsMixin(RideMixin):
-    """Logs plots for classification results in Tensorboard"""
-
-    dataloader: ClassificationDataset
-    logger: Union[TensorBoardLogger, LoggerCollection]
-
-    def get_tb_logger(self) -> Optional[TensorBoardLogger]:
-        if type(self.logger) == TensorBoardLogger:
-            return self.logger  # type:ignore
-        elif type(self.logger) == LoggerCollection:
-            lc: LoggerCollection = self.logger  # type:ignore
-            for lg in lc._logger_iterable:
-                if type(self.logger) == TensorBoardLogger:
-                    return lg  # type:ignore
-        return None
-
-    def validate_attributes(self):
-        assert issubclass(self.dataloader.__class__, ClassificationDataset)
-        assert issubclass(self.logger.__class__, TensorBoardLogger)
-        assert issubclass(self.logger.experiment.__class__, SummaryWriter)
-
-    @staticmethod
-    def configs() -> Configs:
-        c = Configs()
-        c.add(
-            name="log_confusion_matrix",
-            type=int,
-            default=1,
-            choices=[0, 1],
-            strategy="constant",
-            description="Flag indicating whether a confusion matrix for test results should be logged to tensorboard",
-        )
-        c.add(
-            name="log_figure_height",
-            type=float,
-            default=4.8,
-            strategy="constant",
-            description="Height of figures logged to Tensorboard",
-        )
-        c.add(
-            name="log_figure_width",
-            type=float,
-            default=6.4,
-            strategy="constant",
-            description="Width of figures logged to Tensorboard",
-        )
-        return c
-
-    def log_values(self, values: PredTargetPair):
-        if not (self.hparams.log_confusion_matrix):
-            return
-
-        logger = self.get_tb_logger()
-        if not logger:
-            return
-
-        num_classes = len(self.dataloader.classes)
-        confusion_matrix = get_confusion_matrix(
-            values.preds, values.targets, num_classes=num_classes
-        )
-
-        width: float = self.hparams.log_figure_width
-        height: float = self.hparams.log_figure_height
-        figsize = (width, height)
-
-        if self.hparams.log_confusion_matrix:
-            tag = "Confusion Matrix"
-            figure = plot_confusion_matrix(
-                confusion_matrix=confusion_matrix,
-                num_classes=num_classes,
-                class_names=self.dataloader.classes,
-                figsize=figsize,
-            )
-            logger.experiment.add_figure(tag=tag, figure=figure)
-
-
-def get_confusion_matrix(
-    preds: Tensor, labels: Tensor, num_classes: int, normalize="true"
-):
-    """
-    Calculate confusion matrix on the provided preds and labels.
-    Args:
-        preds (tensor or lists of tensors): predictions. Each tensor is in
-            in the shape of (n_batch, num_classes). Tensor(s) must be on CPU.
-        labels (tensor or lists of tensors): corresponding labels. Each tensor is
-            in the shape of either (n_batch,) or (n_batch, num_classes).
-        num_classes (int): number of classes. Tensor(s) must be on CPU.
-        normalize (Optional[str]) : {‘true’, ‘pred’, ‘all’}, default="true"
-            Normalizes confusion matrix over the true (rows), predicted (columns)
-            conditions or all the population. If None, confusion matrix
-            will not be normalized.
-    Returns:
-        cmtx (ndarray): confusion matrix of size (num_classes x num_classes)
-    """
-    from sklearn.metrics import confusion_matrix
-
-    if isinstance(preds, list):
-        preds = torch.cat(preds, dim=0)
-    if isinstance(labels, list):
-        labels = torch.cat(labels, dim=0)
-    # If labels are one-hot encoded, get their indices.
-    if labels.ndim == preds.ndim:
-        labels = torch.argmax(labels, dim=-1)
-    # Get the predicted class indices for examples.
-    preds = torch.flatten(torch.argmax(preds, dim=-1))
-    labels = torch.flatten(labels)
-    cmtx = confusion_matrix(
-        labels, preds, labels=list(range(num_classes)), normalize=normalize
-    )
-    return cmtx
-
-
-def plot_confusion_matrix(
-    confusion_matrix: np.ndarray,
-    num_classes: int,
-    class_names: List[str] = None,
-    figsize: Tuple[float, float] = None,
-):
-    """
-    A function to create a colored and labeled confusion matrix matplotlib figure
-    given true labels and preds.
-    Args:
-        confusion_matrix (ndarray): confusion matrix.
-        num_classes (int): total number of classes.
-        class_names (Optional[list of strs]): a list of class names.
-        figsize (Optional[float, float]): the figure size of the confusion matrix.
-            If None, default to [6.4, 4.8].
-
-    Returns:
-        img (figure): matplotlib figure.
-    """
-    if class_names is None or not isinstance(class_names, list):
-        class_names = [str(i) for i in range(num_classes)]
-
-    figure = plt.figure(figsize=figsize)
-    plt.imshow(confusion_matrix, interpolation="nearest", cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
-    plt.colorbar()
-    tick_marks = np.arange(len(class_names))
-    plt.xticks(tick_marks, class_names, rotation=45)
-    plt.yticks(tick_marks, class_names)
-
-    # Use white text if squares are dark; otherwise black.
-    threshold = confusion_matrix.max() / 2.0
-    for i, j in itertools.product(
-        range(confusion_matrix.shape[0]), range(confusion_matrix.shape[1])
-    ):
-        color = "white" if confusion_matrix[i, j] > threshold else "black"
-        plt.text(
-            j,
-            i,
-            format(confusion_matrix[i, j], ".2f")
-            if confusion_matrix[i, j] != 0
-            else ".",
-            horizontalalignment="center",
-            color=color,
-        )
-
-    plt.tight_layout()
-    plt.ylabel("True label")
-    plt.xlabel("Predicted label")
-
-    return figure
 
 
 class CheckpointEveryNSteps(pl.Callback):
