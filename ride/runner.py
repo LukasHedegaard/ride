@@ -101,25 +101,27 @@ class Runner:
             self.trainer.current_epoch = tune_ckpt["epoch"]  # type:ignore
 
         # Run hparam routines in Lightning
+        if args.auto_scale_batch_size:
+            # with temporary_parameter(self.trainer, "auto_lr_find", 0):
+            self.trainer.tune(model)
+
         if args.auto_lr_find:
             lr_finder = self.trainer.tuner.lr_find(model, min_lr=1e-8, max_lr=1e-1)
-
-            logger.info(f"🔧 Setting learning_rate to {lr_finder.suggestion()}")
+            lr_suggestion = lr_finder.suggestion()
+            logger.info(f"Suggested learning rate is {lr_suggestion}")
+            model.hparams.learning_rate = lr_suggestion
 
             # Plot suggestion
             if process_rank == 0:
                 fig = lr_finder.plot(suggest=True)
-                lr_fig_path = str(
-                    Path(experiment_logger(args.id).log_dir) / "lr_find.png"
-                )
+                lr_fig_path = Path(experiment_logger(args.id).log_dir) / "lr_find.png"
                 logger.info(f"Saving plot of learning rate sweep to {lr_fig_path}")
+                lr_fig_path.parent.mkdir(parents=True, exist_ok=True)
                 fig.savefig(lr_fig_path)
-        elif args.auto_scale_batch_size:
-            self.trainer.tune(model)
 
         self.trainer.fit(model)
 
-        if Path(self.trainer.checkpoint_callback.best_model_path).exists():
+        if Path(self.trainer.checkpoint_callback.best_model_path).is_file():
             self.best_model = self.Module.load_from_checkpoint(
                 checkpoint_path=self.trainer.checkpoint_callback.best_model_path,
                 hparams=model.hparams,

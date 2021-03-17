@@ -61,7 +61,7 @@ class DummyDataLoader(ClassificationDataset):
         self.classes = ["mean", "var"]
 
         self._train_dataloader = DataLoader(
-            DummyDataset(self.input_shape, num_samples=15),
+            DummyDataset(self.input_shape, num_samples=65),
             batch_size=hparams.batch_size,
             num_workers=num_workers,
             shuffle=True,

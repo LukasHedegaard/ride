@@ -46,6 +46,7 @@ def runner_and_args() -> Tuple[Runner, AttributeDict]:
     args.auto_lr_find = 0
     args.auto_scale_batch_size = 0
     args.num_workers = 1
+    args.batch_size = 4
 
     return r, args
 
@@ -64,6 +65,18 @@ class TestRunner:
     def test_train(self, runner_and_args: Tuple[Runner, AttributeDict]):
         """Test that training works"""
         runner, args = runner_and_args
+        runner.train(args)
+
+    def test_train_auto_scale_batch_size(
+        self, runner_and_args: Tuple[Runner, AttributeDict]
+    ):
+        runner, args = runner_and_args
+        args.auto_scale_batch_size = "power"
+        runner.train(args)
+
+    def test_train_auto_lr_find(self, runner_and_args: Tuple[Runner, AttributeDict]):
+        runner, args = runner_and_args
+        args.auto_lr_find = True
         runner.train(args)
 
     def test_validate(self, runner_and_args: Tuple[Runner, AttributeDict]):
