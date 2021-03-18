@@ -67,7 +67,7 @@ class SimpleClassifier(
 
     @staticmethod
     def configs():
-        c = ride.Configs.collect(SimpleClassifier)
+        c = ride.Configs()
         c.add(
             name="hidden_dim",
             type=int,
