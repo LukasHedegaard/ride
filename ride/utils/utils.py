@@ -9,7 +9,7 @@ from typing import Any, Collection, Dict, Set, Union
 
 from pytorch_lightning.utilities.parsing import AttributeDict
 
-AttributeDictOrDict = Union[AttributeDict, Dict[str, Any]]
+DictLike = Union[AttributeDict, Dict[str, Any], Namespace]
 
 
 def rsetattr(obj, attr, val):
@@ -24,12 +24,16 @@ def rgetattr(obj, attr, *args):
     return functools.reduce(_getattr, [obj] + attr.split("."))
 
 
-def attributedict(attributedict_or_dict: AttributeDictOrDict) -> AttributeDict:
+def attributedict(dict_like: DictLike) -> AttributeDict:
     """If given a dict, it is converted it to an argparse.AttributeDict. Otherwise, no change is made"""
-    if isinstance(attributedict_or_dict, dict):
-        return AttributeDict(**attributedict_or_dict)
+    if isinstance(dict_like, AttributeDict):
+        return dict_like
+    elif isinstance(dict_like, Namespace):
+        return AttributeDict(vars(dict_like))
+    elif isinstance(dict_like, dict):
+        return AttributeDict(**dict_like)
     else:
-        return attributedict_or_dict
+        raise ValueError(f"Unable to convert type {type(dict_like)} to AttributeDict")
 
 
 def to_dict(d):

@@ -1,16 +1,18 @@
 from ride import Main, Configs  # noqa: F401  # isort:skip
+import logging
+import os
+from pathlib import Path
+from typing import Tuple
+
+import pytest
 import torch
 
-from typing import Tuple
-import pytest
 from ride.core import RideModule
-from ride.utils.utils import AttributeDict, attributedict
 from ride.optimizers import AdamWOneCycleOptimizer
-import logging
+from ride.utils.io import dump_json, dump_yaml
+from ride.utils.utils import AttributeDict, attributedict
+
 from .dummy_dataset import DummyDataLoader
-from pathlib import Path
-import os
-from ride.utils.io import dump_yaml, dump_json
 
 
 class DummyModule(RideModule, DummyDataLoader, AdamWOneCycleOptimizer):
@@ -206,10 +208,6 @@ class TestMain:
         model_hparams_path = Path(caplog.messages[-1].split(" ")[1])
         assert model_profile_path.is_file()
         assert model_hparams_path.is_file()
-
-    # def test_profile_dataset(self):
-    #     """Test that profiling dataset works"""
-    #     assert False
 
 
 # def test_hparamsearch():

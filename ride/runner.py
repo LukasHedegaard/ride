@@ -20,7 +20,7 @@ from ride.profile import profile_repeatedly
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger, process_rank
 from ride.utils.machine_info import get_machine_info
-from ride.utils.utils import AttributeDict, attributedict, name, some_callable
+from ride.utils.utils import AttributeDict, Namespace, attributedict
 
 EvalutationResults = Dict[str, float]
 
@@ -93,7 +93,9 @@ class Runner:
             trainer_callbacks.append(LearningRateMonitor(logging_interval="step"))
 
         self.trainer = Trainer.from_argparse_args(
-            args, logger=experiment_logger(args.id), callbacks=trainer_callbacks
+            Namespace(**args),
+            logger=experiment_logger(args.id),
+            callbacks=trainer_callbacks,
         )
 
         # Load epoch state for Tune checkpoint

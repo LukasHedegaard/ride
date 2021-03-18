@@ -39,7 +39,7 @@ from ride.runner import Runner  # noqa: E402
 from ride.utils.checkpoints import find_checkpoint  # noqa: E402
 from ride.utils.env import LOGS_PATH  # noqa: E402
 from ride.utils.io import bump_version, dump_yaml  # noqa: E402
-from ride.utils.utils import AttributeDict  # noqa: E402
+from ride.utils.utils import AttributeDict, attributedict  # noqa: E402
 
 logger = getLogger(__name__)
 
@@ -74,7 +74,6 @@ class Main:
             ("validate", "Run model evaluation on validation set"),
             ("test", "Run model evaluation on test set"),
             ("profile_model", "Profile the model"),
-            # ("profile_dataset", "Profile the dataset"),
         ]
         prog_flow_parser = parser.add_argument_group(
             "Flow",
@@ -177,8 +176,7 @@ class Main:
             return parser
 
     def main(self, args: AttributeDict):  # noqa: C901
-        if isinstance(args, dict):
-            args = AttributeDict(**args)
+        args = attributedict(args)
 
         seed_everything(args.seed)
         log_dir = experiment_logger(args.id, args.logging_backend, self.Module).log_dir
@@ -250,16 +248,6 @@ class Main:
                 "evaluation/test_results.yaml",
                 test_results,
             )
-
-        # if args.profile_dataset:
-        #     hprint("Profiling dataset")
-        #     info = self.runner.profile_dataset(args)
-        #     dprint(info)
-        #     results.append(info)
-        #     save_results(
-        #         "profiles/dataset_profile.yaml",
-        #         info,
-        #     )
 
         if args.profile_model:
             hprint("Profiling model")

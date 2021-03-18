@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from ride.utils.logging import getLogger
 from ride.utils.utils import (
     AttributeDict,
-    AttributeDictOrDict,
+    DictLike,
     attributedict,
     merge_attributedicts,
     missing_or_not_in_other,
@@ -38,7 +38,7 @@ class Configs(_Configs):
 def _init_subsubclass(cls):
     orig_init = cls.__init__
 
-    def init(self, hparams: AttributeDictOrDict, *args, **kwargs):
+    def init(self, hparams: DictLike, *args, **kwargs):
         super(cls, self).__init__(hparams, *args, **kwargs)
         apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
 
@@ -109,7 +109,7 @@ def _init_subclass(cls):
     # Monkeypatch derived module init
     orig_init = cls.__init__
 
-    def init(self, hparams: AttributeDictOrDict = {}, *args, **kwargs):
+    def init(self, hparams: DictLike = {}, *args, **kwargs):
         pl.LightningModule.__init__(self)
         self.hparams = merge_attributedicts(self.configs().default_values(), hparams)
         sself = (

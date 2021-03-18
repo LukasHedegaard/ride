@@ -6,7 +6,7 @@ import torch
 
 from ride.core import AttributeDict, RideMixin, RideModule
 from ride.optimizers import SgdOptimizer
-from ride.utils.utils import AttributeDictOrDict
+from ride.utils.utils import DictLike
 
 from .dummy_dataset import DummyDataLoader
 
@@ -34,7 +34,7 @@ class InitOrderModule(
     Mixin1,
     Mixin2,
 ):
-    def __init__(self, hparams: AttributeDictOrDict):
+    def __init__(self, hparams: DictLike):
         self.hparams.msg.append("InitOrderModule.__init__")
 
 

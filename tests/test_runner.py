@@ -7,7 +7,7 @@ import pytest
 import pytorch_lightning as pl
 import torch
 
-from ride.core import RideModule, Configs
+from ride.core import Configs, RideModule
 from ride.logging import experiment_logger
 from ride.optimizers import SgdOptimizer
 from ride.runner import Runner

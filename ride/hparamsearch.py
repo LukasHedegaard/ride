@@ -210,7 +210,7 @@ class Hparamsearch:
                 1, int(hparams["accumulate_grad_batches"]) // num_gpus
             )
 
-        old_args = vars(old_args)
+        old_args = dict(old_args)
         user_passed_arg_keys = [a[2:] for a in sys.argv if a.startswith("--")]
         user_passed_args = {
             k: v for k, v in old_args.items() if k in user_passed_arg_keys
