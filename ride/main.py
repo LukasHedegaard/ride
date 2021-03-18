@@ -73,9 +73,8 @@ class Main:
             ("train", "Run model training"),
             ("validate", "Run model evaluation on validation set"),
             ("test", "Run model evaluation on test set"),
-            ("profile_dataset", "Profile the dataset"),
             ("profile_model", "Profile the model"),
-            # ("notify", "Notify after completion"),
+            # ("profile_dataset", "Profile the dataset"),
         ]
         prog_flow_parser = parser.add_argument_group(
             "Flow",
@@ -252,15 +251,15 @@ class Main:
                 test_results,
             )
 
-        if args.profile_dataset:
-            hprint("Profiling dataset")
-            info = self.runner.profile_dataset(args)
-            dprint(info)
-            results.append(info)
-            save_results(
-                "profiles/dataset_profile.yaml",
-                info,
-            )
+        # if args.profile_dataset:
+        #     hprint("Profiling dataset")
+        #     info = self.runner.profile_dataset(args)
+        #     dprint(info)
+        #     results.append(info)
+        #     save_results(
+        #         "profiles/dataset_profile.yaml",
+        #         info,
+        #     )
 
         if args.profile_model:
             hprint("Profiling model")

@@ -93,7 +93,6 @@ class TestMain:
             "--hparamsearch",
             "--train",
             "--test",
-            "--profile_dataset",
             "--profile_model",
         ]:
             assert msg in help_msg
@@ -208,10 +207,9 @@ class TestMain:
         assert model_profile_path.is_file()
         assert model_hparams_path.is_file()
 
-
-# def test_profile_dataset():
-#     """Test that profiling dataset works"""
-#     assert False
+    # def test_profile_dataset(self):
+    #     """Test that profiling dataset works"""
+    #     assert False
 
 
 # def test_hparamsearch():

@@ -124,15 +124,14 @@ class TestRunner:
         runner, args = runner_and_args
         runner.profile_model(args, max_wait_seconds=1)
 
-    def test_profile_dataset(self, runner_and_args: Tuple[Runner, AttributeDict]):
-        """Test that profiling model work"""
-        runner, args = runner_and_args
+    # def test_profile_dataset(self, runner_and_args: Tuple[Runner, AttributeDict]):
+    #     """Test that profiling model work"""
+    #     runner, args = runner_and_args
 
-        # If dataset doesn't have a profile function, profiling won't work
-        with pytest.raises(AssertionError):
-            runner.profile_dataset(args)
-
-        # TODO: test with profileable dataset
+    #     # If dataset doesn't have a profile function, profiling won't work
+    #     with pytest.raises(AssertionError):
+    #         runner.profile_dataset(args)
+    #     # TODO: test with profileable dataset
 
     # TODO
     # def test_find_learning_rate(self, runner_and_args: Tuple[Runner, AttributeDict]):

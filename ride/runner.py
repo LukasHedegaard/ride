@@ -225,13 +225,13 @@ class Runner:
         }
         return info
 
-    def profile_dataset(self, args: AttributeDict) -> Dict[str, Any]:
-        ds = self.Module(hparams=args).train_dataloader().dataset
-        assert some_callable(
-            ds, "profile"
-        ), f"{name(ds)} should define a `profile` function"
-        info = ds.profile()
-        return info
+    # def profile_dataset(self, args: AttributeDict) -> Dict[str, Any]:
+    #     ds = self.Module(hparams=args).train_dataloader().dataset
+    #     assert some_callable(
+    #         ds, "profile"
+    #     ), f"{name(ds)} should define a `profile` function"
+    #     info = ds.profile()
+    #     return info
 
     def find_learning_rate(self):
         raise NotImplementedError()
