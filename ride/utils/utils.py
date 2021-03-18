@@ -43,12 +43,19 @@ def to_dict(d):
         return dict(d)
 
 
-def merge_attributedicts(*args):
-    assert len(args) > 1
+def merge_dicts(*args):
+    if len(args) == 0:
+        return {}
+    if len(args) == 1:
+        return args[0]
     acc = to_dict(args[0])
     for a in args[1:]:
         acc = {**acc, **to_dict(a)}
-    return attributedict(acc)
+    return acc
+
+
+def merge_attributedicts(*args):
+    return attributedict(merge_dicts(*args))
 
 
 def some(self, attr: str):

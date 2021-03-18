@@ -13,3 +13,7 @@ def test_simple_classifier():
     args.limit_val_batches = 10
     args.limit_test_batches = 10
     m.main(args)
+
+    assert "loss" in m.runner.trainer.model.metrics()
+    assert "top1acc" in m.runner.trainer.model.metrics()
+    assert "top3acc" in m.runner.trainer.model.metrics()

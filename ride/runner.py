@@ -77,13 +77,13 @@ class Runner:
                 save_top_k=1,
                 verbose=True,
                 monitor=f"val/{args.optimization_metric}",  # Comment out when using pl.EvalResult
-                mode=self.Module.metrics[args.optimization_metric].value,
+                mode=self.Module.metrics()[args.optimization_metric].value,
                 prefix="",
                 save_last=True,
             )
         )
         logger.info(
-            f"Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics[args.optimization_metric].value}"
+            f"Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics()[args.optimization_metric].value}"
         )
         if args.checkpoint_every_n_steps:
             trainer_callbacks.append(

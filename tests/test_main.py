@@ -209,7 +209,29 @@ class TestMain:
         assert model_profile_path.is_file()
         assert model_hparams_path.is_file()
 
+    def test_hparamsearch(self, main_and_args: Tuple[Main, AttributeDict]):
+        """Test that execution of hparamsearch and retreival of best hparams works"""
 
-# def test_hparamsearch():
-#     """Test that execution of hparamsearch and retreival of best hparams works"""
-#     assert False
+        # Prepare hparamspace file
+        hparams_space_path = Path(os.getcwd()) / "test_dummy_module_hparamspace.yaml"
+        hparams_space = {
+            "hidden_dim": {
+                "type": "int",
+                "strategy": "choice",
+                "choices": [128, 256, 512, 1024],
+            }
+        }
+        dump_yaml(hparams_space_path, hparams_space)
+
+        # Prep args
+        m, args = main_and_args
+        args.hparamsearch = True
+        args.max_epochs = 1
+        args.trials = 2
+        args.from_hparam_space_file = str(hparams_space_path)
+
+        # Test
+        m.main(args)
+
+        # Clean up
+        hparams_space_path.unlink()

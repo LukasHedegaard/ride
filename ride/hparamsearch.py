@@ -3,13 +3,14 @@ from functools import partial
 from pathlib import Path
 from typing import Type, Union
 
+from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
+
 from ride.core import AttributeDict, Configs, RideModule
 from ride.runner import Runner, is_runnable
 from ride.utils.env import NUM_CPU, TUNE_LOGS_PATH
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.io import bump_version, dump_json, dump_yaml, load_json, load_yaml
 from ride.utils.logging import getLogger
-from ride.utils.tune_callbacks import TuneReportCallback
 
 logger = getLogger(__name__)
 
@@ -79,7 +80,7 @@ class Hparamsearch:
         ).tune_config()
 
         config = {
-            **vars(args),
+            **dict(args),
             **module_config,
             # pl.Trainer args:
             "gpus": args.gpus_per_trial,
@@ -91,45 +92,39 @@ class Hparamsearch:
             ),
         }
         scheduler = tune.schedulers.ASHAScheduler(
-            metric=f"val_{args.optimization_metric}",
-            mode=self.Module.metrics[args.optimization_metric].value,
+            metric=f"val/{args.optimization_metric}",
+            mode=self.Module.metrics()[args.optimization_metric].value,
             max_t=args.max_epochs,
             grace_period=1,
             reduction_factor=2,
         )
 
+        metric_names = [f"val/{m}" for m in self.Module.metrics().keys()]
+
         reporter = tune.CLIReporter(
-            # parameter_columns=[f"hparams.{n}" for n in self.Module.configs().names],
-            metric_columns=[
-                *[f"val_{m}" for m in self.Module.metrics.keys()],
-                "training_iteration",
-            ],
+            metric_columns=[*metric_names, "training_iteration"],
         )
-        # tune_callback = TuneReportCheckpointCallback(
-        #     metrics=[f"val_{k}" for k in self.Module.metrics.keys()],
-        #     filename="checkpoint",
-        #     on="validation_end",
-        # )
-        tune_callback = TuneReportCallback()
-        cpus_per_trial = (
-            min(10 * args.gpus_per_trial, NUM_CPU - 10)
-            if args.gpus_per_trial
-            else min(10, NUM_CPU - 2)
+        tune_callbacks = [
+            TuneReportCheckpointCallback(
+                metrics=metric_names,
+                filename="checkpoint",
+                on="validation_end",
+            )
+        ]
+        cpus_per_trial = max(
+            1,
+            (
+                min(10 * args.gpus_per_trial, NUM_CPU - 10)
+                if args.gpus_per_trial
+                else min(10, NUM_CPU - 2)
+            ),
         )
 
-        # get_logger = partial(
-        #     singleton_experiment_logger(),
-        #     # name=args.id,
-        #     logging_backend=args.logging_backend,
-        #     Module=self.Module,
-        #     save_dir=tune.get_trial_dir(),
-        # )
         analysis = tune.run(
             partial(
                 Runner.static_train_and_val,
                 self.Module,
-                trainer_callbacks=[tune_callback],
-                # get_logger=get_logger,
+                trainer_callbacks=tune_callbacks,
             ),
             name=args.id,
             local_dir=str(TUNE_LOGS_PATH),
@@ -138,13 +133,13 @@ class Hparamsearch:
             num_samples=args.trials,
             scheduler=scheduler,
             progress_reporter=reporter,
-            queue_trials=True,
+            queue_trials=False,
             raise_on_failed_trial=False,
         )
 
         best_hparams = analysis.get_best_config(
-            metric=f"val_{args.optimization_metric}",
-            mode=self.Module.metrics[args.optimization_metric].value,
+            metric=f"val/{args.optimization_metric}",
+            mode=self.Module.metrics()[args.optimization_metric].value,
             scope="all",
         )
         # Select only model parameters

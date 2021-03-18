@@ -232,12 +232,12 @@ class SgdOneCycleOptimizer(RideMixin):
         c.add(
             name="discriminative_lr_fraction",
             type=float,
-            default=0,
-            choices=(1e-7, 0),
+            default=1,
+            choices=(1e-7, 1),
             strategy="loguniform",
             description=(
                 "Discriminative learning rate fraction of early layers compared to final layers. "
-                "If `0`, discriminative learning rate is not used."
+                "If `1`, discriminative learning rate is not used."
             ),
         )
         return c
@@ -279,12 +279,12 @@ class SgdCyclicLrOptimizer(RideMixin):
         c.add(
             name="discriminative_lr_fraction",
             type=float,
-            default=0,
-            choices=(1e-7, 0),
+            default=1,
+            choices=(1e-7, 1),
             strategy="loguniform",
             description=(
                 "Discriminative learning rate fraction of early layers compared to final layers. "
-                "If `0`, discriminative learning rate is not used."
+                "If `1`, discriminative learning rate is not used."
             ),
         )
         return c
@@ -331,12 +331,12 @@ class AdamWCyclicLrOptimizer(RideMixin):
         c.add(
             name="discriminative_lr_fraction",
             type=float,
-            default=0,
-            choices=(1e-7, 0),
+            default=1,
+            choices=(1e-7, 1),
             strategy="loguniform",
             description=(
                 "Discriminative learning rate fraction of early layers compared to final layers. "
-                "If `0`, discriminative learning rate is not used."
+                "If `1`, discriminative learning rate is not used."
             ),
         )
         return c
@@ -384,12 +384,12 @@ class AdamWOneCycleOptimizer(RideMixin):
         c.add(
             name="discriminative_lr_fraction",
             type=float,
-            default=0,
-            choices=(1e-7, 0),
+            default=1,
+            choices=(1e-7, 1),
             strategy="loguniform",
             description=(
                 "Discriminative learning rate fraction of early layers compared to final layers. "
-                "If `0`, discriminative learning rate is not used."
+                "If `1`, discriminative learning rate is not used."
             ),
         )
         return c
@@ -416,7 +416,7 @@ class AdamWOneCycleOptimizer(RideMixin):
 def discriminative_lr_and_params(
     model: torch.nn.Module, lr: float, discriminative_lr_fraction: float
 ):
-    if discriminative_lr_fraction > 0:
+    if discriminative_lr_fraction != 1:
         params, max_lr, _ = discriminative_lr(
             model,
             slice(

@@ -12,7 +12,7 @@ from torch import Tensor
 
 from ride.core import Configs, RideMixin
 from ride.utils.logging import getLogger
-from ride.utils.utils import name, some
+from ride.utils.utils import merge_dicts, name
 
 MetricDict = Dict[str, Tensor]
 StepOutputs = List[Dict[str, Tensor]]
@@ -28,29 +28,22 @@ class OptimisationDirection(Enum):
 class MetricMixin(RideMixin):
     """Abstract base class for Ride modules"""
 
-    metrics: Dict[str, OptimisationDirection] = {}
-
-    @staticmethod
-    def metric_names() -> List[str]:
-        return list(sorted(MetricMixin.metrics.keys()))
-
-    def validate_attributes(self):
-        for attr in [
-            "metrics",
-        ]:
-            assert some(
-                self, attr
-            ), f"{name(self)} should define `{attr}` but none was found."
-
     def __init_subclass__(cls):
-        if hasattr(cls, "_metrics"):
-            cls.register_metrics(cls._metrics)
+        if not hasattr(cls, "_metrics"):
+            logger.error(
+                f"Subclasses of MetricMixin should define a `_metrics` classmethod, but none was found in {name(cls)}"
+            )
 
     @classmethod
-    def register_metrics(cls, metrics: Dict[str, OptimisationDirection]):
-        for key, direction in metrics.items():
-            if key not in cls.metrics:
-                MetricMixin.metrics[key] = direction
+    def metrics(cls) -> Dict[str, str]:
+        ms = merge_dicts(
+            *[c._metrics() for c in cls.__bases__ if issubclass(c, MetricMixin)]
+        )
+        return ms
+
+    @classmethod
+    def metric_names(cls) -> List[str]:
+        return list(sorted(cls.metrics().keys()))
 
     def metrics_step(self, *args, **kwargs) -> MetricDict:
         return {}
@@ -86,7 +79,9 @@ class MeanAveragePrecisionMetric(MetricMixin):
         for attribute in ["hparams.loss", "classes"]:
             attrgetter(attribute)(self)
 
-    _metrics = {"mAP": OptimisationDirection.MAX}
+    @classmethod
+    def _metrics(cls):
+        return {"mAP": OptimisationDirection.MAX}
 
     def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
         map = torch.tensor(-1.0)
@@ -152,7 +147,7 @@ def charades_mean_average_precision(preds, targets):
     return m_ap, w_ap, m_aps
 
 
-def TopKAccuracyMetric(*Ks):
+def TopKAccuracyMetric(*Ks) -> MetricMixin:
     if not Ks:
         Ks = [1, 3, 5]
 
@@ -162,9 +157,9 @@ def TopKAccuracyMetric(*Ks):
     class TopKAccuracyMetricClass(MetricMixin):
         """Top K accuracy metrics: top1acc, top3acc, top5acc"""
 
-        # dataloader: ...
-
-        _metrics = {f"top{k}acc": OptimisationDirection.MAX for k in Ks}
+        @classmethod
+        def _metrics(cls):
+            return {f"top{k}acc": OptimisationDirection.MAX for k in Ks}
 
         def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
             ks = [k for k in Ks]
@@ -179,9 +174,11 @@ def TopKAccuracyMetric(*Ks):
 
 
 class FlopsMetric(MetricMixin):
-    """Computes Giga Floating Point Operations Per Second (GFLOPS) for the model and adds it as metric"""
+    """Computes Floating Point Operations (FLOPs) for the model and adds it as metric"""
 
-    _metrics = {"flops": OptimisationDirection.MIN}
+    @classmethod
+    def _metrics(cls):
+        return {"flops": OptimisationDirection.MIN}
 
     def __init__(self, *args, **kwargs) -> None:
         assert isinstance(self, torch.nn.Module)
@@ -194,7 +191,9 @@ class FlopsMetric(MetricMixin):
 class FlopsWeightedAccuracyMetric(FlopsMetric):
     """Computes acc * (flops / target_gflops) ** (-0.07)"""
 
-    _metrics = {"flops_weighted_acc": OptimisationDirection.MAX}
+    @classmethod
+    def _metrics(cls):
+        return {"flops_weighted_acc": OptimisationDirection.MAX}
 
     def __init__(self, *args, **kwargs):
         FlopsMetric.__init__(self, *args, **kwargs)

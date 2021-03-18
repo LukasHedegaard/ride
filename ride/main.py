@@ -279,14 +279,7 @@ def dprint(d: dict):
     logger.info(yaml.dump({"Results": d}))
 
 
-def make_save_results(root_path: str = None) -> Callable[[str, Any], None]:
-    if not root_path:
-
-        def dummy(relative_path: str, data):
-            return
-
-        return dummy
-
+def make_save_results(root_path: str) -> Callable[[str, Any], None]:
     root_path = Path(root_path)
 
     def bump_version_and_save(relative_path: str, data):

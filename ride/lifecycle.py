@@ -66,7 +66,10 @@ class Lifecycle(MetricMixin):
     hparams: ...
     forward: Callable[[torch.Tensor], torch.Tensor]
     _epoch: int
-    _metrics = {"loss": OptimisationDirection.MIN}
+
+    @classmethod
+    def _metrics(cls):
+        return {"loss": OptimisationDirection.MIN}
 
     def __init__(self, hparams=None, *args, **kwargs):
         self._epoch = 0
