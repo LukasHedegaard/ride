@@ -1,13 +1,27 @@
+import functools
 import inspect
 import math
 import re
 from argparse import Namespace
+from contextlib import contextmanager
 from operator import attrgetter
 from typing import Any, Collection, Dict, Set, Union
 
 from pytorch_lightning.utilities.parsing import AttributeDict
 
 AttributeDictOrDict = Union[AttributeDict, Dict[str, Any]]
+
+
+def rsetattr(obj, attr, val):
+    pre, _, post = attr.rpartition(".")
+    return setattr(rgetattr(obj, pre) if pre else obj, post, val)
+
+
+def rgetattr(obj, attr, *args):
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+
+    return functools.reduce(_getattr, [obj] + attr.split("."))
 
 
 def attributedict(attributedict_or_dict: AttributeDictOrDict) -> AttributeDict:
@@ -96,3 +110,11 @@ def camel_to_snake(s: str) -> str:
     """
     s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
+
+
+@contextmanager
+def temporary_parameter(obj, attr, val):
+    prev_val = rgetattr(obj, attr)
+    rsetattr(obj, attr, val)
+    yield obj
+    rsetattr(obj, attr, prev_val)
