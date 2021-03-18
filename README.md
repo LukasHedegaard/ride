@@ -13,11 +13,11 @@ Training wheels, side rails, and helicopter parent for your Deep Learning projec
 pip install ride
 ```
 
-## Why does this project exist?
-You might have thought that PyTorch Lightning disposed of all your boiler-plate code, but doesn't it still feel like writing and testing Deep Learning models is a lot of work? 
+## Zero-boilerplate AI research
+You might have thought that PyTorch Lightning disposed of all your boilerplate code, but doesn't it still feel like writing and testing Deep Learning models is a lot of work? 
 
-This project is an audacious attempt at disposing of the rest, including your code for:
-- __Train-val-test lifecycles__
+This project is an audacious attempt at disposing of the remaining boiletplate, including your code for:
+- __Train-val-test lifecycle methods__
 - __Finetuning schemes__
 - __Hyperparameter search__
 - __Main function__
@@ -29,7 +29,7 @@ Suggestions and pull requests are always welcome!
 
 
 
-## Programming Model
+## Programming model
 Did you ever take a peek to the source code of the [LightningModule](https://github.com/PyTorchLightning/pytorch-lightning/blob/master/pytorch_lightning/core/lightning.py)?
 This core class of the Pytorch Lightning library makes heavy use of _Mixins_ and _multiple inheritance_ to group functionalities and "inject" them in the LightningModule. 
 
