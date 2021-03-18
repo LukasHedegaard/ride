@@ -62,8 +62,10 @@ lint:
 build:
 	python setup.py sdist bdist_wheel  
 
+
+## Build library for upload to TestPyPI
 testbuild:
-	python test_setup.py sdist bdist_wheel  
+	python setup_testpypi.py sdist bdist_wheel  
 
 
 ## Upload to PyPI
