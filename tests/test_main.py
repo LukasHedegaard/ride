@@ -8,6 +8,9 @@ from ride.utils.utils import AttributeDict, attributedict
 from ride.optimizers import AdamWOneCycleOptimizer
 import logging
 from .dummy_dataset import DummyDataLoader
+from pathlib import Path
+import os
+from ride.utils.io import dump_yaml, dump_json
 
 
 class DummyModule(RideModule, DummyDataLoader, AdamWOneCycleOptimizer):
@@ -155,14 +158,30 @@ class TestMain:
         ]:
             assert any([check in msg for msg in caplog.messages])
 
+    def test_from_hparams_file(self, main_and_args: Tuple[Main, AttributeDict]):
+        """Test loading of hparams"""
+        m, args = main_and_args
+        args.validate = True
+
+        for suffix, dump, hidden_dim in [
+            ("yaml", dump_yaml, 256),
+            ("json", dump_json, 512),
+        ]:
+            # Prep file
+            hparams_path = Path(os.getcwd()) / f"test_dummy_module_hparams.{suffix}"
+            dump(hparams_path, {"hidden_dim": hidden_dim})
+
+            # Test
+            args.from_hparams_file = str(hparams_path)
+            m.main(args)
+            assert m.runner.trainer.model.hparams.hidden_dim == hidden_dim
+
+            # Cleanup
+            hparams_path.unlink()
+
 
 # def test_hparamsearch():
 #     """Test that execution of hparamsearch and retreival of best hparams works"""
-#     assert False
-
-
-# def test_from_hparams_file():
-#     """Test loading of hparams"""
 #     assert False
 
 
