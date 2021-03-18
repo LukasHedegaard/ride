@@ -179,9 +179,11 @@ class Main:
         args = attributedict(args)
 
         seed_everything(args.seed)
-        log_dir = experiment_logger(args.id, args.logging_backend, self.Module).log_dir
+        self.log_dir = experiment_logger(
+            args.id, args.logging_backend, self.Module
+        ).log_dir
         init_logging(
-            log_dir,
+            self.log_dir,
             args.logging_backend,
         )
 
@@ -195,7 +197,7 @@ class Main:
         if not args.default_root_dir:
             args.default_root_dir = str(LOGS_PATH)
 
-        save_results = make_save_results(log_dir)
+        save_results = make_save_results(self.log_dir)
 
         if args.resume_from_checkpoint:
             args.resume_from_checkpoint = find_checkpoint(args.resume_from_checkpoint)

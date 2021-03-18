@@ -11,7 +11,7 @@ from ride.core import RideModule
 from ride.optimizers import AdamWOneCycleOptimizer
 from ride.utils.io import dump_json, dump_yaml
 from ride.utils.utils import AttributeDict, attributedict
-
+from ride.utils.checkpoints import get_latest_checkpoint
 from .dummy_dataset import DummyDataLoader
 
 
@@ -179,6 +179,24 @@ class TestMain:
 
             # Cleanup
             hparams_path.unlink()
+
+    def test_resume_from_checkpoint(self, main_and_args: Tuple[Main, AttributeDict]):
+        """Test that training, validation, and test works"""
+        m, args = main_and_args
+        args.train = True
+
+        m.main(args)
+
+        # From specific file (as usual in PyTorch Lightning)
+        args.resume_from_checkpoint = str(get_latest_checkpoint(m.log_dir))
+        assert ".ckpt" in args.resume_from_checkpoint
+        m.main(args)  # Doesn't run because max_epochs was reached in checkpoint
+
+        # Automatically pick lastest checkpoint in directory
+        args.resume_from_checkpoint = m.log_dir
+        assert ".ckpt" not in args.resume_from_checkpoint
+        args.max_epochs = 2
+        m.main(args)
 
     def test_profile_model(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         """Test that profiling model works"""
