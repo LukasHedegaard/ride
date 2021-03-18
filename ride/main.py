@@ -28,7 +28,7 @@ style_logging()
 
 from argparse import ArgumentParser  # noqa: E402
 from pathlib import Path  # noqa: E402
-from typing import Any, Callable, Type  # noqa: E402
+from typing import Any, Callable, Type, List  # noqa: E402
 import yaml  # noqa: E402
 import platform  # noqa: E402
 from pytorch_lightning import Trainer, seed_everything  # noqa: E402
@@ -57,7 +57,11 @@ class Main:
         self.runner = Runner(self.Module)
         self.hparamsearch = Hparamsearch(self.Module)
 
-    def argparse(self):
+    def argparse(
+        self,
+        args: List[str] = None,
+        run=True,
+    ):
         parser = ArgumentParser(add_help=True)
 
         # Top level commands
@@ -167,20 +171,11 @@ class Main:
             self.Module.configs() - gen_configs - pl_configs
         ).add_argparse_args(module_parser)
 
-        args = parser.parse_args()
-
-        # if args.notify:
-        #     from ride.utils.notify import notify_done  # noqa: E402
-        #     top_level_commands_to_execute = [
-        #         c for c, d in top_level_commands_and_descriptions if getattr(args, c)
-        #     ]
-        #     notify_done(
-        #         function=partial(self.main, args),
-        #         title=f"{self.module_name}: {top_level_commands_to_execute}",
-        #         comment=f'Using GPUs="{args.gpus}"',
-        #     )
-        # else:
-        self.main(args)
+        if run:
+            parsed_args = parser.parse_args(args)
+            return self.main(parsed_args)
+        else:
+            return parser
 
     def main(self, args: AttributeDict):  # noqa: C901
         if isinstance(args, dict):
