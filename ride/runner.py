@@ -193,7 +193,7 @@ class Runner:
         )
 
     def profile_model(
-        self, args: AttributeDict, max_wait_seconds: float = 30
+        self, args: AttributeDict, max_wait_seconds: float = 30, num_runs: int = 100
     ) -> Dict[str, Any]:
         if hasattr(self, "trained_model"):
             model = self.trained_model
@@ -201,7 +201,7 @@ class Runner:
             model = self.Module(hparams=args)
 
         timing_results_dict, single_profile = profile_repeatedly(
-            model, max_wait_seconds
+            model, max_wait_seconds, num_runs=num_runs
         )
 
         single_run_detailed_timing = single_profile.key_averages().table(

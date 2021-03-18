@@ -70,7 +70,7 @@ class TestMain:
         with caplog.at_level(logging.WARNING):
             Main(DummyModule).argparse([])
 
-        assert len(caplog.messages) == 0
+        assert caplog.messages == []
         captured = capsys.readouterr()
         assert captured.out == ""
         assert captured.err == ""
@@ -179,10 +179,34 @@ class TestMain:
             # Cleanup
             hparams_path.unlink()
 
+    def test_profile_model(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
+        """Test that profiling model works"""
+        m, args = main_and_args
+        args.profile_model = True
+        args.profile_model_num_runs = 10
 
-# def test_hparamsearch():
-#     """Test that execution of hparamsearch and retreival of best hparams works"""
-#     assert False
+        caplog.clear()
+
+        # Nothing is logged
+        with caplog.at_level(logging.INFO):
+            m.main(args)
+
+        assert len(caplog.messages) > 0
+
+        for check in [
+            "Results",
+            "flops",
+            "machine",
+            "samples_per_second",
+            "num_runs",
+        ]:
+            assert any([check in msg for msg in caplog.messages])
+
+        # Check that results are saved and path is printed
+        model_profile_path = Path(caplog.messages[-2].split(" ")[1])
+        model_hparams_path = Path(caplog.messages[-1].split(" ")[1])
+        assert model_profile_path.is_file()
+        assert model_hparams_path.is_file()
 
 
 # def test_profile_dataset():
@@ -190,6 +214,6 @@ class TestMain:
 #     assert False
 
 
-# def test_profile_model():
-#     """Test that profiling dataset works"""
+# def test_hparamsearch():
+#     """Test that execution of hparamsearch and retreival of best hparams works"""
 #     assert False

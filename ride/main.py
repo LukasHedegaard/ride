@@ -110,12 +110,6 @@ class Main:
             description="Type of experiment logger",
         )
         gen_configs.add(
-            "results_log_dir",
-            type=str,
-            default=None,
-            description="Path to logging directory for results",
-        )
-        gen_configs.add(
             "from_hparams_file",
             type=str,
             default=None,
@@ -140,6 +134,12 @@ class Main:
             type=int,
             default=0,
             description="Save models checkpoint every N steps independent of epoch and validation cycle. If `0`, this feature is unused",
+        )
+        gen_configs.add(
+            "profile_model_num_runs",
+            type=int,
+            default=100,
+            description="Number of runs to perform when profiling model",
         )
         gen_settings_parser = gen_configs.add_argparse_args(gen_settings_parser)
 
@@ -182,8 +182,9 @@ class Main:
             args = AttributeDict(**args)
 
         seed_everything(args.seed)
+        log_dir = experiment_logger(args.id, args.logging_backend, self.Module).log_dir
         init_logging(
-            experiment_logger(args.id, args.logging_backend, self.Module).log_dir,
+            log_dir,
             args.logging_backend,
         )
 
@@ -197,7 +198,7 @@ class Main:
         if not args.default_root_dir:
             args.default_root_dir = str(LOGS_PATH)
 
-        save_results = make_save_results(args.results_log_dir)
+        save_results = make_save_results(log_dir)
 
         if args.resume_from_checkpoint:
             args.resume_from_checkpoint = find_checkpoint(args.resume_from_checkpoint)
@@ -237,7 +238,7 @@ class Main:
             dprint(val_results)
             results.append(val_results)
             save_results(
-                f"evaluation/{args.id}_val.yaml",
+                "evaluation/validation_results.yaml",
                 val_results,
             )
 
@@ -247,7 +248,7 @@ class Main:
             dprint(test_results)
             results.append(test_results)
             save_results(
-                f"evaluation/{args.id}_test.yaml",
+                "evaluation/test_results.yaml",
                 test_results,
             )
 
@@ -257,21 +258,21 @@ class Main:
             dprint(info)
             results.append(info)
             save_results(
-                f"dataset_profiles/{args.dataset}.yaml",
+                "profiles/dataset_profile.yaml",
                 info,
             )
 
         if args.profile_model:
             hprint("Profiling model")
-            info = self.runner.profile_model(args)
+            info = self.runner.profile_model(args, num_runs=args.profile_model_num_runs)
             dprint(info)
             results.append(info)
             save_results(
-                f"model_profiles/{self.Module.__name__}.yaml",
+                "profiles/model_profile.yaml",
                 info,
             )
             save_results(
-                f"model_profiles/{self.Module.__name__}_hparams.yaml",
+                "profiles/model_hparams.yaml",
                 vars(args),
             )
 
