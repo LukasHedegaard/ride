@@ -1,10 +1,9 @@
-from ride import Main  # noqa: F401  # isort:skip
+from ride import Main, Configs  # noqa: F401  # isort:skip
 import torch
 
 from typing import Tuple
 import pytest
 from ride.core import RideModule
-from ride.main import Main
 from ride.utils.utils import AttributeDict, attributedict
 from ride.optimizers import AdamWOneCycleOptimizer
 import logging
@@ -13,14 +12,28 @@ from .dummy_dataset import DummyDataLoader
 
 class DummyModule(RideModule, DummyDataLoader, AdamWOneCycleOptimizer):
     def __init__(self, hparams):
-        self.pred_layer = torch.nn.Linear(
-            self.input_shape[0],  # from DummyDataLoader
-            self.output_shape,  # from DummyDataLoader
-        )
+        self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)
+        self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
         self.loss = torch.nn.functional.mse_loss
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.pred_layer(x)
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        x = torch.relu(self.l1(x))
+        x = torch.relu(self.l2(x))
+        return x
+
+    @staticmethod
+    def configs():
+        c = Configs()
+        c.add(
+            name="hidden_dim",
+            type=int,
+            default=128,
+            strategy="choice",
+            choices=[128, 256, 512, 1024],
+            description="Number of hiden units.",
+        )
+        return c
 
 
 @pytest.fixture()  # scope="module"
@@ -102,7 +115,7 @@ class TestMain:
             assert msg in help_msg
 
         # Module args
-        for msg in ["--loss", "--learning_rate", "--batch_size"]:
+        for msg in ["--loss", "--learning_rate", "--batch_size", "--hidden_dim"]:
             assert msg in help_msg
 
     def test_default_id(self):

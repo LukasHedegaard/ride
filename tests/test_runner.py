@@ -7,7 +7,7 @@ import pytest
 import pytorch_lightning as pl
 import torch
 
-from ride.core import RideModule
+from ride.core import RideModule, Configs
 from ride.logging import experiment_logger
 from ride.optimizers import SgdOptimizer
 from ride.runner import Runner
@@ -20,14 +20,28 @@ pl.seed_everything(42)
 
 class DummyModule(RideModule, DummyDataLoader, SgdOptimizer):
     def __init__(self, hparams):
-        self.pred_layer = torch.nn.Linear(
-            self.input_shape[0],  # from DummyDataLoader
-            self.output_shape,  # from DummyDataLoader
-        )
+        self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)
+        self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
         self.loss = torch.nn.functional.mse_loss
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.pred_layer(x)
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        x = torch.relu(self.l1(x))
+        x = torch.relu(self.l2(x))
+        return x
+
+    @staticmethod
+    def configs():
+        c = Configs()
+        c.add(
+            name="hidden_dim",
+            type=int,
+            default=128,
+            strategy="choice",
+            choices=[128, 256, 512, 1024],
+            description="Number of hiden units.",
+        )
+        return c
 
 
 @pytest.fixture()  # scope="module"
