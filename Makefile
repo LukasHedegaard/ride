@@ -62,15 +62,19 @@ lint:
 build:
 	python setup.py sdist bdist_wheel  
 
-
-## Upload to TestPyPI
-testpublish:
-	python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+testbuild:
+	python test_setup.py sdist bdist_wheel  
 
 
 ## Upload to PyPI
 publish:
 	python -m twine upload dist/*
+
+
+## Upload to TestPyPI
+testpublish:
+	python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
 	
 
 #################################################################################
