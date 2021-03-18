@@ -119,7 +119,6 @@ Flow:
   --train               Run model training
   --validate            Run model evaluation on validation set
   --test                Run model evaluation on test set
-  --profile_dataset     Profile the dataset
   --profile_model       Profile the model
 
 General:
