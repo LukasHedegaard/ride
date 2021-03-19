@@ -1,3 +1,4 @@
+SHELL:=/bin/bash
 .PHONY: clean test
 
 #################################################################################
@@ -19,8 +20,6 @@ endif
 #################################################################################
 # COMMANDS                                                                      #
 #################################################################################
-
-CUDA := $(if $(CUDA),$(CUDA),cpu)
 
 ## Install packages
 install:
@@ -46,6 +45,12 @@ clean:
 test:
 	@echo ⚡⚡⚡ Testing ⚡⚡⚡
 	py.test --cov ride --cov-report term-missing
+
+
+## Upload to codecov.io
+codecov:
+	$(eval CODECOV_TOKEN := $(shell grep CODECOV_TOKEN .env | cut -d '=' -f2))
+	@CODECOV_TOKEN=$(CODECOV_TOKEN) bash <(curl -s https://codecov.io/bash)
 
 
 ## Lint the code
