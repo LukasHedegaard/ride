@@ -67,6 +67,7 @@ class Finetunable(Unfreezable):
     def validate_attributes(self):
         for hparam in Finetunable.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
+        Unfreezable.validate_attributes(self)
 
     def map_loaded_weights(self, file, loaded_state_dict):
         return loaded_state_dict

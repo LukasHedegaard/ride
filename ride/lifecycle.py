@@ -1,15 +1,14 @@
-from functools import wraps
 from itertools import groupby
 from operator import attrgetter
 from typing import Callable, Dict
 
 import torch
 import torch.nn.functional as F
-from matplotlib.figure import Figure
 from pytorch_lightning import LightningModule
 from supers import supers
 
 from ride.core import Configs
+from ride.logging import log_figures
 from ride.metrics import (
     MetricDict,
     MetricMixin,
@@ -43,16 +42,6 @@ loss_names = {
 }
 
 logger = getLogger(__name__)
-
-
-def with_float_args(fn):
-    @wraps(fn)
-    def wrapped(*args, **kwargs):
-        return fn(
-            *[x.float() for x in args], **{k: v.float() for k, v in kwargs.items()}
-        )
-
-    return wrapped
 
 
 class Lifecycle(MetricMixin):
@@ -217,7 +206,7 @@ class Lifecycle(MetricMixin):
                 "pred": pred,
                 "target": target,
             }
-        else:  # self.hparams.test_ensemble
+        else:
             identifier = batch[-1]
             # Delay computation of metrics to epoch end
             return {"pred": pred, "target": target, "identifier": identifier}
@@ -268,6 +257,7 @@ class Lifecycle(MetricMixin):
         # Make confusion matrix
         if (
             self.hparams.test_confusion_matrix
+            and hasattr(self, "num_classes")
             and self.trainer.progress_bar_callback.is_enabled
         ):
             try:
@@ -276,15 +266,10 @@ class Lifecycle(MetricMixin):
                 )
                 targets = torch.tensor([t for s in step_outputs for t in s["target"]])
 
-                save_as = (
-                    self.logger.experiment[0]
-                    if type(self.logger.experiment) == list
-                    else self.logger.experiment
-                ).log_dir + "/confusion_matrix.png"
-
-                make_confusion_matrix(
+                fig = make_confusion_matrix(
                     preds,
                     targets,
+                    self.num_classes,
                     count=False,
                     percent=False,
                     figsize=(25, 25),
@@ -293,8 +278,8 @@ class Lifecycle(MetricMixin):
                         for i, c in enumerate(self.test_dataloader().dataset.classes)
                     ],
                     cbar=False,
-                    save_as=save_as,
                 )
+                log_figures(self, {"confusion_matrix": fig})
             except Exception as e:
                 logger.warning(
                     f"Unable to save confusion matrix. Caught error: ''{e}''"
@@ -303,21 +288,3 @@ class Lifecycle(MetricMixin):
 
 def prefix_keys(prefix: str, dictionary: Dict) -> Dict:
     return {f"{prefix}{k}": v for k, v in dictionary.items()}
-
-
-def name(any):
-    if hasattr(any, "__name__"):
-        return any.__name__.lower()
-    else:
-        return any.__class__.__name__.lower()
-
-
-def sort_metrics(d: dict):
-    scalars = {k: v for k, v in d.items() if type(v) in {int, float, str}}
-    tensors = {
-        k: str(v.tolist())
-        for k, v in d.items()
-        if type(v) in {torch.Tensor} and bool(v.shape)
-    }
-    figures = {k: v for k, v in d.items() if type(v) in {Figure}}
-    return scalars, tensors, figures

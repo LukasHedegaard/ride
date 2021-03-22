@@ -17,14 +17,14 @@ logger = getLogger(__name__)
 
 @overload
 def profile(model: torch.nn.Module, detailed=False) -> float:
-    ...
+    ...  # pragma: no cover
 
 
 @overload
 def profile(
     model: torch.nn.Module, detailed=True
 ) -> Tuple[float, torch.autograd.profiler.EventList,]:
-    ...
+    ...  # pragma: no cover
 
 
 def profile(model: torch.nn.Module, detailed=True):
@@ -88,7 +88,7 @@ def compute_num_runs(total_wait_time, single_run_time):
 
 
 def profile_repeatedly(
-    model: torch.nn.Module, max_wait_seconds=30, num_runs=100
+    model: torch.nn.Module, max_wait_seconds=30, num_runs=None
 ) -> Tuple[Dict[str, str], torch.autograd.profiler.EventList]:
     for attr in [
         "hparams.batch_size",
@@ -131,4 +131,4 @@ def profile_repeatedly(
 class ProfileableDataset:
     @abstractmethod
     def profile(self) -> Dict[str, Any]:
-        ...
+        ...  # pragma: no cover

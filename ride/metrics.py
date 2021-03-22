@@ -307,6 +307,7 @@ def params_count(model: torch.nn.Module):
 def make_confusion_matrix(  # noqa: C901
     preds,
     targets,
+    num_classes,
     group_names=None,
     categories="auto",
     count=True,
@@ -356,7 +357,7 @@ def make_confusion_matrix(  # noqa: C901
 
     """
 
-    from pytorch_lightning.metrics.functional.classification import confusion_matrix
+    from pytorch_lightning.metrics.functional.confusion_matrix import confusion_matrix
     from seaborn import heatmap
 
     font_logger = getLogger("matplotlib.font_manager")
@@ -365,7 +366,7 @@ def make_confusion_matrix(  # noqa: C901
     if len(preds.shape) > 1:
         preds = preds.squeeze().argmax(-1)
     assert targets.shape and preds.shape and len(targets.shape) == 1
-    cf = confusion_matrix(preds, targets).cpu().numpy()
+    cf = confusion_matrix(preds, targets, num_classes).cpu().numpy()
 
     # CODE TO GENERATE TEXT INSIDE EACH SQUARE
     blanks = ["" for i in range(cf.size)]
@@ -422,7 +423,7 @@ def make_confusion_matrix(  # noqa: C901
         categories = False
 
     # MAKE THE HEATMAP VISUALIZATION
-    plt.figure(figsize=figsize)
+    fig = plt.figure(figsize=figsize)
     heatmap(
         cf,
         annot=box_labels,
@@ -442,9 +443,4 @@ def make_confusion_matrix(  # noqa: C901
     if title:
         plt.title(title)
 
-    if save_as:
-        save_as = str(save_as)
-        if save_as[-4:] not in {".png", ".pdf", ".svg"}:
-            save_as += ".png"
-        logger.debug(f"Saving confusion matrix to {save_as}")
-        plt.savefig(save_as)
+    return fig

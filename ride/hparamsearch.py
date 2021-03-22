@@ -65,7 +65,7 @@ class Hparamsearch:
         try:
             from ray import tune
         except ModuleNotFoundError:
-            logger.error(
+            logger.error(  # pragma: no cover
                 "To use hyperparameter search, first install Ray Tune: `pip install 'ray[tune]'`"
             )
             return
@@ -200,7 +200,7 @@ class Hparamsearch:
         # During hparamsearch, only a single GPU is used, but accumulate_grad_batches is set to the total number of gpus given
         # If we have multiple GPUs, we need to reduce accumulate_grad_batches accordingly
         num_gpus = parse_num_gpus(old_args.gpus)
-        if num_gpus > 0 and "accumulate_grad_batches" in hparams:
+        if num_gpus > 0 and "accumulate_grad_batches" in hparams:  # pragma: no cover
             hparams["accumulate_grad_batches"] = max(
                 1, int(hparams["accumulate_grad_batches"]) // num_gpus
             )

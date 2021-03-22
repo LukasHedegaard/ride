@@ -1,4 +1,6 @@
 from ride import Main  # noqa: F401  # isort:skip
+from pathlib import Path
+
 import pytest
 
 from examples.simple_classifier import SimpleClassifier
@@ -16,8 +18,11 @@ def test_simple_classifier():
     args.limit_train_batches = 100
     args.limit_val_batches = 10
     args.limit_test_batches = 10
+    args.test_confusion_matrix = True
+    args.logging_backend = "wandb"
     m.main(args)
 
     assert "loss" in m.runner.trainer.model.metrics()
     assert "top1acc" in m.runner.trainer.model.metrics()
     assert "top3acc" in m.runner.trainer.model.metrics()
+    assert (Path(m.log_dir) / "test_confusion_matrix.png").is_file()

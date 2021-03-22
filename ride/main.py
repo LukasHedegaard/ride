@@ -136,8 +136,8 @@ class Main:
         gen_configs.add(
             "profile_model_num_runs",
             type=int,
-            default=100,
-            description="Number of runs to perform when profiling model",
+            default=0,
+            description="Number of runs to perform when profiling model. If `0`, model will be profiled to max 10 seconds.",
         )
         gen_settings_parser = gen_configs.add_argparse_args(gen_settings_parser)
 
@@ -208,7 +208,7 @@ class Main:
                 args.from_hparams_file,
                 old_args=args,
                 Cls=self.Module,
-                auto_scale_lr=bool(args.train),
+                auto_scale_lr=True,
             )
 
         if args.hparamsearch:

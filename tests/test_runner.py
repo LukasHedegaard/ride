@@ -62,6 +62,7 @@ def runner_and_args() -> Tuple[Runner, AttributeDict]:
     args.auto_scale_batch_size = 0
     args.num_workers = 1
     args.batch_size = 4
+    args.logging_backend = "tensorboard"
 
     return r, args
 

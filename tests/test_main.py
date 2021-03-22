@@ -1,6 +1,7 @@
 from ride import Main, Configs  # noqa: F401  # isort:skip
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Tuple
 
@@ -12,7 +13,7 @@ from ride.finetune import Finetunable
 from ride.optimizers import AdamWOneCycleOptimizer
 from ride.utils.checkpoints import get_latest_checkpoint
 from ride.utils.io import dump_json, dump_yaml
-from ride.utils.utils import AttributeDict, attributedict
+from ride.utils.utils import AttributeDict, attributedict, temporary_parameter
 
 # from ride.finetune import Finetunable
 from .dummy_dataset import DummyDataLoader
@@ -153,6 +154,7 @@ class TestMain:
         args.train = True
         args.validate = True
         args.test = True
+        args.checkpoint_every_n_steps = 10
 
         with caplog.at_level(logging.INFO):
             m.main(args)
@@ -168,7 +170,7 @@ class TestMain:
         ]:
             assert any([check in msg for msg in caplog.messages])
 
-    def test_from_hparams_file(self, main_and_args: Tuple[Main, AttributeDict]):
+    def test_from_hparams_file(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         """Test loading of hparams"""
         m, args = main_and_args
         args.validate = True
@@ -179,12 +181,28 @@ class TestMain:
         ]:
             # Prep file
             hparams_path = Path(os.getcwd()) / f"test_dummy_module_hparams.{suffix}"
-            dump(hparams_path, {"hidden_dim": hidden_dim})
+            dump(
+                hparams_path,
+                {"hidden_dim": hidden_dim, "batch_size": 4, "learning_rate": 0.01},
+            )
 
             # Test
+            caplog.clear()
             args.from_hparams_file = str(hparams_path)
-            m.main(args)
+            # args.train = True  # Triggers auto_scale_lr
+            args.batch_size = 6
+            with temporary_parameter(
+                sys, "argv", [*sys.argv, "--batch_size", "6"]
+            ), caplog.at_level(logging.INFO):
+                m.main(args)
+
+            len(caplog.messages) > 0
+            for check in ["Scaling learning_rate from 0.01 to 0.015"]:
+                any([check in msg for msg in caplog.messages])
+
             assert m.runner.trainer.model.hparams.hidden_dim == hidden_dim
+            assert m.runner.trainer.model.hparams.batch_size == 6  # from command line
+            assert m.runner.trainer.model.hparams.learning_rate == 0.015  # auto scaled
 
             # Cleanup
             hparams_path.unlink()
@@ -313,6 +331,7 @@ class TestMain:
         args.unfreeze_from_epoch = 0
         args.train = True
         args.max_epochs = 2
+        # TODO: test with max_epochs > num layers
 
         caplog.clear()
         with caplog.at_level(logging.INFO):
