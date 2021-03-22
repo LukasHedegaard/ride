@@ -3,6 +3,7 @@ import os
 import socket
 import subprocess
 import sys
+from functools import wraps
 from pathlib import Path
 
 import click
@@ -11,7 +12,6 @@ import pytorch_lightning as pl
 
 from ride.utils.env import LOG_LEVEL
 from ride.utils.utils import once
-from functools import wraps
 
 LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
 

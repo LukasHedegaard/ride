@@ -1,6 +1,7 @@
 from ride import Main  # noqa: F401  # isort:skip
-from examples.simple_classifier import SimpleClassifier
 import pytest
+
+from examples.simple_classifier import SimpleClassifier
 
 
 # This test has a dependency on MNIST downloads, which are unstable

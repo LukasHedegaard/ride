@@ -4,10 +4,9 @@ import math
 import re
 from argparse import Namespace
 from contextlib import contextmanager
-from operator import attrgetter
-from typing import Any, Collection, Dict, Set, Union, Callable
 from functools import wraps
-
+from operator import attrgetter
+from typing import Any, Callable, Collection, Dict, Set, Union
 
 from pytorch_lightning.utilities.parsing import AttributeDict
 
