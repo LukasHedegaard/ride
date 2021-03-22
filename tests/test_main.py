@@ -8,16 +8,17 @@ import pytest
 import torch
 
 from ride.core import RideModule
+from ride.finetune import Finetunable
 from ride.optimizers import AdamWOneCycleOptimizer
+from ride.utils.checkpoints import get_latest_checkpoint
 from ride.utils.io import dump_json, dump_yaml
 from ride.utils.utils import AttributeDict, attributedict
-from ride.utils.checkpoints import get_latest_checkpoint
 
 # from ride.finetune import Finetunable
 from .dummy_dataset import DummyDataLoader
 
 
-class DummyModule(RideModule, DummyDataLoader, AdamWOneCycleOptimizer):
+class DummyModule(RideModule, Finetunable, DummyDataLoader, AdamWOneCycleOptimizer):
     def __init__(self, hparams):
         self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)
         self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
@@ -43,8 +44,7 @@ class DummyModule(RideModule, DummyDataLoader, AdamWOneCycleOptimizer):
         return c
 
 
-@pytest.fixture()  # scope="module"
-def main_and_args() -> Tuple[Main, AttributeDict]:
+def default_main_and_args() -> Tuple[Main, AttributeDict]:
     m = Main(DummyModule)
     parser = m.argparse(run=False)
     args, _ = parser.parse_known_args()
@@ -62,6 +62,11 @@ def main_and_args() -> Tuple[Main, AttributeDict]:
     args.batch_size = 4
 
     return m, args
+
+
+@pytest.fixture()  # scope="module"
+def main_and_args() -> Tuple[Main, AttributeDict]:
+    return default_main_and_args()
 
 
 class TestMain:
@@ -258,7 +263,7 @@ class TestMain:
         # Clean up
         hparams_space_path.unlink()
 
-    def xtest_complex_finetuning(
+    def test_complex_finetuning(
         self, caplog, main_and_args: Tuple[Main, AttributeDict]
     ):
         """
@@ -274,17 +279,42 @@ class TestMain:
         # Create a run to start with
         m.main(args)
 
-        # From specific file (as usual in PyTorch Lightning)
-        args.finetune_from_weights = str(get_latest_checkpoint(m.log_dir))
-        assert ".ckpt" in args.finetune_from_weights
+        checkpoint = str(get_latest_checkpoint(m.log_dir))
 
+        # Finetune from checkpoint
+        m, args = default_main_and_args()  # Need to make new main
+        args.finetune_from_weights = checkpoint
         args.unfreeze_layers_initial = 1
         args.unfreeze_epoch_step = 1
         args.unfreeze_from_epoch = 0
-        args.max_epochs = 3
+        args.train = True
+
+        # One epoch, one unfrozen
+        args.max_epochs = 1
 
         caplog.clear()
         with caplog.at_level(logging.INFO):
             m.main(args)
 
         assert len(caplog.messages) > 0
+        assert any(["Unfreezing 1 layer(s)" in msg for msg in caplog.messages])
+        assert not any(["Unfreezing 2 layer(s)" in msg for msg in caplog.messages])
+
+        assert m.runner.trainer.model.l1.weight.requires_grad is False
+        assert m.runner.trainer.model.l1.bias.requires_grad is False
+        assert m.runner.trainer.model.l2.weight.requires_grad is True
+        assert m.runner.trainer.model.l2.bias.requires_grad is True
+
+        # Two epochs, both unfrozen
+        args.max_epochs = 2
+
+        caplog.clear()
+        with caplog.at_level(logging.INFO):
+            m.main(args)
+
+        assert any(["Unfreezing 1 layer(s)" in msg for msg in caplog.messages])
+        assert any(["Unfreezing 2 layer(s)" in msg for msg in caplog.messages])
+        assert m.runner.trainer.model.l1.weight.requires_grad is True
+        assert m.runner.trainer.model.l1.bias.requires_grad is True
+        assert m.runner.trainer.model.l2.weight.requires_grad is True
+        assert m.runner.trainer.model.l2.bias.requires_grad is True

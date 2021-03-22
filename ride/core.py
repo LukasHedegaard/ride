@@ -119,7 +119,7 @@ def _init_subclass(cls):
         )
         supers(sself)[1:-1].__init__(self.hparams)
         apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
-        supers(sself)._init_end(self.hparams, *args, **kwargs)
+        supers(sself).on_init_end(self.hparams, *args, **kwargs)
         supers(self).validate_attributes()
 
     cls.__init__ = init
@@ -167,10 +167,10 @@ class RideModule:
 
 
 class RideMixin(ABC):
-    def __init__(self, hparams: AttributeDict):
+    def __init__(self, hparams: AttributeDict, *args, **kwargs):
         ...
 
-    def _init_end(self, hparams: AttributeDict, *args, **kwargs):
+    def on_init_end(self, hparams: AttributeDict, *args, **kwargs):
         ...
 
     def validate_attributes(self):

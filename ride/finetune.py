@@ -1,23 +1,21 @@
 import pickle
 import re
 from argparse import ArgumentError
-from functools import reduce
 from operator import attrgetter
 from pathlib import Path
 
 import pytorch_lightning as pl
 import torch
-from supers import supers
 
-from ride.core import Configs, RideMixin
-from ride.unfreeze import UnfreezeMixin
+from ride.core import Configs
+from ride.unfreeze import Unfreezable
 from ride.utils.logging import getLogger
-from ride.utils.utils import attributedict
+from ride.utils.utils import attributedict, rgetattr, to_dict
 
 logger = getLogger(__name__)
 
 
-class FinetuneMixin(UnfreezeMixin, RideMixin):
+class Finetunable(Unfreezable):
     """Adds finetune capabilities to model
 
     Usage notes:
@@ -30,7 +28,7 @@ class FinetuneMixin(UnfreezeMixin, RideMixin):
 
     @staticmethod
     def configs() -> Configs:
-        c: Configs = sum(supers(FinetuneMixin).configs())  # type: ignore
+        c: Configs = Unfreezable.configs()
         c.add(
             name="finetune_from_weights",
             default="",
@@ -67,17 +65,13 @@ class FinetuneMixin(UnfreezeMixin, RideMixin):
         return c
 
     def validate_attributes(self):
-        for hparam in FinetuneMixin.configs().names:
+        for hparam in Finetunable.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     def map_loaded_weights(self, file, loaded_state_dict):
         return loaded_state_dict
 
-    def __init__(self, hparams=None, *args, **kwargs):
-        if hparams is None:
-            return
-        if not self.hparams:
-            self.hparams = attributedict(hparams)
+    def on_init_end(self, hparams, *args, **kwargs):
         self.hparams.finetune_params_skip = (
             f".*({self.hparams.finetune_params_skip}).*"
             if self.hparams.finetune_params_skip
@@ -85,14 +79,14 @@ class FinetuneMixin(UnfreezeMixin, RideMixin):
         )
 
         if not self.hparams.finetune_from_weights:
-            UnfreezeMixin.__init__(self, self.hparams)
+            Unfreezable.on_init_end(self, hparams, *args, **kwargs)
             return
 
         # Load model
         new_model_state = self.state_dict()  # type: ignore
 
         # Load hparams
-        default_ft_hparams = vars(FinetuneMixin.configs().default_values())
+        default_ft_hparams = to_dict(Finetunable.configs().default_values())
         hparams_passed = attributedict(
             {
                 k: (default_ft_hparams[k] if k in default_ft_hparams else v)
@@ -136,7 +130,7 @@ class FinetuneMixin(UnfreezeMixin, RideMixin):
             msg += f" (skipped {names_not_loaded})"
         logger.debug(msg)
 
-        UnfreezeMixin.__init__(self, self.hparams)
+        Unfreezable.on_init_end(self, hparams, *args, **kwargs)
 
 
 def load_model_weights(file: str, hparams_passed, model_state_key):
@@ -148,10 +142,9 @@ def load_model_weights(file: str, hparams_passed, model_state_key):
     logger.info(f"Loading model weights from {path}")
 
     if suffix in {".ckpt"}:
-        return pl.LightningModule.load_from_checkpoint(
-            file,
-            hparams=hparams_passed,
-        ).state_dict()
+        return pl.utilities.cloud_io.load(
+            file, map_location=lambda storage, loc: storage
+        )["state_dict"]
     elif suffix in {".pyth", ".pth"}:
         return try_pyth_load(file, model_state_key)
     elif suffix in {".pkl", ".pickle"}:
@@ -209,17 +202,3 @@ def try_pickle_load(file):
             pass
 
     raise ValueError(f"Unable to load file {file}")
-
-
-def rgetattr(obj, attr: str, *args):
-    """Recursive getattr
-
-    Args:
-        obj (Any): Object whose attribute to select
-        attr (str): String with relative path to object attribute
-    """
-
-    def _getattr(obj, attr):
-        return getattr(obj, attr, *args)
-
-    return reduce(_getattr, [obj] + attr.split("."))

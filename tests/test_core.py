@@ -17,16 +17,16 @@ class Mixin1(RideMixin):
     def __init__(self, hparams: AttributeDict):
         self.hparams.msg.append("Mixin1.__init__")
 
-    def _init_end(self, hparams, *args, **kwargs):
-        self.hparams.msg.append("Mixin1._init_end")
+    def on_init_end(self, hparams, *args, **kwargs):
+        self.hparams.msg.append("Mixin1.on_init_end")
 
 
 class Mixin2(RideMixin):
     def __init__(self, hparams: AttributeDict):
         self.hparams.msg.append("Mixin2.__init__")
 
-    def _init_end(self, hparams, *args, **kwargs):
-        self.hparams.msg.append("Mixin2._init_end")
+    def on_init_end(self, hparams, *args, **kwargs):
+        self.hparams.msg.append("Mixin2.on_init_end")
 
 
 class InitOrderModule(
@@ -46,8 +46,8 @@ def test_init_order():
         "Mixin1.__init__",
         "Mixin2.__init__",
         "InitOrderModule.__init__",
-        "Mixin1._init_end",
-        "Mixin2._init_end",
+        "Mixin1.on_init_end",
+        "Mixin2.on_init_end",
     ]
 
 

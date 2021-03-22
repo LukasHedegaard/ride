@@ -3,14 +3,13 @@ from typing import Dict, Sequence
 
 import torch
 
-from ride.config import Configs
-from ride.core import RideMixin
+from ride.core import Configs, RideMixin
 from ride.utils.logging import getLogger
 
 logger = getLogger(__name__)
 
 
-class UnfreezeMixin(RideMixin):
+class Unfreezable(RideMixin):
     hparams: ...
 
     def validate_attributes(self):
@@ -44,7 +43,6 @@ class UnfreezeMixin(RideMixin):
             name="unfreeze_layers_initial",
             type=int,
             default=1,
-            choices=list(range(-1, 10)),
             strategy="choice",
             description="Number layers to unfreeze initially. If `-1`, it will be equal to total_layers",
         )
@@ -62,7 +60,7 @@ class UnfreezeMixin(RideMixin):
         )
         return c
 
-    def __init__(
+    def on_init_end(
         self,
         hparams,
         layers_to_unfreeze: Sequence[torch.nn.Module] = None,
@@ -72,20 +70,22 @@ class UnfreezeMixin(RideMixin):
         self.layers_to_unfreeze = (
             layers_to_unfreeze
             if layers_to_unfreeze is not None
-            else get_modules_to_unfreeze(self, hparams.unfreeze_layers_must_include)
+            else get_modules_to_unfreeze(
+                self, self.hparams.unfreeze_layers_must_include
+            )
         )
 
         # Gradual unfreeze linear schedule
         self.unfreeze_schedule = (
             linear_unfreeze_schedule(
-                initial_epoch=hparams.unfreeze_from_epoch,
+                initial_epoch=self.hparams.unfreeze_from_epoch,
                 total_layers=len(self.layers_to_unfreeze),
-                step_size=hparams.unfreeze_layer_step,
-                init_layers=hparams.unfreeze_layers_initial,
-                max_layers=hparams.unfreeze_layers_max,
-                epoch_step=hparams.unfreeze_epoch_step,
+                step_size=self.hparams.unfreeze_layer_step,
+                init_layers=self.hparams.unfreeze_layers_initial,
+                max_layers=self.hparams.unfreeze_layers_max,
+                epoch_step=self.hparams.unfreeze_epoch_step,
             )
-            if hparams.unfreeze_from_epoch > -1
+            if self.hparams.unfreeze_from_epoch > -1
             else {}
         )
 
