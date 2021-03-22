@@ -306,6 +306,12 @@ class TestMain:
         assert m.runner.trainer.model.l2.bias.requires_grad is True
 
         # Two epochs, both unfrozen
+        m, args = default_main_and_args()  # Need to make new main
+        args.finetune_from_weights = checkpoint
+        args.unfreeze_layers_initial = 1
+        args.unfreeze_epoch_step = 1
+        args.unfreeze_from_epoch = 0
+        args.train = True
         args.max_epochs = 2
 
         caplog.clear()
