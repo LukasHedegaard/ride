@@ -1,3 +1,4 @@
+import platform
 import shutil
 from argparse import ArgumentParser
 from pathlib import Path
@@ -150,5 +151,13 @@ class TestRunner:
     def test_teardown(self, runner_and_args: Tuple[Runner, AttributeDict]):
         runner, args = runner_and_args
         d = Path(experiment_logger(args.id).log_dir).parent
-        shutil.rmtree(d)
-        assert not d.exists()
+
+        try:
+            # May throw error on Windows:
+            # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
+            shutil.rmtree(d)
+        except Exception:
+            pass
+
+        if platform.system() != "Windows":
+            assert not d.exists()
