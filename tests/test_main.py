@@ -1,3 +1,4 @@
+import shutil
 from ride import Main, Configs  # noqa: F401  # isort:skip
 import logging
 import os
@@ -297,11 +298,14 @@ class TestMain:
         # Create a run to start with
         m.main(args)
 
-        checkpoint = str(get_latest_checkpoint(m.log_dir))
+        latest_checkpoint = get_latest_checkpoint(m.log_dir)
+        assert latest_checkpoint.exists()
+        checkpoint = Path("test_complex_finetuning.ckpt")
+        shutil.copy(latest_checkpoint, checkpoint)
 
         # Finetune from checkpoint
         m, args = default_main_and_args()  # Need to make new main
-        args.finetune_from_weights = checkpoint
+        args.finetune_from_weights = str(checkpoint)
         args.unfreeze_layers_initial = 1
         args.unfreeze_epoch_step = 1
         args.unfreeze_from_epoch = 0
@@ -325,7 +329,7 @@ class TestMain:
 
         # Two epochs, both unfrozen
         m, args = default_main_and_args()  # Need to make new main
-        args.finetune_from_weights = checkpoint
+        args.finetune_from_weights = str(checkpoint)
         args.unfreeze_layers_initial = 1
         args.unfreeze_epoch_step = 1
         args.unfreeze_from_epoch = 0
@@ -343,3 +347,5 @@ class TestMain:
         assert m.runner.trainer.model.l1.bias.requires_grad is True
         assert m.runner.trainer.model.l2.weight.requires_grad is True
         assert m.runner.trainer.model.l2.bias.requires_grad is True
+
+        checkpoint.unlink()
