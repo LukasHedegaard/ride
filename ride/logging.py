@@ -1,12 +1,11 @@
+import io
 import os
-from dataclasses import dataclass
-from operator import attrgetter
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import pytorch_lightning as pl
-import torch
 from matplotlib.figure import Figure
+from PIL import Image
 from pytorch_lightning.loggers import (
     LightningLoggerBase,
     LoggerCollection,
@@ -15,9 +14,7 @@ from pytorch_lightning.loggers import (
     WandbLogger,
 )
 from pytorch_lightning.utilities import rank_zero_only
-from torch import Tensor
 
-from ride.core import RideMixin
 from ride.utils.env import RUN_LOGS_PATH
 from ride.utils.io import dump_yaml
 from ride.utils.logging import getLogger, process_rank
@@ -28,7 +25,7 @@ ExperimentLoggerCreator = Callable[[str], ExperimentLogger]
 
 
 def singleton_experiment_logger() -> ExperimentLoggerCreator:
-    _logger = None
+    _loggers = {}
 
     def experiment_logger(
         name: str = None,
@@ -36,34 +33,45 @@ def singleton_experiment_logger() -> ExperimentLoggerCreator:
         Module=None,
         save_dir=RUN_LOGS_PATH,
     ) -> ExperimentLogger:
-        nonlocal _logger
-        if not _logger:
-            if process_rank != 0:
-                _logger = pl.loggers.base.DummyLogger()
-                _logger.log_dir = None
-                return _logger
+        nonlocal _loggers
+        if logging_backend not in _loggers:
+            if process_rank != 0:  # pragma: no cover
+                _loggers[logging_backend] = pl.loggers.base.DummyLogger()
+                _loggers[logging_backend].log_dir = None
+                return _loggers[logging_backend]
 
             logging_backend = logging_backend.lower()
             if logging_backend == "tensorboard":
-                _logger = TensorBoardLogger(save_dir=save_dir, name=name)
+                _loggers[logging_backend] = TensorBoardLogger(
+                    save_dir=save_dir, name=name
+                )
             elif logging_backend == "wandb":
-                _logger = WandbLogger(
+                _loggers[logging_backend] = WandbLogger(
                     save_dir=save_dir,
                     name=name,
                     project=(Module.__name__ if Module else None),
                 )
-                _logger.log_dir = getattr(
-                    _logger.experiment._settings, "_sync_dir", None
+                _loggers[logging_backend].log_dir = getattr(
+                    _loggers[logging_backend].experiment._settings, "_sync_dir", None
                 )
             else:
                 logger.warn("No valid logger selected.")
 
-        return _logger
+        return _loggers[logging_backend]
 
     return experiment_logger
 
 
 experiment_logger = singleton_experiment_logger()
+
+
+def fig2img(fig):
+    """Convert a Matplotlib figure to a PIL Image and return it"""
+    buf = io.BytesIO()
+    fig.savefig(buf)
+    buf.seek(0)
+    img = Image.open(buf)
+    return img
 
 
 def add_experiment_logger(
@@ -93,8 +101,15 @@ def log_figures(module: pl.LightningModule, d: Dict[str, Figure]):
             # SummaryWriter.add_figure(self, tag, figure)
             image_loggers.append(lgr.experiment.add_figure)
         elif type(lgr) == WandbLogger:
-            # wandb.log({"chart": plt})
-            image_loggers.append(lambda tag, fig: lgr.experiment.add_figure({tag: fig}))
+            import wandb  # noqa: F401
+
+            wandb_log = lgr.experiment.log
+
+            def log_figure(tag, fig):
+                im = wandb.Image(fig2img(fig), caption=tag)
+                return wandb_log({tag: im})
+
+            image_loggers.append(log_figure)
         elif type(lgr) == ResultsLogger:
             image_loggers.append(lgr.log_figure)
 
@@ -148,7 +163,9 @@ class ResultsLogger(LightningLoggerBase):
 
     def log_figure(self, tag: str, fig: Figure):
         if self.log_dir:
-            fig.savefig(self.log_dir / f"{self.prefix}_{tag}.png")
+            fig_path = str(Path(self.log_dir) / f"{self.prefix}_{tag}.png")
+            logger.info(f"Saving confusion matrix to {fig_path}")
+            fig.savefig(fig_path)
 
     @rank_zero_only
     def finalize(self, status):
@@ -167,40 +184,7 @@ class ResultsLogger(LightningLoggerBase):
         return "1"
 
 
-@dataclass
-class PredTargetPair:
-    preds: Tensor
-    targets: Tensor
-
-
 StepOutputs = List[Dict[str, Any]]
-
-
-class BaseValueLoggerMixin(RideMixin):
-    """Abstract base class for value loggers"""
-
-    def validate_attributes(self):
-        for attribute in [
-            "logger",  # from pytorch_lightning TensorboardLogger
-        ]:
-            attrgetter(attribute)(self)
-
-    @staticmethod
-    def collect_values_for_step(preds: Tensor, targets: Tensor) -> PredTargetPair:
-        return PredTargetPair(preds.detach(), targets.detach())
-
-    @staticmethod
-    def collect_values_for_epoch(outputs: StepOutputs) -> PredTargetPair:
-        preds, targets = [], []
-        for x in outputs:
-            if "values" in x:
-                preds.append(x["values"].preds)
-                targets.append(x["values"].targets)
-
-        return PredTargetPair(torch.cat(preds), torch.cat(targets))
-
-    def log_values(self, values: PredTargetPair):
-        ...
 
 
 class CheckpointEveryNSteps(pl.Callback):

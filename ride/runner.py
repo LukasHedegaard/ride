@@ -92,9 +92,11 @@ class Runner:
         if args.monitor_lr:
             trainer_callbacks.append(LearningRateMonitor(logging_interval="step"))
 
+        _experiment_logger = experiment_logger(args.id, args.logging_backend)
+
         self.trainer = Trainer.from_argparse_args(
             Namespace(**args),
-            logger=experiment_logger(args.id),
+            logger=_experiment_logger,
             callbacks=trainer_callbacks,
         )
 
@@ -116,7 +118,7 @@ class Runner:
             # Plot suggestion
             if process_rank == 0:
                 fig = lr_finder.plot(suggest=True)
-                lr_fig_path = Path(experiment_logger(args.id).log_dir) / "lr_find.png"
+                lr_fig_path = Path(_experiment_logger.log_dir) / "lr_find.png"
                 logger.info(f"Saving plot of learning rate sweep to {lr_fig_path}")
                 lr_fig_path.parent.mkdir(parents=True, exist_ok=True)
                 fig.savefig(lr_fig_path)
@@ -144,7 +146,7 @@ class Runner:
         dataloaders = {"val": model.val_dataloader, "test": model.test_dataloader}
 
         # Init trainer
-        base_logger = experiment_logger(args.id)
+        base_logger = experiment_logger(args.id, args.logging_backend)
         results_logger = ResultsLogger(prefix=mode, save_to=base_logger.log_dir)
         logger = add_experiment_logger(base_logger, results_logger)
         if hasattr(self, "trainer"):
@@ -195,7 +197,7 @@ class Runner:
         )
 
     def profile_model(
-        self, args: AttributeDict, max_wait_seconds: float = 30, num_runs: int = 100
+        self, args: AttributeDict, max_wait_seconds: float = 10, num_runs: int = None
     ) -> Dict[str, Any]:
         if hasattr(self, "trained_model"):
             model = self.trained_model
@@ -203,7 +205,7 @@ class Runner:
             model = self.Module(hparams=args)
 
         timing_results_dict, single_profile = profile_repeatedly(
-            model, max_wait_seconds, num_runs=num_runs
+            model, max_wait_seconds, num_runs
         )
 
         single_run_detailed_timing = single_profile.key_averages().table(
