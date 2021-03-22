@@ -3,12 +3,12 @@ pytest
 flake8
 mypy
 black
-isort
+isort~=5.7
 flake8-black
 pytest
 pytest-cov
 pytest-xdist
 seaborn
-ray[tune]
+ray[tune]~=1.2
 torchvision
 lightning-bolts

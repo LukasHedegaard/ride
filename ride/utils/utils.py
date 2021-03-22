@@ -5,11 +5,28 @@ import re
 from argparse import Namespace
 from contextlib import contextmanager
 from operator import attrgetter
-from typing import Any, Collection, Dict, Set, Union
+from typing import Any, Collection, Dict, Set, Union, Callable
+from functools import wraps
+
 
 from pytorch_lightning.utilities.parsing import AttributeDict
 
 DictLike = Union[AttributeDict, Dict[str, Any], Namespace]
+
+
+def once(fn: Callable):
+    mem = set()
+
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        h = hash((args, str(kwargs)))
+        if h in mem:
+            return
+        else:
+            mem.add(h)
+            return fn(*args, **kwargs)
+
+    return wrapped
 
 
 def rsetattr(obj, attr, val):

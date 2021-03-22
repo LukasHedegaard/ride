@@ -24,7 +24,7 @@ endif
 ## Install packages
 install:
 	python -m pip install --upgrade pip
-	pip install -e .
+	pip install -e .[dev,build]
 
 
 ## Delete all compiled Python files
