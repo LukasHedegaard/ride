@@ -21,7 +21,7 @@ jobs:
         pip install .[dev]
     - name: Generate coverage report
       run: |
-        python -m pytest --cov=./ --cov-report=xml
+        python -m pytest --cov=./ --cov-report=xml -m "not skip_cicd"
     - name: Upload coverage to Codecov  
       run: |
         bash <(curl -s https://codecov.io/bash) -c -F unittests -t ${{ secrets.CODECOV_TOKEN }}

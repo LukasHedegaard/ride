@@ -1,7 +1,10 @@
 from ride import Main  # noqa: F401  # isort:skip
 from examples.simple_classifier import SimpleClassifier
+import pytest
 
 
+# This test has a dependency on MNIST downloads, which are unstable
+@pytest.mark.skip_cicd
 def test_simple_classifier():
     m = Main(SimpleClassifier)
     parser = m.argparse(run=False)

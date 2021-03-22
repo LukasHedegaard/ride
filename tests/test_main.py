@@ -12,6 +12,8 @@ from ride.optimizers import AdamWOneCycleOptimizer
 from ride.utils.io import dump_json, dump_yaml
 from ride.utils.utils import AttributeDict, attributedict
 from ride.utils.checkpoints import get_latest_checkpoint
+
+# from ride.finetune import Finetunable
 from .dummy_dataset import DummyDataLoader
 
 
@@ -63,65 +65,6 @@ def main_and_args() -> Tuple[Main, AttributeDict]:
 
 
 class TestMain:
-    def test_help(self, capsys, caplog):
-        """Test that command help works"""
-
-        caplog.clear()
-
-        # Nothing is logged
-        with caplog.at_level(logging.WARNING):
-            Main(DummyModule).argparse([])
-
-        assert caplog.messages == []
-        captured = capsys.readouterr()
-        assert captured.out == ""
-        assert captured.err == ""
-
-        # Help is printed
-        with pytest.raises(SystemExit), caplog.at_level(logging.WARNING):
-            Main(DummyModule).argparse(["--help"])
-
-        # Help message was neither logged nor in stderr
-        assert len(caplog.messages) == 0
-        captured = capsys.readouterr()
-        assert captured.err == ""
-
-        # Help is in stdout
-        help_msg = captured.out
-        assert len(help_msg) > 0
-
-        # Flow args
-        for msg in [
-            "--hparamsearch",
-            "--train",
-            "--test",
-            "--profile_model",
-        ]:
-            assert msg in help_msg
-
-        # General args
-        for msg in ["--id", "--logging_backend", "--optimization_metric"]:
-            assert msg in help_msg
-
-        # Pytorch Lightning args
-        for msg in [
-            "--logger",
-            "--gpus",
-            "--accumulate_grad_batches",
-            "--max_epochs",
-            "--limit_train_batches",
-            "--precision",
-            "--resume_from_checkpoint",
-            "--benchmark",
-            "--auto_lr_find",
-            "--auto_scale_batch_size",
-        ]:
-            assert msg in help_msg
-
-        # Module args
-        for msg in ["--loss", "--learning_rate", "--batch_size", "--hidden_dim"]:
-            assert msg in help_msg
-
     def test_default_id(self):
         """Test that a default id is given"""
         m = Main(DummyModule)
@@ -181,7 +124,7 @@ class TestMain:
             hparams_path.unlink()
 
     def test_resume_from_checkpoint(self, main_and_args: Tuple[Main, AttributeDict]):
-        """Test that training, validation, and test works"""
+        """Test that resuming from checkpoint works with inferred checkpoint path works"""
         m, args = main_and_args
         args.train = True
 
@@ -253,3 +196,93 @@ class TestMain:
 
         # Clean up
         hparams_space_path.unlink()
+
+    def xtest_complex_finetuning(
+        self, caplog, main_and_args: Tuple[Main, AttributeDict]
+    ):
+        """
+        Test complex fine-tuning setup, including
+        - finetune_from_weights
+        - discriminative_lr_fraction
+        - gradual_unfreeze
+        """
+        m, args = main_and_args
+        args.train = True
+        args.discriminative_lr_fraction = 0.5
+
+        # Create a run to start with
+        m.main(args)
+
+        # From specific file (as usual in PyTorch Lightning)
+        args.finetune_from_weights = str(get_latest_checkpoint(m.log_dir))
+        assert ".ckpt" in args.finetune_from_weights
+
+        args.unfreeze_layers_initial = 1
+        args.unfreeze_epoch_step = 1
+        args.unfreeze_from_epoch = 0
+        args.max_epochs = 3
+
+        caplog.clear()
+        with caplog.at_level(logging.INFO):
+            m.main(args)
+
+        assert len(caplog.messages) > 0
+
+    def test_help(self, capsys, caplog):
+        """Test that command help works"""
+
+        caplog.clear()
+
+        # Nothing is logged
+        with caplog.at_level(logging.WARNING):
+            Main(DummyModule).argparse([])
+
+        assert caplog.messages == []
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == ""
+
+        # Help is printed
+        with pytest.raises(SystemExit), caplog.at_level(logging.WARNING):
+            Main(DummyModule).argparse(["--help"])
+
+        # Help message was neither logged nor in stderr
+        assert len(caplog.messages) == 0
+        captured = capsys.readouterr()
+        assert captured.err == ""
+
+        # Help is in stdout
+        help_msg = captured.out
+        assert len(help_msg) > 0
+
+        # Flow args
+        for msg in [
+            "--hparamsearch",
+            "--train",
+            "--test",
+            "--profile_model",
+        ]:
+            assert msg in help_msg
+
+        # General args
+        for msg in ["--id", "--logging_backend", "--optimization_metric"]:
+            assert msg in help_msg
+
+        # Pytorch Lightning args
+        for msg in [
+            "--logger",
+            "--gpus",
+            "--accumulate_grad_batches",
+            "--max_epochs",
+            "--limit_train_batches",
+            "--precision",
+            "--resume_from_checkpoint",
+            "--benchmark",
+            "--auto_lr_find",
+            "--auto_scale_batch_size",
+        ]:
+            assert msg in help_msg
+
+        # Module args
+        for msg in ["--loss", "--learning_rate", "--batch_size", "--hidden_dim"]:
+            assert msg in help_msg
