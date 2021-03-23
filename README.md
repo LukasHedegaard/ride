@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/ride_logo.svg" width="350"><br>
+  <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/images/ride_logo.svg" width="350"><br>
 </div>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
