@@ -32,7 +32,7 @@ class SimpleClassifier(
             default=128,
             strategy="choice",
             choices=[128, 256, 512, 1024],
-            description="Number of hiden units.",
+            description="Number of hidden units.",
         )
         return c
 

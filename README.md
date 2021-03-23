@@ -25,7 +25,7 @@ Though [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning
 - __Command-line interface__ 
 - __...__
 
-This project is an audacious attempt at disposing of the remaining boiletplate by providing good battle-tested defaults with minimal coding.
+This project is an audacious attempt at disposing of the remaining boilerplate by providing good battle-tested defaults with minimal coding.
 
 Everything you find here is highly opinionated and was first and foremost an attempt at generalising personal research boiler-plate. 
 On the other hand, it might be just right, and if not, it's highly extendable and forkable.
@@ -77,7 +77,7 @@ class SimpleClassifier(
             default=128,
             strategy="choice",
             choices=[128, 256, 512, 1024],
-            description="Number of hiden units.",
+            description="Number of hidden units.",
         )
         return c
 
@@ -161,7 +161,7 @@ Module:
                         Weight decay. (Default: 1e-05)
   --momentum MOMENTUM   Momentum. (Default: 0.9)
   --hidden_dim HIDDEN_DIM {128, 256, 512, 1024}
-                        Number of hiden units. (Defualt: 128)
+                        Number of hidden units. (Defualt: 128)
   ...
 ```
 
