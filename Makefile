@@ -70,7 +70,7 @@ build:
 
 ## Build library for upload to TestPyPI
 testbuild:
-	python setup_testpypi.py sdist bdist_wheel  
+	python setup.py sdist bdist_wheel --test
 
 
 ## Upload to PyPI

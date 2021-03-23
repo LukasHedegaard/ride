@@ -1,9 +1,22 @@
 from setuptools import find_packages, setup
+import sys
 
 
-def from_file(file_name: str):
-    with open(file_name, "r") as f:
-        return f.read().splitlines()
+def from_file(file_name: str = "requirements.txt", comment_char: str = "#"):
+    """Load requirements from a file"""
+    with open(file_name, "r") as file:
+        lines = [ln.strip() for ln in file.readlines()]
+    reqs = []
+    for ln in lines:
+        # filer all comments
+        if comment_char in ln:
+            ln = ln[: ln.index(comment_char)].strip()
+        # skip directly installed dependencies
+        if ln.startswith("http"):
+            continue
+        if ln:  # if requirement is not empty
+            reqs.append(ln)
+    return reqs
 
 
 def long_description():
@@ -13,8 +26,15 @@ def long_description():
     return text
 
 
+# Override name for test version, since `ride` was already taken on TestPyPI
+if "--test" in sys.argv:
+    sys.argv.pop(sys.argv.index("--test"))
+    name = "ride-the-lightning"
+else:
+    name = "ride"
+
 setup(
-    name="ride",
+    name=name,
     version="0.2.1",
     description="Training wheels, side rails, and helicopter parent for your Deep Learning projects using Pytorch Lightning",
     long_description=long_description(),
@@ -24,8 +44,9 @@ setup(
     url="https://github.com/LukasHedegaard/ride",
     install_requires=from_file("requirements.txt"),
     extras_require={
-        "dev": from_file("requirements-dev.txt"),
-        "build": ["setuptools", "wheel", "twine"],
+        "dev": from_file("requirements/dev.txt"),
+        "docs": from_file("requirements/docs.txt"),
+        "build": from_file("requirements/build.txt"),
     },
     packages=find_packages(exclude=["test"]),
     keywords=["deep learning", "pytorch", "AI"],
