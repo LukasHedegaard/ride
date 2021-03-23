@@ -1,5 +1,13 @@
-from setuptools import find_packages, setup
 import sys
+
+from setuptools import find_packages, setup
+
+try:
+    from ride import info
+except ImportError:
+    # alternative https://stackoverflow.com/a/67692/4521646
+    sys.path.append("ride")
+    import info  # noqa: F401
 
 
 def from_file(file_name: str = "requirements.txt", comment_char: str = "#"):
@@ -35,13 +43,13 @@ else:
 
 setup(
     name=name,
-    version="0.2.1",
-    description="Training wheels, side rails, and helicopter parent for your Deep Learning projects using Pytorch Lightning",
+    version=info.__version__,
+    description=info.__docs__,
     long_description=long_description(),
     long_description_content_type="text/markdown",
-    author="Lukas Hedegaard",
-    author_email="lukasxhedegaard@gmail.com",
-    url="https://github.com/LukasHedegaard/ride",
+    author=info.__author__,
+    author_email=info.__author_email__,
+    url=info.__homepage__,
     install_requires=from_file("requirements.txt"),
     extras_require={
         "dev": from_file("requirements/dev.txt"),
