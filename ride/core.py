@@ -165,6 +165,28 @@ class RideModule:
         # Overload the version in pytorch_lightning core to omit DeprecationWarning
         self._hparams = attributedict(hp)
 
+    @classmethod
+    def with_dataset(cls, ds: "Dataset"):
+        # @staticmethod
+        # def configs():
+        #     return ds.configs() + cls.configs()
+
+        DerivedRideModule = type(
+            f"{name(cls)}With{name(ds)}", cls.__bases__, dict(cls.__dict__)
+        )
+
+        new_bases = [b for b in cls.__bases__ if not issubclass(b, Dataset)]
+        old_dataset = [b for b in cls.__bases__ if issubclass(b, Dataset)]
+        assert len(old_dataset) <= 1, "`RideModule` should only have one `Dataset`"
+        if old_dataset and issubclass(old_dataset[0], ClassificationDataset):
+            assert issubclass(
+                ds, ClassificationDataset
+            ), "A `ClassificationDataset` should be replaced by a `ClassificationDataset`"
+        new_bases.insert(-1, ds)
+        DerivedRideModule.__bases__ = tuple(new_bases)
+
+        return DerivedRideModule
+
 
 class RideMixin(ABC):
     def __init__(self, hparams: AttributeDict, *args, **kwargs):
