@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Mac
+.DS_Store
+
+# Code
+.vscode
+
+# Ride artifacts
+datasets/
+logs/ 
