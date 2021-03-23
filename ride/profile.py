@@ -79,9 +79,10 @@ def profile(model: torch.nn.Module, detailed=True):
 
 
 def compute_num_runs(total_wait_time, single_run_time):
-    additional_runs = 0
+    additional_runs = 1
+    single_run_time = max(single_run_time, 1e-7)
     for option in [10000, 1000, 100, 10, 5, 3]:
-        if total_wait_time // single_run_time // option:
+        if (total_wait_time / single_run_time / option) > 1:
             additional_runs = option
             break
     return additional_runs
