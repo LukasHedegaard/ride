@@ -14,12 +14,12 @@ from ride.optimizers import SgdOptimizer
 from ride.runner import Runner
 from ride.utils.utils import AttributeDict
 
-from .dummy_dataset import DummyDataLoader
+from .dummy_dataset import DummyRegressionDataLoader
 
 pl.seed_everything(42)
 
 
-class DummyModule(RideModule, DummyDataLoader, SgdOptimizer):
+class DummyModule(RideModule, DummyRegressionDataLoader, SgdOptimizer):
     def __init__(self, hparams):
         self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)
         self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
@@ -125,29 +125,6 @@ class TestRunner:
         """Test that profiling model work"""
         runner, args = runner_and_args
         runner.profile_model(args, max_wait_seconds=1)
-
-    # def test_profile_dataset(self, runner_and_args: Tuple[Runner, AttributeDict]):
-    #     """Test that profiling model work"""
-    #     runner, args = runner_and_args
-
-    #     # If dataset doesn't have a profile function, profiling won't work
-    #     with pytest.raises(AssertionError):
-    #         runner.profile_dataset(args)
-    #     # TODO: test with profileable dataset
-
-    # TODO
-    # def test_find_learning_rate(self, runner_and_args: Tuple[Runner, AttributeDict]):
-    #     """Test that automatic learning rate search works
-    #     """
-    #     runner, _ = runner_and_args
-    #     runner.find_learning_rate()
-
-    # TODO
-    # def test_find_batch_size(self, runner_and_args: Tuple[Runner, AttributeDict]):
-    #     """Test that automatic batch size search works
-    #     """
-    #     runner, _ = runner_and_args
-    #     runner.find_batch_size()
 
     def test_teardown(self, runner_and_args: Tuple[Runner, AttributeDict]):
         runner, args = runner_and_args

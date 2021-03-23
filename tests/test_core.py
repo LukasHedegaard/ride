@@ -8,7 +8,7 @@ from ride.core import AttributeDict, RideMixin, RideModule
 from ride.optimizers import SgdOptimizer
 from ride.utils.utils import DictLike
 
-from .dummy_dataset import DummyDataLoader
+from .dummy_dataset import DummyRegressionDataLoader
 
 pl.seed_everything(42)
 
@@ -54,7 +54,7 @@ def test_init_order():
 class DummyModule(
     RideModule,
     SgdOptimizer,
-    DummyDataLoader,
+    DummyRegressionDataLoader,
     # Loss(torch.nn.functional.mse_loss), # Yet another option
 ):
     # Not needed:
@@ -64,8 +64,8 @@ class DummyModule(
 
     def __init__(self):
         self.lin = torch.nn.Linear(
-            self.input_shape[0],  # from DummyDataLoader
-            self.output_shape,  # from DummyDataLoader
+            self.input_shape[0],  # from DummyRegressionDataLoader
+            self.output_shape,  # from DummyRegressionDataLoader
         )
         # Alternative way of specifying loss:
         self.loss = torch.nn.functional.mse_loss
@@ -138,12 +138,12 @@ def test_module_with_only_some_lifecycle_steps_warns(caplog):
         class DummyModuleSomeLifecycleStep(
             RideModule,
             SgdOptimizer,
-            DummyDataLoader,
+            DummyRegressionDataLoader,
         ):
             def __init__(self):
                 self.lin = torch.nn.Linear(
-                    self.input_shape[0],  # from DummyDataLoader
-                    self.output_shape,  # from DummyDataLoader
+                    self.input_shape[0],  # from DummyRegressionDataLoader
+                    self.output_shape,  # from DummyRegressionDataLoader
                 )
                 # Alternative way of specifying loss:
                 self.loss = torch.nn.functional.mse_loss
@@ -167,12 +167,12 @@ def test_module_with_no_forward_warns(caplog):
         class DummyModuleNoForward(
             RideModule,
             SgdOptimizer,
-            DummyDataLoader,
+            DummyRegressionDataLoader,
         ):
             def __init__(self):
                 self.lin = torch.nn.Linear(
-                    self.input_shape[0],  # from DummyDataLoader
-                    self.output_shape,  # from DummyDataLoader
+                    self.input_shape[0],  # from DummyRegressionDataLoader
+                    self.output_shape,  # from DummyRegressionDataLoader
                 )
 
             # Missing on purpose:

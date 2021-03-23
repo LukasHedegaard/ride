@@ -187,7 +187,7 @@ class Main:
             args.logging_backend,
         )
 
-        if args.num_workers and platform.system() == "Windows":
+        if getattr(args, "num_workers", False) and platform.system() == "Windows":
             logger.warning(
                 f"You have requested num_workers={args.num_workers} on Windows, but currently 0 is recommended (see https://stackoverflow.com/a/59680818)"
             )

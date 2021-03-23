@@ -1,7 +1,6 @@
-import shutil
-from ride import Main, Configs  # noqa: F401  # isort:skip
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -17,10 +16,14 @@ from ride.utils.io import dump_json, dump_yaml
 from ride.utils.utils import AttributeDict, attributedict, temporary_parameter
 
 # from ride.finetune import Finetunable
-from .dummy_dataset import DummyDataLoader
+from .dummy_dataset import DummyRegressionDataLoader
+
+from ride import Main, Configs  # noqa: F401  # isort:skip
 
 
-class DummyModule(RideModule, Finetunable, DummyDataLoader, AdamWOneCycleOptimizer):
+class DummyModule(
+    RideModule, Finetunable, DummyRegressionDataLoader, AdamWOneCycleOptimizer
+):
     def __init__(self, hparams):
         self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)
         self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
