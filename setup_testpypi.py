@@ -15,7 +15,7 @@ def long_description():
 
 setup(
     name="ride-the-lightning",
-    version="0.2.0",
+    version="0.2.1",
     description="Training wheels, side rails, and helicopter parent for your Deep Learning projects using Pytorch Lightning",
     long_description=long_description(),
     long_description_content_type="text/markdown",
