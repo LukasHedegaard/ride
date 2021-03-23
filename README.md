@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg)](https://codecov.io/gh/LukasHedegaard/ride)
+[![codecov](https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC)](https://codecov.io/gh/LukasHedegaard/ride)
 
 
 Training wheels, side rails, and helicopter parent for your Deep Learning projects in [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning).
@@ -14,16 +14,20 @@ pip install ride
 ```
 
 ## Zero-boilerplate AI research
-You might have thought that PyTorch Lightning disposed of all your boilerplate code, but doesn't it still feel like writing and testing Deep Learning models is a lot of work? 
-
-This project is an audacious attempt at disposing of the remaining boiletplate, including your code for:
-- __Train-val-test lifecycle methods__
+Though [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning) helps remove a lot of boilerplate code, writing and testing Deep Learning models still includes setting up
+- __Trainer__
+- __Checkpointing__
+- __Metrics__
+- __Train-val-test step methods__
 - __Finetuning schemes__
 - __Hyperparameter search__
 - __Main function__
 - __Command-line interface__ 
+- __...__
 
-Everything you find here is highly opinionated and may not fit your project needs, as it was first and foremost an attempt at generalising personal research boiler-plate. 
+This project is an audacious attempt at disposing of the remaining boiletplate by providing good battle-tested defaults with minimal coding.
+
+Everything you find here is highly opinionated and was first and foremost an attempt at generalising personal research boiler-plate. 
 On the other hand, it might be just right, and if not, it's highly extendable and forkable.
 Suggestions and pull requests are always welcome!
 
@@ -33,26 +37,25 @@ Suggestions and pull requests are always welcome!
 Did you ever take a peek to the source code of the [LightningModule](https://github.com/PyTorchLightning/pytorch-lightning/blob/master/pytorch_lightning/core/lightning.py)?
 This core class of the Pytorch Lightning library makes heavy use of _Mixins_ and _multiple inheritance_ to group functionalities and "inject" them in the LightningModule. 
 
-In `ride` we build up our modules the same way, _mixing in_ functionality by inheriting from multiple base classes in our Module definition.
+In `ride` we build up our modules the same way, _mixing in_ functionality by inheriting from multiple base classes in our Model definition.
 
 
-## Enough talk, let's `ride` 🏎💨 
-
-### Model definition
+## Model definition
 Below, we have the __complete__ code for a simple classifier on the MNIST dataset:
 ```python
 # simple_classifier.py
 import torch
 import ride
 import numpy as np
+from .examples import MnistDataset
 
 
 class SimpleClassifier(
     ride.RideModule,
     ride.Lifecycle, 
     ride.SgdOneCycleOptimizer, 
-    ride.MnistDataset,
     ride.TopKAccuracyMetric(1,3),
+    MnistDataset,
 ):
     def __init__(self, hparams):
         # `self.input_shape` and `self.output_shape` were injected via `ride.MnistDataset`
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     ride.Main(SimpleClassifier).argparse()
 
 ```
-That's it! So what's going on, and aren't we missing a bunch of (boiler-plate) code?
+That's it! So what's going on, and aren't we missing a bunch of code?
 
 All of the usual boiler-plate code has been _mixed in_ using multiple inheritance:
 - `RideModule` is a base-module which includes `pl.LightningModule` and makes some behind-the-scenes python-magic work. For instance, it modifies your `__init__` function to automatically initiate all the mixins correctly.
@@ -102,9 +105,9 @@ These define all of the configurable (hyper)parameters including their
 
 Configs specific to the SimpleClassifier can be added by overloading the `configs` methods as shown in the example.
 
-The final piece of sorcery is the `Main` class, which adds a complete command-line interface
+The final piece of sorcery is the `Main` class, which adds a complete command-line interface.
 
-## Command-line interface
+## Command-line interface 💻
 
 Let's check out the command-line interface:
 ```shell
@@ -144,6 +147,9 @@ Hparamsearch:
 
 Module:
   Settings associated with the Module
+  --loss {mse_loss,l1_loss,nll_loss,cross_entropy,binary_cross_entropy,...}
+                        Loss function used during optimisation. 
+                        (Default: cross_entropy)
   --batch_size BATCH_SIZE
                         Dataloader batch size. (Default: 64)
   --num_workers NUM_WORKERS
