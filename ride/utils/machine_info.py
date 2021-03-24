@@ -10,7 +10,6 @@ NUM_CPU = os.cpu_count() or 1
 
 
 def get_machine_info() -> Dict[str, Any]:
-
     sys = uname()
     cpu = get_cpu_info()
     svmem = virtual_memory()
@@ -41,12 +40,7 @@ def get_machine_info() -> Dict[str, Any]:
 
 
 def get_size(bytes, suffix="B"):
-    """
-    Scale bytes to its proper format
-    e.g:
-        1253656 => '1.20MB'
-        1253656678 => '1.17GB'
-    """
+    """Scale bytes to its proper format, e.g. 1253656 => '1.20MB'"""
     factor = 1024
     for unit in ["", "K", "M", "G", "T", "P"]:
         if bytes < factor:

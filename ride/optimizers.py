@@ -7,11 +7,11 @@ from typing import Callable
 
 import torch
 
-from ride.core import Configs, RideMixin
+from ride.core import Configs, OptimizerMixin
 from ride.utils.discriminative_lr import discriminative_lr
 
 
-class SgdOptimizer(RideMixin):
+class SgdOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
 
@@ -59,7 +59,7 @@ class SgdOptimizer(RideMixin):
         return optimizer
 
 
-class AdamWOptimizer(RideMixin):
+class AdamWOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
 
@@ -115,7 +115,7 @@ class AdamWOptimizer(RideMixin):
         return optimizer
 
 
-class SgdReduceLrOnPlateauOptimizer(RideMixin):
+class SgdReduceLrOnPlateauOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
 
@@ -165,7 +165,7 @@ class SgdReduceLrOnPlateauOptimizer(RideMixin):
         }
 
 
-class AdamWReduceLrOnPlateauOptimizer(RideMixin):
+class AdamWReduceLrOnPlateauOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
 
@@ -214,7 +214,7 @@ class AdamWReduceLrOnPlateauOptimizer(RideMixin):
         }
 
 
-class SgdOneCycleOptimizer(RideMixin):
+class SgdOneCycleOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
     train_dataloader: Callable
@@ -261,7 +261,7 @@ class SgdOneCycleOptimizer(RideMixin):
         return [optimizer], [scheduler]
 
 
-class SgdCyclicLrOptimizer(RideMixin):
+class SgdCyclicLrOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
     train_dataloader: Callable
@@ -313,7 +313,7 @@ class SgdCyclicLrOptimizer(RideMixin):
         return [optimizer], [scheduler]
 
 
-class AdamWCyclicLrOptimizer(RideMixin):
+class AdamWCyclicLrOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
     train_dataloader: Callable
@@ -366,7 +366,7 @@ class AdamWCyclicLrOptimizer(RideMixin):
         return [optimizer], [scheduler]
 
 
-class AdamWOneCycleOptimizer(RideMixin):
+class AdamWOneCycleOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
     train_dataloader: Callable

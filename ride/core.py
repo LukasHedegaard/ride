@@ -78,10 +78,9 @@ def _init_subclass(cls):
     missing_lifecycle_steps = missing_or_not_in_other(
         cls, pl.LightningModule, lifecycle_steps
     )
-    if missing_lifecycle_steps == lifecycle_steps:
-        logger.info(
-            f"No lifecycle steps {missing_lifecycle_steps} found in {name(cls)}. Adding ClassificationLifecycle with CrossEntropyLoss automatically."
-        )
+    if missing_lifecycle_steps:
+        logger.info(f"Missing lifecycle steps {missing_lifecycle_steps} in {name(cls)}")
+        logger.info("🔧 Adding ride.Lifecycle automatically")
         # Import here to break cyclical import
         from ride.lifecycle import Lifecycle
 
@@ -90,20 +89,36 @@ def _init_subclass(cls):
             Lifecycle,
             *cls.__bases__[-1:],
         )
-    elif missing_lifecycle_steps:
-        for n in missing_lifecycle_steps:
-            logger.warning(
-                f"No `{n}` function found in {name(cls)}. Did you forget to define it?"
-            )
 
-    # Warn if there is no dataset
+    # Ensure dataset
     dataset_steps = {"train_dataloader", "val_dataloader", "test_dataloader"}
-    dataset_steps_steps = missing_or_not_in_other(
+    missing_dataset_steps = missing_or_not_in_other(
         cls, pl.LightningModule, dataset_steps
     )
-    for n in dataset_steps_steps:
+    if missing_dataset_steps:
         logger.warning(
-            f"No `{n}` function found in {name(cls)}. Did you forget to define it?"
+            f"No dataloader funcions {missing_dataset_steps} found in {name(cls)}"
+        )
+        logger.info(
+            "🔧 Adding ride.RideDataset automatically and assuming that `self.datamodule`, `self.input_shape`, and `self.output_shape` will be provided by user"
+        )
+        cls.__bases__ = (
+            *cls.__bases__[:-1],
+            RideDataset,
+            *cls.__bases__[-1:],
+        )
+
+    # Ensure optimizer
+    if missing_or_not_in_other(cls, pl.LightningModule, {"configure_optimizers"}):
+        logger.info(f"`configure_optimizers` not found in in {name(cls)}")
+        logger.info("🔧 Adding ride.SgdOptimizer automatically")
+        # Import here to break cyclical import
+        from ride.optimizers import SgdOptimizer
+
+        cls.__bases__ = (
+            *cls.__bases__[:-1],
+            SgdOptimizer,
+            *cls.__bases__[-1:],
         )
 
     # Monkeypatch derived module init
@@ -213,6 +228,10 @@ class RideMixin(ABC):
         ...
 
 
+class OptimizerMixin(RideMixin):
+    ...
+
+
 class RideDataset(RideMixin):
     input_shape: DataShape
     output_shape: DataShape
@@ -234,11 +253,6 @@ class RideDataset(RideMixin):
                 self, f"hparams.{n}"
             ), "`self.hparams.{n}` not found in Dataset. Did you forget to include its `configs`?"
 
-        for n in {"train_dataloader", "val_dataloader", "test_dataloader"}:
-            assert some(
-                self, n
-            ), f"Ride Dataset should define `{n}` but none was found."
-
     @staticmethod
     def configs() -> Configs:
         c = Configs()
@@ -257,20 +271,6 @@ class RideDataset(RideMixin):
             description="Number of workers in dataloader.",
         )
         return c
-
-
-class RideClassificationDataset(RideDataset):
-    classes: List[str]
-
-    @property
-    def num_classes(self) -> int:
-        return len(self.classes)
-
-    def validate_attributes(self):
-        RideDataset.validate_attributes(self)
-        assert type(getattr(self, "classes", None)) in {
-            list,
-        }, "Ride RideClassificationDataset should define `classes` but none was found."
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
         """ The train dataloader """
@@ -296,3 +296,18 @@ class RideClassificationDataset(RideDataset):
             self, "datamodule.test_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `test_dataloader` function."
         return self.datamodule.test_dataloader
+
+
+class RideClassificationDataset(RideDataset):
+    classes: List[str]
+
+    @property
+    def num_classes(self) -> int:
+        return len(self.classes)
+
+    def validate_attributes(self):
+        RideDataset.validate_attributes(self)
+        assert type(getattr(self, "classes", None)) in {
+            list,
+            tuple,
+        }, "Ride RideClassificationDataset should define `classes` but none was found."
