@@ -5,12 +5,12 @@ from typing import Any, List, Sequence, Union
 
 import pytorch_lightning as pl
 from corider import Configs as _Configs
+from pytorch_lightning.utilities.parsing import AttributeDict
 from supers import supers
 from torch.utils.data import DataLoader
 
 from ride.utils.logging import getLogger
 from ride.utils.utils import (
-    AttributeDict,
     DictLike,
     attributedict,
     merge_attributedicts,
@@ -151,6 +151,24 @@ def apply_init_args(fn, self, hparams, *args, **kwargs):
 
 
 class RideModule:
+    """
+    Base-class for modules using the Ride ecosystem.
+
+    This module should be inherited as the highest-priority parent.
+
+    Example::
+
+        class MyModule(ride.RideModule, ride.SgdOneCycleOptimizer):
+            def __init__(self, hparams):
+                ...
+
+    It handles proper initialisation of `RideMixin` parents and adds automatic attribute validation.
+
+    If `pytorch_lightning.LightningModule` is omitted as lowest-priority parent, `RideModule` will automatically add it.
+
+    If `training_step`, `validation_step`, and `test_step` methods are not found, the `ride.Lifecycle` will be automatically mixed in by this module.
+    """
+
     def __init_subclass__(cls):
         _init_subclass(cls)
 
@@ -167,10 +185,6 @@ class RideModule:
 
     @classmethod
     def with_dataset(cls, ds: "Dataset"):
-        # @staticmethod
-        # def configs():
-        #     return ds.configs() + cls.configs()
-
         DerivedRideModule = type(
             f"{name(cls)}With{name(ds)}", cls.__bases__, dict(cls.__dict__)
         )

@@ -55,7 +55,6 @@ class DummyModule(
     RideModule,
     SgdOptimizer,
     DummyRegressionDataLoader,
-    # Loss(torch.nn.functional.mse_loss), # Yet another option
 ):
     # Not needed:
     # @staticmethod

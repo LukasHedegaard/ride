@@ -20,7 +20,9 @@ from ride.profile import profile_repeatedly
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger, process_rank
 from ride.utils.machine_info import get_machine_info
-from ride.utils.utils import AttributeDict, Namespace, attributedict
+from pytorch_lightning.utilities.parsing import AttributeDict
+from argparse import Namespace
+from ride.utils.utils import attributedict
 
 EvalutationResults = Dict[str, float]
 
