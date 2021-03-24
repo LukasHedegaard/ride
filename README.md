@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/images/ride_logo.svg" width="350", height="200"><br>
+  <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/logo.svg" width="350", height="200"><br>
 </div>
 
 <div align="left">
