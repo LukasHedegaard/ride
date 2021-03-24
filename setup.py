@@ -52,9 +52,9 @@ setup(
     url=info.__homepage__,
     install_requires=from_file("requirements.txt"),
     extras_require={
+        "build": from_file("requirements/build.txt"),
         "dev": from_file("requirements/dev.txt"),
         "docs": from_file("requirements/docs.txt"),
-        "build": from_file("requirements/build.txt"),
     },
     packages=find_packages(exclude=["test"]),
     keywords=["deep learning", "pytorch", "AI"],
