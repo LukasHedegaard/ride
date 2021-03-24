@@ -3,20 +3,12 @@
 </div>
 
 <div align="left">
-  <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20">
-  <img src="https://readthedocs.org/projects/ride/badge/?version=latest" height="20" href="https://ride.readthedocs.io/en/latest/?badge=latest">
+  <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20" href="https://pypi.org/project/ride/">
+  <img src="https://readthedocs.org/projects/ride/badge/?version=latest" height="20" href="https://ride.readthedocs.io">
   <img src="https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC" height="20" href="https://codecov.io/gh/LukasHedegaard/ride">
   <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" height="20" href="https://opensource.org/licenses/Apache-2.0">
   <img src="https://img.shields.io/badge/code%20style-black-000000.svg" height="20" href="https://github.com/psf/black">
 </div>
-
-<!-- ![Python package](https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg)
-[![Documentation Status](https://readthedocs.org/projects/ride/badge/?version=latest)](https://ride.readthedocs.io/en/latest/?badge=latest)  -->
-<!-- [![PyPI Status](https://badge.fury.io/py/ride.svg)](https://badge.fury.io/py/ride) -->
-
-<!-- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC)](https://codecov.io/gh/LukasHedegaard/ride) -->
 
 
 Training wheels, side rails, and helicopter parent for your Deep Learning projects in [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning).
