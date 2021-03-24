@@ -1,16 +1,14 @@
-from ride.core import AttributeDict, ClassificationDataset, Configs
+from ride.core import AttributeDict, RideClassificationDataset, Configs
 from ride.utils.env import DATASETS_PATH
-from ride.utils.logging import getLogger
-
-logger = getLogger(__name__)
 
 
-class MnistDataset(ClassificationDataset):
+class MnistDataset(RideClassificationDataset):
     """
     Example Mnist Dataset
     Modified from https://github.com/PyTorchLightning/pytorch-lightning/blob/master/pl_examples/basic_examples/mnist_datamodule.py
     """
 
+    @staticmethod
     def configs():
         c = Configs.collect(MnistDataset)
         c.add(

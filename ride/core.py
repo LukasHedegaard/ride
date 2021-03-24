@@ -5,12 +5,12 @@ from typing import Any, List, Sequence, Union
 
 import pytorch_lightning as pl
 from corider import Configs as _Configs
+from pytorch_lightning.utilities.parsing import AttributeDict
 from supers import supers
 from torch.utils.data import DataLoader
 
 from ride.utils.logging import getLogger
 from ride.utils.utils import (
-    AttributeDict,
     DictLike,
     attributedict,
     merge_attributedicts,
@@ -78,10 +78,9 @@ def _init_subclass(cls):
     missing_lifecycle_steps = missing_or_not_in_other(
         cls, pl.LightningModule, lifecycle_steps
     )
-    if missing_lifecycle_steps == lifecycle_steps:
-        logger.info(
-            f"No lifecycle steps {missing_lifecycle_steps} found in {name(cls)}. Adding ClassificationLifecycle with CrossEntropyLoss automatically."
-        )
+    if missing_lifecycle_steps:
+        logger.info(f"Missing lifecycle steps {missing_lifecycle_steps} in {name(cls)}")
+        logger.info("🔧 Adding ride.Lifecycle automatically")
         # Import here to break cyclical import
         from ride.lifecycle import Lifecycle
 
@@ -90,20 +89,36 @@ def _init_subclass(cls):
             Lifecycle,
             *cls.__bases__[-1:],
         )
-    elif missing_lifecycle_steps:
-        for n in missing_lifecycle_steps:
-            logger.warning(
-                f"No `{n}` function found in {name(cls)}. Did you forget to define it?"
-            )
 
-    # Warn if there is no dataset
+    # Ensure dataset
     dataset_steps = {"train_dataloader", "val_dataloader", "test_dataloader"}
-    dataset_steps_steps = missing_or_not_in_other(
+    missing_dataset_steps = missing_or_not_in_other(
         cls, pl.LightningModule, dataset_steps
     )
-    for n in dataset_steps_steps:
+    if missing_dataset_steps:
         logger.warning(
-            f"No `{n}` function found in {name(cls)}. Did you forget to define it?"
+            f"No dataloader funcions {missing_dataset_steps} found in {name(cls)}"
+        )
+        logger.info(
+            "🔧 Adding ride.RideDataset automatically and assuming that `self.datamodule`, `self.input_shape`, and `self.output_shape` will be provided by user"
+        )
+        cls.__bases__ = (
+            *cls.__bases__[:-1],
+            RideDataset,
+            *cls.__bases__[-1:],
+        )
+
+    # Ensure optimizer
+    if missing_or_not_in_other(cls, pl.LightningModule, {"configure_optimizers"}):
+        logger.info(f"`configure_optimizers` not found in in {name(cls)}")
+        logger.info("🔧 Adding ride.SgdOptimizer automatically")
+        # Import here to break cyclical import
+        from ride.optimizers import SgdOptimizer
+
+        cls.__bases__ = (
+            *cls.__bases__[:-1],
+            SgdOptimizer,
+            *cls.__bases__[-1:],
         )
 
     # Monkeypatch derived module init
@@ -151,6 +166,24 @@ def apply_init_args(fn, self, hparams, *args, **kwargs):
 
 
 class RideModule:
+    """
+    Base-class for modules using the Ride ecosystem.
+
+    This module should be inherited as the highest-priority parent.
+
+    Example::
+
+        class MyModule(ride.RideModule, ride.SgdOneCycleOptimizer):
+            def __init__(self, hparams):
+                ...
+
+    It handles proper initialisation of `RideMixin` parents and adds automatic attribute validation.
+
+    If `pytorch_lightning.LightningModule` is omitted as lowest-priority parent, `RideModule` will automatically add it.
+
+    If `training_step`, `validation_step`, and `test_step` methods are not found, the `ride.Lifecycle` will be automatically mixed in by this module.
+    """
+
     def __init_subclass__(cls):
         _init_subclass(cls)
 
@@ -166,22 +199,18 @@ class RideModule:
         self._hparams = attributedict(hp)
 
     @classmethod
-    def with_dataset(cls, ds: "Dataset"):
-        # @staticmethod
-        # def configs():
-        #     return ds.configs() + cls.configs()
-
+    def with_dataset(cls, ds: "RideDataset"):
         DerivedRideModule = type(
             f"{name(cls)}With{name(ds)}", cls.__bases__, dict(cls.__dict__)
         )
 
-        new_bases = [b for b in cls.__bases__ if not issubclass(b, Dataset)]
-        old_dataset = [b for b in cls.__bases__ if issubclass(b, Dataset)]
-        assert len(old_dataset) <= 1, "`RideModule` should only have one `Dataset`"
-        if old_dataset and issubclass(old_dataset[0], ClassificationDataset):
+        new_bases = [b for b in cls.__bases__ if not issubclass(b, RideDataset)]
+        old_dataset = [b for b in cls.__bases__ if issubclass(b, RideDataset)]
+        assert len(old_dataset) <= 1, "`RideModule` should only have one `RideDataset`"
+        if old_dataset and issubclass(old_dataset[0], RideClassificationDataset):
             assert issubclass(
-                ds, ClassificationDataset
-            ), "A `ClassificationDataset` should be replaced by a `ClassificationDataset`"
+                ds, RideClassificationDataset
+            ), "A `RideClassificationDataset` should be replaced by a `RideClassificationDataset`"
         new_bases.insert(-1, ds)
         DerivedRideModule.__bases__ = tuple(new_bases)
 
@@ -199,7 +228,11 @@ class RideMixin(ABC):
         ...
 
 
-class Dataset(RideMixin):
+class OptimizerMixin(RideMixin):
+    ...
+
+
+class RideDataset(RideMixin):
     input_shape: DataShape
     output_shape: DataShape
 
@@ -208,22 +241,17 @@ class Dataset(RideMixin):
             int,
             list,
             tuple,
-        }, "Ride Dataset should define `input_shape` but none was found."
+        }, "RideDataset should define `input_shape` but none was found."
         assert type(getattr(self, "output_shape", None)) in {
             int,
             list,
             tuple,
-        }, "Ride Dataset should define `output_shape` but none was found."
+        }, "RideDataset should define `output_shape` but none was found."
 
-        for n in Dataset.configs().names:
+        for n in RideDataset.configs().names:
             assert some(
                 self, f"hparams.{n}"
             ), "`self.hparams.{n}` not found in Dataset. Did you forget to include its `configs`?"
-
-        for n in {"train_dataloader", "val_dataloader", "test_dataloader"}:
-            assert some(
-                self, n
-            ), f"Ride Dataset should define `{n}` but none was found."
 
     @staticmethod
     def configs() -> Configs:
@@ -243,20 +271,6 @@ class Dataset(RideMixin):
             description="Number of workers in dataloader.",
         )
         return c
-
-
-class ClassificationDataset(Dataset):
-    classes: List[str]
-
-    @property
-    def num_classes(self) -> int:
-        return len(self.classes)
-
-    def validate_attributes(self):
-        Dataset.validate_attributes(self)
-        assert type(getattr(self, "classes", None)) in {
-            list,
-        }, "Ride ClassificationDataset should define `classes` but none was found."
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
         """ The train dataloader """
@@ -282,3 +296,18 @@ class ClassificationDataset(Dataset):
             self, "datamodule.test_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `test_dataloader` function."
         return self.datamodule.test_dataloader
+
+
+class RideClassificationDataset(RideDataset):
+    classes: List[str]
+
+    @property
+    def num_classes(self) -> int:
+        return len(self.classes)
+
+    def validate_attributes(self):
+        RideDataset.validate_attributes(self)
+        assert type(getattr(self, "classes", None)) in {
+            list,
+            tuple,
+        }, "Ride RideClassificationDataset should define `classes` but none was found."

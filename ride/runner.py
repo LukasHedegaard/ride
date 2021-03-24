@@ -8,7 +8,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.utilities.cloud_io import load as pl_load
 
-from ride.core import Dataset, RideModule
+from ride.core import RideDataset, RideModule
 from ride.logging import (
     CheckpointEveryNSteps,
     ExperimentLoggerCreator,
@@ -20,7 +20,9 @@ from ride.profile import profile_repeatedly
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger, process_rank
 from ride.utils.machine_info import get_machine_info
-from ride.utils.utils import AttributeDict, Namespace, attributedict
+from pytorch_lightning.utilities.parsing import AttributeDict
+from argparse import Namespace
+from ride.utils.utils import attributedict
 
 EvalutationResults = Dict[str, float]
 
@@ -29,7 +31,7 @@ logger = getLogger(__name__)
 
 def is_runnable(cls):
     assert issubclass(cls, RideModule)
-    assert issubclass(cls, Dataset)
+    assert issubclass(cls, RideDataset)
     assert issubclass(cls, LightningModule)
     return True
 

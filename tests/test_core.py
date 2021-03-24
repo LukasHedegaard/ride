@@ -36,6 +36,8 @@ class InitOrderModule(
 ):
     def __init__(self, hparams: DictLike):
         self.hparams.msg.append("InitOrderModule.__init__")
+        self.input_shape = (1,)
+        self.output_shape = (1,)
 
 
 def test_init_order():
@@ -55,7 +57,6 @@ class DummyModule(
     RideModule,
     SgdOptimizer,
     DummyRegressionDataLoader,
-    # Loss(torch.nn.functional.mse_loss), # Yet another option
 ):
     # Not needed:
     # @staticmethod
@@ -128,35 +129,6 @@ def apply_standard_args(args):
     args.test_ensemble = 0
     args.loss = "mse_loss"
     return args
-
-
-def test_module_with_only_some_lifecycle_steps_warns(caplog):
-    """Test if modules initialises when hparams is also given"""
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-
-        class DummyModuleSomeLifecycleStep(
-            RideModule,
-            SgdOptimizer,
-            DummyRegressionDataLoader,
-        ):
-            def __init__(self):
-                self.lin = torch.nn.Linear(
-                    self.input_shape[0],  # from DummyRegressionDataLoader
-                    self.output_shape,  # from DummyRegressionDataLoader
-                )
-                # Alternative way of specifying loss:
-                self.loss = torch.nn.functional.mse_loss
-
-            def forward(self, x: torch.Tensor) -> torch.Tensor:
-                return self.lin(x)
-
-            def training_step(self, batch, batch_idx=None):
-                return {}
-
-    assert len(caplog.messages) == 2
-    assert "test_step" in caplog.text
-    assert "validation_step" in caplog.text
 
 
 def test_module_with_no_forward_warns(caplog):

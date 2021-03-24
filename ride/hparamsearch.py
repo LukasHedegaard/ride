@@ -3,9 +3,10 @@ from functools import partial
 from pathlib import Path
 from typing import Type, Union
 
+from pytorch_lightning.utilities.parsing import AttributeDict
 from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 
-from ride.core import AttributeDict, Configs, RideModule
+from ride.core import Configs, RideModule
 from ride.runner import Runner, is_runnable
 from ride.utils.env import NUM_CPU, TUNE_LOGS_PATH
 from ride.utils.gpus import parse_num_gpus

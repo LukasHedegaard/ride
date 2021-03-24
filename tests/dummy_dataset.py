@@ -8,8 +8,8 @@ from typing import Sequence
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from ride.core import ClassificationDataset, Configs
-from ride.core import Dataset as RideDataset
+from ride.core import RideClassificationDataset, Configs
+from ride.core import RideDataset
 from ride.utils.utils import some
 
 
@@ -111,7 +111,7 @@ class OverOneDataset(Dataset):
         return sample
 
 
-class DummyClassificationDataLoader(ClassificationDataset):
+class DummyClassificationDataLoader(RideClassificationDataset):
     @staticmethod
     def configs() -> Configs:
         c = Configs.collect(DummyClassificationDataLoader)
@@ -125,7 +125,7 @@ class DummyClassificationDataLoader(ClassificationDataset):
         return c
 
     def validate_attributes(self):
-        ClassificationDataset.validate_attributes(self)
+        RideClassificationDataset.validate_attributes(self)
         for attr in DummyRegressionDataLoader.configs().names:
             assert some(
                 self, f"hparams.{attr}"

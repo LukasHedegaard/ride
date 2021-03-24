@@ -1,10 +1,22 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/images/ride_logo.svg" width="350"><br>
+  <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/images/ride_logo.svg" width="350", height="200"><br>
 </div>
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<div align="left">
+  <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20">
+  <img src="https://readthedocs.org/projects/ride/badge/?version=latest" height="20" href="https://ride.readthedocs.io/en/latest/?badge=latest">
+  <img src="https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC" height="20" href="https://codecov.io/gh/LukasHedegaard/ride">
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" height="20" href="https://opensource.org/licenses/Apache-2.0">
+  <img src="https://img.shields.io/badge/code%20style-black-000000.svg" height="20" href="https://github.com/psf/black">
+</div>
+
+<!-- ![Python package](https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/ride/badge/?version=latest)](https://ride.readthedocs.io/en/latest/?badge=latest)  -->
+<!-- [![PyPI Status](https://badge.fury.io/py/ride.svg)](https://badge.fury.io/py/ride) -->
+
+<!-- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC)](https://codecov.io/gh/LukasHedegaard/ride)
+[![codecov](https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC)](https://codecov.io/gh/LukasHedegaard/ride) -->
 
 
 Training wheels, side rails, and helicopter parent for your Deep Learning projects in [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning).
@@ -58,7 +70,7 @@ class SimpleClassifier(
     MnistDataset,
 ):
     def __init__(self, hparams):
-        # `self.input_shape` and `self.output_shape` were injected via `ride.MnistDataset`
+        # `self.input_shape` and `self.output_shape` were injected via `MnistDataset`
         self.l1 = torch.nn.Linear(np.prod(self.input_shape), self.hparams.hidden_dim)
         self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
 
@@ -202,16 +214,6 @@ RUN_LOGS_PATH="run_logs"  # Dir relative to LOGS_PATH
 TUNE_LOGS_PATH="tune_logs"# Dir relative to LOGS_PATH
 LOG_LEVEL="INFO"          # One of "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"
 ```
-
-
-## Documentation
-Coming up. 
-For now, a look to the source code should get you there.
-
-<!-- ## Compatibility with Pytorch Lightning
-The framework is built on top of Pytorch Lightning, and we strive to be fully compatible with the newest versions.
-That said, Pytorch Lightning is still evolving rapidly, so things may occationally break on our side.
- -->
 
 
 

@@ -39,7 +39,8 @@ from ride.runner import Runner  # noqa: E402
 from ride.utils.checkpoints import find_checkpoint  # noqa: E402
 from ride.utils.env import LOGS_PATH  # noqa: E402
 from ride.utils.io import bump_version, dump_yaml  # noqa: E402
-from ride.utils.utils import AttributeDict, attributedict  # noqa: E402
+from ride.utils.utils import attributedict  # noqa: E402
+from pytorch_lightning.utilities.parsing import AttributeDict  # noqa: E402
 
 logger = getLogger(__name__)
 

@@ -3,7 +3,7 @@ pytest
 flake8
 mypy
 black
-isort~=5.7
+isort>=5.7
 flake8-black
 pytest
 pytest-cov
