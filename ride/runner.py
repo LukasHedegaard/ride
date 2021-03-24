@@ -8,7 +8,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.utilities.cloud_io import load as pl_load
 
-from ride.core import Dataset, RideModule
+from ride.core import RideDataset, RideModule
 from ride.logging import (
     CheckpointEveryNSteps,
     ExperimentLoggerCreator,
@@ -31,7 +31,7 @@ logger = getLogger(__name__)
 
 def is_runnable(cls):
     assert issubclass(cls, RideModule)
-    assert issubclass(cls, Dataset)
+    assert issubclass(cls, RideDataset)
     assert issubclass(cls, LightningModule)
     return True
 

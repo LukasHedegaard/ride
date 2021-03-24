@@ -70,7 +70,7 @@ class SimpleClassifier(
     MnistDataset,
 ):
     def __init__(self, hparams):
-        # `self.input_shape` and `self.output_shape` were injected via `ride.MnistDataset`
+        # `self.input_shape` and `self.output_shape` were injected via `MnistDataset`
         self.l1 = torch.nn.Linear(np.prod(self.input_shape), self.hparams.hidden_dim)
         self.l2 = torch.nn.Linear(self.hparams.hidden_dim, self.output_shape)
 

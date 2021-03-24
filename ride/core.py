@@ -184,18 +184,18 @@ class RideModule:
         self._hparams = attributedict(hp)
 
     @classmethod
-    def with_dataset(cls, ds: "Dataset"):
+    def with_dataset(cls, ds: "RideDataset"):
         DerivedRideModule = type(
             f"{name(cls)}With{name(ds)}", cls.__bases__, dict(cls.__dict__)
         )
 
-        new_bases = [b for b in cls.__bases__ if not issubclass(b, Dataset)]
-        old_dataset = [b for b in cls.__bases__ if issubclass(b, Dataset)]
-        assert len(old_dataset) <= 1, "`RideModule` should only have one `Dataset`"
-        if old_dataset and issubclass(old_dataset[0], ClassificationDataset):
+        new_bases = [b for b in cls.__bases__ if not issubclass(b, RideDataset)]
+        old_dataset = [b for b in cls.__bases__ if issubclass(b, RideDataset)]
+        assert len(old_dataset) <= 1, "`RideModule` should only have one `RideDataset`"
+        if old_dataset and issubclass(old_dataset[0], RideClassificationDataset):
             assert issubclass(
-                ds, ClassificationDataset
-            ), "A `ClassificationDataset` should be replaced by a `ClassificationDataset`"
+                ds, RideClassificationDataset
+            ), "A `RideClassificationDataset` should be replaced by a `RideClassificationDataset`"
         new_bases.insert(-1, ds)
         DerivedRideModule.__bases__ = tuple(new_bases)
 
@@ -213,7 +213,7 @@ class RideMixin(ABC):
         ...
 
 
-class Dataset(RideMixin):
+class RideDataset(RideMixin):
     input_shape: DataShape
     output_shape: DataShape
 
@@ -222,14 +222,14 @@ class Dataset(RideMixin):
             int,
             list,
             tuple,
-        }, "Ride Dataset should define `input_shape` but none was found."
+        }, "RideDataset should define `input_shape` but none was found."
         assert type(getattr(self, "output_shape", None)) in {
             int,
             list,
             tuple,
-        }, "Ride Dataset should define `output_shape` but none was found."
+        }, "RideDataset should define `output_shape` but none was found."
 
-        for n in Dataset.configs().names:
+        for n in RideDataset.configs().names:
             assert some(
                 self, f"hparams.{n}"
             ), "`self.hparams.{n}` not found in Dataset. Did you forget to include its `configs`?"
@@ -259,7 +259,7 @@ class Dataset(RideMixin):
         return c
 
 
-class ClassificationDataset(Dataset):
+class RideClassificationDataset(RideDataset):
     classes: List[str]
 
     @property
@@ -267,10 +267,10 @@ class ClassificationDataset(Dataset):
         return len(self.classes)
 
     def validate_attributes(self):
-        Dataset.validate_attributes(self)
+        RideDataset.validate_attributes(self)
         assert type(getattr(self, "classes", None)) in {
             list,
-        }, "Ride ClassificationDataset should define `classes` but none was found."
+        }, "Ride RideClassificationDataset should define `classes` but none was found."
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
         """ The train dataloader """
