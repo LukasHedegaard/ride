@@ -26,7 +26,7 @@ Build docs
 .. code-block:: bash
 
     cd docs
-    make
+    make html
 
 Build and publish to TestPyPI:
 

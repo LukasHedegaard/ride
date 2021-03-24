@@ -268,7 +268,7 @@ intersphinx_mapping = {
     "torch": ("https://pytorch.org/docs/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "PIL": ("https://pillow.readthedocs.io/en/stable/", None),
-    "pytorchlightning": ("https://pytorch-lightning.readthedocs.io/en/stable/", None),
+    "pytorch_lightning": ("https://pytorch-lightning.readthedocs.io/en/stable/", None),
 }
 
 # -- Options for todo extension ----------------------------------------------
@@ -370,3 +370,5 @@ from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 TORCHVISION_AVAILABLE = _module_available("torchvision")
 """
 coverage_skip_undoc_in_source = True
+
+html_show_sphinx = True

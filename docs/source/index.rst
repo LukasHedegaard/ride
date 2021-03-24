@@ -16,6 +16,7 @@ Ride Documentation
    :caption: Ride API
 
    common/ride_module
+   common/ride_datasets
    common/main
 
 
@@ -40,6 +41,7 @@ Ride Documentation
    :name: community
    :caption: Community
 
+   starter/development
    generated/CHANGELOG.md
 
 Indices and tables
