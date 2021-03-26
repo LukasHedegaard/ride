@@ -1,18 +1,26 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 import yaml
 from torch import Tensor
 
 
-def bump_version(path: Path):
-    """Bumps the version number for a path if it already exists"""
+def bump_version(path: Union[str, Path]) -> Path:
+    """Bumps the version number for a path if it already exists
+
+    Example::
+
+        bump_version("folder/new_file.json") == Path("folder/new_file.json)
+        bump_version("folder/old_file.json") == Path("folder/old_file_1.json)
+        bump_version("folder/old_file_1.json") == Path("folder/old_file_2.json)
+    """
     if not path.exists():
         return path
 
     # Check for already bumped versions
+    prev_version = None
     try:
         prev_version = max(
             map(
@@ -27,7 +35,11 @@ def bump_version(path: Path):
     except ValueError:  # max() arg is an empty sequence
         new_version = 1
 
-    new_name = f"{path.stem}_{new_version}{path.suffix}"
+    if prev_version and path.stem.endswith(f"_{prev_version}"):
+        suffix = f"_{prev_version}"
+        new_name = f"{path.stem[:-len(suffix)]}_{new_version}{path.suffix}"
+    else:
+        new_name = f"{path.stem}_{new_version}{path.suffix}"
     return path.parent / new_name
 
 
