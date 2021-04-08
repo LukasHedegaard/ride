@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Type, Union
 
 from pytorch_lightning.utilities.parsing import AttributeDict
-from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 
 from ride.core import Configs, RideModule
 from ride.runner import Runner, is_runnable
@@ -65,6 +64,9 @@ class Hparamsearch:
         """
         try:
             from ray import tune
+            from ray.tune.integration.pytorch_lightning import (
+                TuneReportCheckpointCallback,
+            )
         except ModuleNotFoundError:
             logger.error(  # pragma: no cover
                 "To use hyperparameter search, first install Ray Tune: `pip install 'ray[tune]'`"
