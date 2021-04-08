@@ -46,7 +46,7 @@ class MetricMixin(RideMixin):
         return list(sorted(cls.metrics().keys()))
 
     def metrics_step(self, *args, **kwargs) -> MetricDict:
-        return {}
+        return {}  # pragma: no cover
 
     def metrics_epoch(
         self, outputs: StepOutputs, prefix: str = "", **kwargs
@@ -87,19 +87,17 @@ class MeanAveragePrecisionMetric(MetricMixin):
         map = torch.tensor(-1.0)
         try:
             map = compute_map(self)(preds, targets)
-        except RuntimeError:
+        except RuntimeError:  # pragma: no cover
             logger.error("Unable to compute mAP.")
         return {"mAP": map}
 
     def metrics_epoch(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
-        preds = preds.detach().cpu().numpy()
-        targets = targets.detach().cpu().numpy()
         map = torch.tensor(-1.0)
         try:
-            map, wmap, _ = charades_mean_average_precision(preds, targets)
-        except RuntimeError:
+            map = compute_map(self)(preds, targets)
+        except RuntimeError:  # pragma: no cover
             logger.error("Unable to compute mAP.")
-        return {"mAP": torch.tensor(map)}
+        return {"mAP": map}
 
 
 def compute_map(self):
@@ -111,40 +109,6 @@ def compute_map(self):
                 num_classes=len(self.classes)
             )
     return map_fn
-
-
-def charades_mean_average_precision(preds, targets):
-    """
-    Returns mAP, weighted mAP, and AP array
-    Source: https://github.com/gsig/charades-algorithms
-    """
-    preds = preds.copy()
-    empty = np.sum(targets, axis=1) == 0
-    preds[empty, :] = np.NINF
-
-    m_aps = []
-    n_classes = preds.shape[1]
-    for oc_i in range(n_classes):
-        sorted_idxs = np.argsort(-preds[:, oc_i])
-        tp = targets[:, oc_i][sorted_idxs] == 1
-        fp = np.invert(tp)
-        n_pos = tp.sum()
-        if n_pos < 0.1:
-            m_aps.append(float("nan"))
-            continue
-        # fp.sum()
-        f_pcs = np.cumsum(fp)
-        t_pcs = np.cumsum(tp)
-        prec = t_pcs / (f_pcs + t_pcs).astype(float)
-        avg_prec = 0
-        for i in range(preds.shape[0]):
-            if tp[i]:
-                avg_prec += prec[i]
-        m_aps.append(avg_prec / n_pos.astype(float))
-    m_aps = np.array(m_aps)
-    m_ap = np.nanmean(m_aps)  # ignore nan in calculation of mean
-    w_ap = m_aps * targets.sum(axis=0) / targets.sum().sum().astype(float)
-    return m_ap, w_ap, m_aps
 
 
 def TopKAccuracyMetric(*Ks) -> MetricMixin:
@@ -166,7 +130,7 @@ def TopKAccuracyMetric(*Ks) -> MetricMixin:
             accs = [torch.tensor(-1.0) for _ in ks]
             try:
                 accs = topk_accuracies(preds, targets, ks)
-            except RuntimeError:
+            except RuntimeError:  # pragma: no cover
                 logger.error("Unable to compute top-k accuracy.")
             return {f"top{k}acc": accs[i] for i, k in enumerate(ks)}
 
@@ -180,7 +144,7 @@ class FlopsMetric(MetricMixin):
     def _metrics(cls):
         return {"flops": OptimisationDirection.MIN}
 
-    def __init__(self, *args, **kwargs) -> None:
+    def on_init_end(self, *args, **kwargs):
         assert isinstance(self, torch.nn.Module)
         self.flops = flops(self)  # type: ignore
 
@@ -193,10 +157,10 @@ class FlopsWeightedAccuracyMetric(FlopsMetric):
 
     @classmethod
     def _metrics(cls):
-        return {"flops_weighted_acc": OptimisationDirection.MAX}
-
-    def __init__(self, *args, **kwargs):
-        FlopsMetric.__init__(self, *args, **kwargs)
+        return {
+            **{"flops_weighted_acc": OptimisationDirection.MAX},
+            **FlopsMetric._metrics(),
+        }
 
     def validate_attributes(self):
         for hparam in FlopsWeightedAccuracyMetric.configs().names:
@@ -219,7 +183,7 @@ class FlopsWeightedAccuracyMetric(FlopsMetric):
         return {
             **FlopsMetric.metrics_step(self, preds, targets, **kwargs),
             "flops_weighted_acc": acc
-            * (self.flops / self.hparams.target_gflops) ** (-0.07),
+            * (self.flops * 1e-9 / self.hparams.target_gflops) ** (-0.07),
         }
 
 
