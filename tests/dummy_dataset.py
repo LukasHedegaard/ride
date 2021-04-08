@@ -31,7 +31,7 @@ class MeanVarDataset(Dataset):
                 x.var(),
             ]
         )
-        sample = [x, y]
+        sample = [x, y, idx // 2]
         return sample
 
 
@@ -107,7 +107,7 @@ class OverOneDataset(Dataset):
         x = 2 * torch.rand(self.input_shape)
         m = x.mean()
         y = (m > 0).to(torch.long)
-        sample = [x, y]
+        sample = [x, y, idx // 2]
         return sample
 
 

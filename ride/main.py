@@ -243,7 +243,10 @@ class Main:
             )
 
         if args.test:
-            hprint("Running evaluation on test set")
+            hprint(
+                f"Running evaluation on test set{' using ensemble testing' if args.test_ensemble else ''}"
+            )
+
             test_results = self.runner.test(args)
             dprint(test_results)
             results.append(test_results)

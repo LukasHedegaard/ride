@@ -174,6 +174,21 @@ class TestMain:
         ]:
             assert any([check in msg for msg in caplog.messages])
 
+    def test_test_ensemble(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
+        """Test ensemble works"""
+        m, args = main_and_args
+        args.test = True
+        args.test_ensemble = True
+
+        with caplog.at_level(logging.INFO):
+            m.main(args)
+
+        for check in [
+            "Running evaluation on test set using ensemble testing",
+            "test/epoch",
+        ]:
+            assert any([check in msg for msg in caplog.messages])
+
     def test_from_hparams_file(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         """Test loading of hparams"""
         m, args = main_and_args
