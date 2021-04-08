@@ -13,6 +13,24 @@ from pytorch_lightning.utilities.parsing import AttributeDict
 DictLike = Union[AttributeDict, Dict[str, Any], Namespace]
 
 
+def is_shape(x: Any):
+    """Tests whether `x` is a shape, i.e. one of
+    - int
+    - List[int]
+    - Tuple[int]
+    - Namedtuple[int]
+
+    Args:
+        x (Any): instance to check
+    """
+    Type = type(x)
+    if Type == int:
+        return True
+    if not (Type in {list, tuple} or issubclass(Type, tuple)):
+        return False
+    return all(type(y) == int for y in x)
+
+
 def once(fn: Callable):
     mem = set()
 

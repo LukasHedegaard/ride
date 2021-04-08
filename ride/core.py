@@ -17,6 +17,7 @@ from ride.utils.utils import (
     missing_or_not_in_other,
     name,
     some,
+    is_shape,
 )
 
 logger = getLogger(__name__)
@@ -237,16 +238,12 @@ class RideDataset(RideMixin):
     output_shape: DataShape
 
     def validate_attributes(self):
-        assert type(getattr(self, "input_shape", None)) in {
-            int,
-            list,
-            tuple,
-        }, "RideDataset should define `input_shape` but none was found."
-        assert type(getattr(self, "output_shape", None)) in {
-            int,
-            list,
-            tuple,
-        }, "RideDataset should define `output_shape` but none was found."
+        assert is_shape(
+            getattr(self, "input_shape", None)
+        ), "RideDataset should define an `input_shape` of type int, list, tuple, or namedtuple."
+        assert is_shape(
+            getattr(self, "output_shape", None)
+        ), "RideDataset should define `output_shape` of type int, list, tuple, or namedtuple."
 
         for n in RideDataset.configs().names:
             assert some(
