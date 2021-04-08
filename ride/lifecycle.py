@@ -280,7 +280,7 @@ class Lifecycle(MetricMixin):
                     cbar=False,
                 )
                 log_figures(self, {"confusion_matrix": fig})
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.warning(
                     f"Unable to save confusion matrix. Caught error: ''{e}''"
                 )

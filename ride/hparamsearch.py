@@ -67,8 +67,8 @@ class Hparamsearch:
             from ray.tune.integration.pytorch_lightning import (
                 TuneReportCheckpointCallback,
             )
-        except ModuleNotFoundError:
-            logger.error(  # pragma: no cover
+        except ModuleNotFoundError:  # pragma: no cover
+            logger.error(
                 "To use hyperparameter search, first install Ray Tune: `pip install 'ray[tune]'`"
             )
             return
