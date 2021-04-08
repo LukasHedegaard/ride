@@ -1,5 +1,11 @@
 from .main import Main  # noqa: F401, E402  # isort:skip
-from .core import Configs, RideModule, getLogger  # noqa: F401, E402
+from .core import (  # noqa: F401, E402
+    Configs,
+    RideClassificationDataset,
+    RideDataset,
+    RideModule,
+    getLogger,
+)
 
 # from .finetune import Finetunable  # noqa: F401
 from .hparamsearch import Hparamsearch  # noqa: F401, E402
