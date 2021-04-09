@@ -1,14 +1,12 @@
 name: Publish to PyPI
 
-on: 
-  create:
-    tags:
-    - '*'
+on:
+  release:
+    types: [published]
 
 jobs:
   build-n-publish:
     name: Build and publish to PyPI
-    if: github.event_name == 'create' && startsWith(github.event.ref, 'refs/tags')
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@master
