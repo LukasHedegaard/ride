@@ -179,6 +179,9 @@ class Main:
     def main(self, args: AttributeDict):  # noqa: C901
         args = attributedict(args)
 
+        # Ensure gpus is defined
+        args.gpus = getattr(args, "gpus", "")
+
         seed_everything(args.seed)
         self.log_dir = experiment_logger(
             args.id, args.logging_backend, self.Module
