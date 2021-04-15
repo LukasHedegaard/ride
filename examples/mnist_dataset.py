@@ -1,5 +1,17 @@
 from ride.core import AttributeDict, RideClassificationDataset, Configs
 from ride.utils.env import DATASETS_PATH
+from ride import getLogger
+
+logger = getLogger(__name__)
+
+try:
+    import pl_bolts  # noqa: F401
+    import torchvision  # noqa: F401
+except ImportError:
+    logger.error(
+        "To run the `mnist_dataset.py` example, first install its dependencies: "
+        "`pip install pytorch-lightning-bolts torchvision`"
+    )
 
 
 class MnistDataset(RideClassificationDataset):
@@ -29,8 +41,6 @@ class MnistDataset(RideClassificationDataset):
         return c
 
     def __init__(self, hparams: AttributeDict):
-        import pl_bolts
-
         self.datamodule = pl_bolts.datamodules.MNISTDataModule(
             data_dir=DATASETS_PATH,
             val_split=self.hparams.val_split,
