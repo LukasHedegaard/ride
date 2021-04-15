@@ -101,7 +101,12 @@ def log_figures(module: pl.LightningModule, d: Dict[str, Figure]):
             # SummaryWriter.add_figure(self, tag, figure)
             image_loggers.append(lgr.experiment.add_figure)
         elif type(lgr) == WandbLogger:
-            import wandb  # noqa: F401
+            try:
+                import wandb  # noqa: F401
+            except ImportError:
+                logger.error(
+                    "Before using the WandbLogger, first install WandB using `pip install wandb`"
+                )
 
             wandb_log = lgr.experiment.log
 
