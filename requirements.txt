@@ -8,3 +8,4 @@ gputil>=1.4
 py-cpuinfo>=7.0
 ptflops>=0.6
 joblib>=1.0
+psutil
