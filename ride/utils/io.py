@@ -1,10 +1,15 @@
 import json
+import os
 from pathlib import Path
 from typing import Any, Union
 
 import numpy as np
 import yaml
 from torch import Tensor
+
+
+def is_nonempty_file(path: Union[str, Path]) -> bool:
+    return os.path.isfile(path) and os.path.getsize(path) > 0
 
 
 def bump_version(path: Union[str, Path]) -> Path:
@@ -16,6 +21,7 @@ def bump_version(path: Union[str, Path]) -> Path:
         bump_version("folder/old_file.json") == Path("folder/old_file_1.json)
         bump_version("folder/old_file_1.json") == Path("folder/old_file_2.json)
     """
+    path = Path(path)
     if not path.exists():
         return path
 
@@ -45,7 +51,11 @@ def bump_version(path: Union[str, Path]) -> Path:
 
 def load_structured_data(path: Path):
     suffix = path.suffix
-    assert suffix in {".json", ".yml", ".yaml"}
+    assert suffix in {
+        ".json",
+        ".yml",
+        ".yaml",
+    }, f"The supplied file ({str(path)}) should be of type 'json' or 'yaml"
     if suffix == ".yml":
         suffix = ".yaml"
     d = {".json": load_json, ".yaml": load_yaml}[suffix](path)

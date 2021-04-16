@@ -13,11 +13,11 @@ from ride.utils.logging import getLogger
 from ride.utils.utils import (
     DictLike,
     attributedict,
+    is_shape,
     merge_attributedicts,
     missing_or_not_in_other,
     name,
     some,
-    is_shape,
 )
 
 logger = getLogger(__name__)
@@ -27,8 +27,18 @@ DataShape = Union[int, Sequence[int], Sequence[Sequence[int]]]
 
 
 class Configs(_Configs):
+    """Configs module for holding project configurations.
+
+    This is a wrapper of the Configs found as a stand-alone package in https://github.com/LukasHedegaard/co-rider
+    """
+
     @staticmethod
     def collect(cls: "RideModule") -> "Configs":
+        """Collect the configs from all class bases
+
+        Returns:
+            Configs: Aggregated configurations
+        """
         c: Configs = sum([c.configs() for c in cls.__bases__ if hasattr(c, "configs")])  # type: ignore
         return c
 
@@ -219,6 +229,8 @@ class RideModule:
 
 
 class RideMixin(ABC):
+    """Abstract base-class for Ride mixins"""
+
     def __init__(self, hparams: AttributeDict, *args, **kwargs):
         ...
 
@@ -230,10 +242,29 @@ class RideMixin(ABC):
 
 
 class OptimizerMixin(RideMixin):
+    """Abstract base-class for Optimizer mixins"""
+
     ...
 
 
 class RideDataset(RideMixin):
+    """Base-class for Ride datasets.
+
+    If no dataset is specified otherwise, this mixin is automatically add as a base of RideModule childen.
+
+    User-specified datasets must inherit from this class, and specify the following:
+    - `self.input_shape`: Union[int, Sequence[int], Sequence[Sequence[int]]]
+    - `self.output_shape`: Union[int, Sequence[int], Sequence[Sequence[int]]]
+
+    and either the functions:
+    - `train_dataloader`: Callable[[Any], DataLoader]
+    - `val_dataloader`: Callable[[Any], DataLoader]
+    - `test_dataloader`: Callable[[Any], DataLoader]
+
+    or:
+    - `self.datamodule`, which has `train_dataloader`, `val_dataloader`, and `test_dataloader` attributes.
+    """
+
     input_shape: DataShape
     output_shape: DataShape
 
@@ -296,6 +327,24 @@ class RideDataset(RideMixin):
 
 
 class RideClassificationDataset(RideDataset):
+    """Base-class for Ride classification datasets.
+
+    If no dataset is specified otherwise, this mixin is automatically add as a base of RideModule childen.
+
+    User-specified datasets must inherit from this class, and specify the following:
+    - `self.input_shape`: Union[int, Sequence[int], Sequence[Sequence[int]]]
+    - `self.output_shape`: Union[int, Sequence[int], Sequence[Sequence[int]]]
+    - `self.classes`: List[str]
+
+    and either the functions:
+    - `train_dataloader`: Callable[[Any], DataLoader]
+    - `val_dataloader`: Callable[[Any], DataLoader]
+    - `test_dataloader`: Callable[[Any], DataLoader]
+
+    or:
+    - `self.datamodule`, which has `train_dataloader`, `val_dataloader`, and `test_dataloader` attributes.
+    """
+
     classes: List[str]
 
     @property

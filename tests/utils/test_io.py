@@ -1,7 +1,8 @@
-from ride.utils import io
-from pathlib import Path
 import json
 import shutil
+from pathlib import Path
+
+from ride.utils import io
 
 
 def test_bump_version():

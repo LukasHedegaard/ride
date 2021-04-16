@@ -8,8 +8,7 @@ from typing import Sequence
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from ride.core import RideClassificationDataset, Configs
-from ride.core import RideDataset
+from ride.core import Configs, RideClassificationDataset, RideDataset
 from ride.utils.utils import some
 
 

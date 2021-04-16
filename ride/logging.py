@@ -16,7 +16,6 @@ from pytorch_lightning.loggers import (
 from pytorch_lightning.utilities import rank_zero_only
 
 from ride.utils.env import RUN_LOGS_PATH
-from ride.utils.io import dump_yaml
 from ride.utils.logging import getLogger, process_rank
 
 logger = getLogger(__name__)
@@ -101,7 +100,12 @@ def log_figures(module: pl.LightningModule, d: Dict[str, Figure]):
             # SummaryWriter.add_figure(self, tag, figure)
             image_loggers.append(lgr.experiment.add_figure)
         elif type(lgr) == WandbLogger:
-            import wandb  # noqa: F401
+            try:
+                import wandb  # noqa: F401
+            except ImportError:
+                logger.error(
+                    "Before using the WandbLogger, first install WandB using `pip install wandb`"
+                )
 
             wandb_log = lgr.experiment.log
 
@@ -146,20 +150,22 @@ class ResultsLogger(LightningLoggerBase):
 
     @rank_zero_only
     def log_hyperparams(self, params):
-        if self.log_dir:
-            dump_yaml(
-                path=Path(self.log_dir) / f"{self.prefix}_hparams.yaml",
-                data=params,
-            )
+        ...  # Skip it: hparams are saved in main
+        # if self.log_dir:
+        #     dump_yaml(
+        #         path=Path(self.log_dir) / f"{self.prefix}_hparams.yaml",
+        #         data=params,
+        #     )
 
     @rank_zero_only
     def log_metrics(self, metrics: Dict, step):
         self.results = {self._fix_name_perfix(k): float(v) for k, v in metrics.items()}
-        if self.log_dir:
-            dump_yaml(
-                path=Path(self.log_dir) / f"{self.prefix}_results.yaml",
-                data={k: float(v) for k, v in self.results.items()},
-            )
+        ...  # Skip it: results are saved in main
+        # if self.log_dir:
+        #     dump_yaml(
+        #         path=Path(self.log_dir) / f"{self.prefix}_results.yaml",
+        #         data={k: float(v) for k, v in self.results.items()},
+        #     )
 
     def log_figure(self, tag: str, fig: Figure):
         if self.log_dir:

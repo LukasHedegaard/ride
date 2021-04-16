@@ -9,7 +9,7 @@ from ride.core import Configs, RideModule
 from ride.runner import Runner, is_runnable
 from ride.utils.env import NUM_CPU, TUNE_LOGS_PATH
 from ride.utils.gpus import parse_num_gpus
-from ride.utils.io import bump_version, dump_json, dump_yaml, load_json, load_yaml
+from ride.utils.io import bump_version, dump_json, dump_yaml, load_structured_data
 from ride.utils.logging import getLogger
 
 logger = getLogger(__name__)
@@ -187,14 +187,7 @@ class Hparamsearch:
             AttributeDict: AttributeDict with updated hyperparameters
         """
         path = Path(path)
-        if "json" in path.suffix:
-            hparams = load_json(path)
-        elif "yaml" in path.suffix:
-            hparams = load_yaml(path)
-        else:
-            raise RuntimeError(
-                f"The supplied hparams file ({str(path)}) should be of type 'json' or 'yaml"
-            )
+        hparams = load_structured_data(path)
 
         if Cls:
             hparam_names = Cls.configs().names

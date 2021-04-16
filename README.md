@@ -9,6 +9,9 @@
   <a href='https://ride.readthedocs.io/en/latest/?badge=latest'>
       <img src='https://readthedocs.org/projects/ride/badge/?version=latest' alt='Documentation Status' height="20"/>
   </a>
+  <a href="https://www.codefactor.io/repository/github/lukashedegaard/ride">
+    <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" />
+  </a>
   <a href="https://codecov.io/gh/LukasHedegaard/ride">
     <img src="https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC" height="20"/>
   </a>

@@ -17,7 +17,7 @@ class SgdOptimizer(OptimizerMixin):
 
     def validate_attributes(self):
         attrgetter("parameters")(self)
-        for hparam in self.configs().names:
+        for hparam in SgdOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -65,7 +65,7 @@ class AdamWOptimizer(OptimizerMixin):
 
     def validate_attributes(self):
         attrgetter("parameters")(self)
-        for hparam in self.configs().names:
+        for hparam in AdamWOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -121,7 +121,7 @@ class SgdReduceLrOnPlateauOptimizer(OptimizerMixin):
 
     def validate_attributes(self):
         attrgetter("parameters")(self)
-        for hparam in self.configs().names:
+        for hparam in SgdReduceLrOnPlateauOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -171,7 +171,7 @@ class AdamWReduceLrOnPlateauOptimizer(OptimizerMixin):
 
     def validate_attributes(self):
         attrgetter("parameters")(self)
-        for hparam in self.configs().names:
+        for hparam in AdamWReduceLrOnPlateauOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -223,7 +223,7 @@ class SgdOneCycleOptimizer(OptimizerMixin):
         attrgetter("parameters")(self)
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.max_epochs")(self)
-        for hparam in self.configs().names:
+        for hparam in SgdOneCycleOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -270,7 +270,7 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
         attrgetter("parameters")(self)
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.max_epochs")(self)
-        for hparam in self.configs().names:
+        for hparam in SgdCyclicLrOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -322,7 +322,7 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
         attrgetter("parameters")(self)
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.max_epochs")(self)
-        for hparam in self.configs().names:
+        for hparam in AdamWCyclicLrOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod
@@ -375,7 +375,7 @@ class AdamWOneCycleOptimizer(OptimizerMixin):
         attrgetter("parameters")(self)
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.max_epochs")(self)
-        for hparam in self.configs().names:
+        for hparam in AdamWOneCycleOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
     @staticmethod

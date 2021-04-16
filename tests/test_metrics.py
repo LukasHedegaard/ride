@@ -1,9 +1,12 @@
-from ride import metrics
 import logging
-from ride.core import RideModule
-from .dummy_dataset import DummyClassificationDataLoader
-import torch
+
 import pytorch_lightning as pl
+import torch
+
+from ride import metrics
+from ride.core import RideModule
+
+from .dummy_dataset import DummyClassificationDataLoader
 
 
 def test_faulty_metric_warning(caplog):

@@ -6,7 +6,6 @@ import sys
 from functools import wraps
 from pathlib import Path
 
-import click
 import coloredlogs
 import pytorch_lightning as pl
 
@@ -42,7 +41,7 @@ def if_rank_zero(fn):
 def getLogger(name, log_once=False):
     name = name.split(".")[0]  # Get chars before '.'
     if name not in {"wandb", "lightning", "ride", "datasets", "models"}:
-        name = click.style(name, fg="white", bold=True)
+        name = style(name, fg="white", bold=True)
     logger = logging.getLogger(name)
     if log_once:
         logger._log = once(logger._log)
@@ -206,7 +205,7 @@ def init_logging(logdir: str = None, logging_backend: str = "tensorboard"):
 
     # Add root handler for redirecting run output to file
     os.makedirs(logdir, exist_ok=True)
-    getLogger("").addHandler(logging.FileHandler(Path(logdir) / "run.log"))
+    logging.getLogger().addHandler(logging.FileHandler(Path(logdir) / "run.log"))
 
     # Write basic environment info to logs
     logger.info(f"Running on host {style(socket.gethostname(), fg='yellow')}")
