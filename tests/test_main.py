@@ -12,7 +12,7 @@ from ride.core import RideModule
 from ride.finetune import Finetunable
 from ride.optimizers import AdamWOneCycleOptimizer
 from ride.utils.checkpoints import get_latest_checkpoint
-from ride.utils.io import dump_json, dump_yaml
+from ride.utils.io import dump_json, dump_yaml, is_nonempty_file
 from ride.utils.utils import AttributeDict, attributedict, temporary_parameter
 
 # from ride.finetune import Finetunable
@@ -174,6 +174,16 @@ class TestMain:
         ]:
             assert any([check in msg for msg in caplog.messages])
 
+        # Check that result files exist
+        hparams_path = Path(caplog.messages[5].split(" ")[1])
+        assert is_nonempty_file(hparams_path)
+
+        val_result_path = Path(caplog.messages[-4].split(" ")[1])
+        assert is_nonempty_file(val_result_path)
+
+        test_result_path = Path(caplog.messages[-1].split(" ")[1])
+        assert is_nonempty_file(test_result_path)
+
     def test_test_ensemble(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         """Test ensemble works"""
         m, args = main_and_args
@@ -268,10 +278,8 @@ class TestMain:
             assert any([check in msg for msg in caplog.messages])
 
         # Check that results are saved and path is printed
-        model_profile_path = Path(caplog.messages[-2].split(" ")[1])
-        model_hparams_path = Path(caplog.messages[-1].split(" ")[1])
-        assert model_profile_path.is_file()
-        assert model_hparams_path.is_file()
+        model_profile_path = Path(caplog.messages[-1].split(" ")[1])
+        assert is_nonempty_file(model_profile_path)
 
     def test_hparamsearch(self, main_and_args: Tuple[Main, AttributeDict]):
         """Test that execution of hparamsearch and retreival of best hparams works"""

@@ -39,7 +39,7 @@ from ride.runner import Runner  # noqa: E402
 from ride.utils.checkpoints import find_checkpoint  # noqa: E402
 from ride.utils.env import LOGS_PATH  # noqa: E402
 from ride.utils.io import bump_version, dump_yaml  # noqa: E402
-from ride.utils.utils import attributedict  # noqa: E402
+from ride.utils.utils import attributedict, to_dict  # noqa: E402
 from pytorch_lightning.utilities.parsing import AttributeDict  # noqa: E402
 
 logger = getLogger(__name__)
@@ -215,20 +215,18 @@ class Main:
                 auto_scale_lr=True,
             )
 
+        save_results("hparams.yaml", to_dict(args))
+
         if args.hparamsearch:
             hprint("Searching for optimal model hyperparameters")
             best_hparams = self.hparamsearch.run(args)
             if not best_hparams:
                 raise RuntimeError("Hparamsearch was unable to identy best hparams")
-            logger.info("Search found these hyperparameters:")
+            logger.info("Hparamsearch completed")
             dprint(best_hparams)
             results.append(best_hparams)
-            save_results(
-                f"hparamsearch/{args.id}.yaml",
-                best_hparams,
-            )
-            best_hparams_path = Hparamsearch.dump(best_hparams, identifier=args.id)
-            logger.info(f"Loading best hparams from '{best_hparams_path}'")
+            best_hparams_path = save_results("hparamsearch.yaml", to_dict(best_hparams))
+            logger.info("🔧 Assigning best hparams to model")
             args = Hparamsearch.load(best_hparams_path, old_args=args)
 
         if args.train:
@@ -240,37 +238,23 @@ class Main:
             val_results = self.runner.validate(args)
             dprint(val_results)
             results.append(val_results)
-            save_results(
-                "evaluation/validation_results.yaml",
-                val_results,
-            )
+            save_results("val_results.yaml", val_results)
 
         if args.test:
             hprint(
                 f"Running evaluation on test set{' using ensemble testing' if args.test_ensemble else ''}"
             )
-
             test_results = self.runner.test(args)
             dprint(test_results)
             results.append(test_results)
-            save_results(
-                "evaluation/test_results.yaml",
-                test_results,
-            )
+            save_results("test_results.yaml", test_results)
 
         if args.profile_model:
             hprint("Profiling model")
             info = self.runner.profile_model(args, num_runs=args.profile_model_num_runs)
             dprint(info)
             results.append(info)
-            save_results(
-                "profiles/model_profile.yaml",
-                info,
-            )
-            save_results(
-                "profiles/model_hparams.yaml",
-                vars(args),
-            )
+            save_results("profile.yaml", info)
 
         return results
 
@@ -288,13 +272,15 @@ def dprint(d: dict):
     logger.info(yaml.dump({"Results": d}))
 
 
-def make_save_results(root_path: str) -> Callable[[str, Any], None]:
+def make_save_results(root_path: str, verbose=True) -> Callable[[str, Any], None]:
     root_path = Path(root_path)
 
     def bump_version_and_save(relative_path: str, data):
         nonlocal root_path
         path = bump_version(root_path / relative_path)
-        logger.info("Saving " + str(path))
+        if verbose:
+            logger.info("Saving " + str(path))
         dump_yaml(path, data)
+        return path
 
     return bump_version_and_save
