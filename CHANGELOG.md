@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2021-04-15
+### Fixed
+- Project dependencies: removed click and added psutil to requirements
+- Logging: Save stdout and stderr to run.log
+
+### Changed
+- Logged results names. Flattened folder structure and streamlines names
+
+### Added
+- Docstrings to remaining core classes
+- Tests that logged results exists
+
+
 ## [0.3.1] - 2021-03-24
 ### Added
 - Add support for namedtuples in dataset `input_shape` and `output_shape`
