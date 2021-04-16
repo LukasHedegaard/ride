@@ -205,7 +205,7 @@ def init_logging(logdir: str = None, logging_backend: str = "tensorboard"):
 
     # Add root handler for redirecting run output to file
     os.makedirs(logdir, exist_ok=True)
-    getLogger("").addHandler(logging.FileHandler(Path(logdir) / "run.log"))
+    logging.getLogger().addHandler(logging.FileHandler(Path(logdir) / "run.log"))
 
     # Write basic environment info to logs
     logger.info(f"Running on host {style(socket.gethostname(), fg='yellow')}")
