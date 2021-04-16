@@ -1,5 +1,6 @@
-from ride.utils.utils import is_shape
 from collections import namedtuple
+
+from ride.utils.utils import is_shape
 
 
 def test_is_shape():

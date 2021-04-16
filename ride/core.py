@@ -13,11 +13,11 @@ from ride.utils.logging import getLogger
 from ride.utils.utils import (
     DictLike,
     attributedict,
+    is_shape,
     merge_attributedicts,
     missing_or_not_in_other,
     name,
     some,
-    is_shape,
 )
 
 logger = getLogger(__name__)

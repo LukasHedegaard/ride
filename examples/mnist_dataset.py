@@ -1,6 +1,6 @@
-from ride.core import AttributeDict, RideClassificationDataset, Configs
-from ride.utils.env import DATASETS_PATH
 from ride import getLogger
+from ride.core import AttributeDict, Configs, RideClassificationDataset
+from ride.utils.env import DATASETS_PATH
 
 logger = getLogger(__name__)
 
