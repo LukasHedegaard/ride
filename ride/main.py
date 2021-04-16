@@ -225,7 +225,9 @@ class Main:
             logger.info("Hparamsearch completed")
             dprint(best_hparams)
             results.append(best_hparams)
-            best_hparams_path = save_results("hparamsearch.yaml", to_dict(best_hparams))
+            # Save to both run_logs and tune_logs
+            save_results("hparamsearch.yaml", to_dict(best_hparams))
+            best_hparams_path = Hparamsearch.dump(best_hparams, identifier=args.id)
             logger.info("🔧 Assigning best hparams to model")
             args = Hparamsearch.load(best_hparams_path, old_args=args)
 
