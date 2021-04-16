@@ -51,7 +51,11 @@ def bump_version(path: Union[str, Path]) -> Path:
 
 def load_structured_data(path: Path):
     suffix = path.suffix
-    assert suffix in {".json", ".yml", ".yaml"}
+    assert suffix in {
+        ".json",
+        ".yml",
+        ".yaml",
+    }, f"The supplied file ({str(path)}) should be of type 'json' or 'yaml"
     if suffix == ".yml":
         suffix = ".yaml"
     d = {".json": load_json, ".yaml": load_yaml}[suffix](path)
