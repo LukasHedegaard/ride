@@ -146,13 +146,13 @@ def load_model_weights(file: str, hparams_passed, model_state_key):
         return pl.utilities.cloud_io.load(
             file, map_location=lambda storage, loc: storage
         )["state_dict"]
-    elif suffix in {".pyth", ".pth"}:
+    elif suffix in {".pyth", ".pth", ".pt"}:
         return try_pyth_load(file, model_state_key)
     elif suffix in {".pkl", ".pickle"}:
         return try_pickle_load(file)
     else:
         raise ArgumentError(
-            f"Unable to load model weights with suffix '{suffix}'. Suffix must be one of {'.ckpt', '.pyth', '.pth', '.pkl', '.pickle'}"
+            f"Unable to load model weights with suffix '{suffix}'. Suffix must be one of {'.ckpt', '.pyth', '.pth', '.pt', '.pkl', '.pickle'}"
         )
 
 
