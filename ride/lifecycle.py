@@ -194,7 +194,7 @@ class Lifecycle(MetricMixin):
         self.common_epoch_end(step_outputs, prefix="val/")
 
     def test_step(self, batch, batch_idx=None):
-        if not batch:
+        if batch is None:
             return None
 
         x, target = batch[0], batch[1]
