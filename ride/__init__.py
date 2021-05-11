@@ -6,8 +6,7 @@ from .core import (  # noqa: F401, E402
     RideModule,
     getLogger,
 )
-
-# from .finetune import Finetunable  # noqa: F401
+from .finetune import Finetunable  # noqa: F401
 from .hparamsearch import Hparamsearch  # noqa: F401, E402
 from .lifecycle import Lifecycle  # noqa: F401, E402
 from .metrics import (  # noqa: F401, E402
