@@ -15,7 +15,6 @@ class Unfreezable(RideMixin):
     def validate_attributes(self):
         for hparam in self.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
-        attrgetter("hparams.max_epochs")(self)
 
     @staticmethod
     def configs() -> Configs:
