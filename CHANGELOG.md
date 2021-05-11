@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - CheckpointEveryNSteps now included in ModelCheckpoint c.f. pl==1.3
+- Import from torchmetrics instead of pl.metrics 
 
 ### Added
-- Lifecycle and Finetuneable mixins always included per default
+- Lifecycle and Finetuneable mixins always included via RideModule
 - Support for pytorch-lightning==1.3
+- Additional tests: Coverage is now at 92%
 
 ### Removed
 - Support for nested inheritance of RideModule

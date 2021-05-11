@@ -1,5 +1,6 @@
 corider
 pytorch-lightning~=1.3
+torchmetrics
 python-dotenv
 supers
 matplotlib
