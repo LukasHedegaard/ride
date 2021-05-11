@@ -1,7 +1,7 @@
 import logging
 
-import pytorch_lightning as pl
 import torch
+from torchmetrics.classification.average_precision import AveragePrecision
 
 from ride import metrics
 from ride.core import RideModule
@@ -45,9 +45,7 @@ def test_MeanAveragePrecisionMetric():
     )
     preds = torch.tensor([[0.1, 0.9] for _ in range(8)])
 
-    pl_map = pl.metrics.classification.AveragePrecision(num_classes=len(net.classes))(
-        preds, targets
-    )
+    pl_map = AveragePrecision(num_classes=len(net.classes))(preds, targets)
 
     assert DummyModule.metric_names() == ["loss", "mAP"]
     assert net.metrics_step(preds, targets)["mAP"] == pl_map

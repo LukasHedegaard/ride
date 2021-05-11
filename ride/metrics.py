@@ -4,11 +4,12 @@ from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pytorch_lightning as pl
 import torch
 from ptflops import get_model_complexity_info
 from supers import supers
 from torch import Tensor
+from torchmetrics.classification.average_precision import AveragePrecision
+from torchmetrics.functional.classification.confusion_matrix import confusion_matrix
 
 from ride.core import Configs, RideMixin
 from ride.utils.logging import getLogger
@@ -103,11 +104,9 @@ class MeanAveragePrecisionMetric(MetricMixin):
 def compute_map(self):
     if "map_fn" not in vars():
         if "binary" in self.hparams.loss:
-            map_fn = pl.metrics.classification.AveragePrecision(pos_label=1)
+            map_fn = AveragePrecision(pos_label=1)
         else:
-            map_fn = pl.metrics.classification.AveragePrecision(
-                num_classes=len(self.classes)
-            )
+            map_fn = AveragePrecision(pos_label=1, num_classes=len(self.classes))
     return map_fn
 
 
@@ -321,7 +320,6 @@ def make_confusion_matrix(  # noqa: C901
 
     """
 
-    from pytorch_lightning.metrics.functional.confusion_matrix import confusion_matrix
     from seaborn import heatmap
 
     font_logger = getLogger("matplotlib.font_manager")
