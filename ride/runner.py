@@ -12,7 +12,6 @@ from pytorch_lightning.utilities.parsing import AttributeDict
 
 from ride.core import RideDataset, RideModule
 from ride.logging import (
-    CheckpointEveryNSteps,
     ExperimentLoggerCreator,
     ResultsLogger,
     add_experiment_logger,
@@ -80,17 +79,13 @@ class Runner:
                 verbose=True,
                 monitor=f"val/{args.optimization_metric}",  # Comment out when using pl.EvalResult
                 mode=self.Module.metrics()[args.optimization_metric].value,
-                prefix="",
                 save_last=True,
+                every_n_train_steps=args.checkpoint_every_n_steps,
             )
         )
         logger.info(
             f"Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics()[args.optimization_metric].value}"
         )
-        if args.checkpoint_every_n_steps:
-            trainer_callbacks.append(
-                CheckpointEveryNSteps(args.checkpoint_every_n_steps)
-            )
         if args.monitor_lr:
             trainer_callbacks.append(LearningRateMonitor(logging_interval="step"))
 
