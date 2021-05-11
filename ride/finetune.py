@@ -157,23 +157,31 @@ def load_model_weights(file: str, hparams_passed, model_state_key):
 
 
 def try_pyth_load(file, model_state_key):
-    loaded_model_state = torch.load(file, map_location="cpu")
+    loaded = torch.load(file, map_location="cpu")
+    if issubclass(type(loaded), torch.nn.Module):
+        return loaded.state_dict()
+
+    assert issubclass(
+        type(loaded), dict
+    ), "pyth checkpoint should either be a model or a dict of weights"
+
     guesses = [
         model_state_key,
         "state_dict",
         "model_state",
     ]
     for g in guesses:
-        if g in loaded_model_state.keys():
-            state_dict = loaded_model_state[g]
+        if g in loaded.keys():
+            state_dict = loaded[g]
             break
 
-    if len(loaded_model_state) > 13:  # Hail mary
-        state_dict = loaded_model_state
+    # Check if we already have a state_dict
+    if all([type(v) == torch.Tensor for v in loaded.values()]):
+        state_dict = loaded
 
-    if not state_dict:
+    if not state_dict:  # pragma: no cover
         raise KeyError(
-            f"None of the tried keys {guesses} fits loaded model state {loaded_model_state.keys()}. You can try another key using the `finetune_from_weights_key` hparam."
+            f"None of the tried keys {guesses} fits loaded model state {loaded.keys()}. You can try another key using the `finetune_from_weights_key` hparam."
         )
 
     return state_dict
@@ -199,7 +207,7 @@ def try_pickle_load(file):
 
         try:
             return pickle.load(f, encoding="latin1")
-        except Exception:
+        except Exception:  # pragma: no cover
             pass
 
-    raise ValueError(f"Unable to load file {file}")
+    raise ValueError(f"Unable to load file {file}")  # pragma: no cover
