@@ -2,8 +2,8 @@ from argparse import ArgumentParser
 
 import torch
 
-from ride.core import Configs, RideModule
 from ride import optimizers
+from ride.core import Configs, RideModule
 
 from .dummy_dataset import DummyRegressionDataLoader
 
