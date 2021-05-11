@@ -181,6 +181,7 @@ class Main:
 
         # Ensure gpus is defined
         args.gpus = getattr(args, "gpus", "")
+        args.max_epochs = getattr(args, "max_epochs", 1)
 
         seed_everything(args.seed)
         self.log_dir = experiment_logger(
