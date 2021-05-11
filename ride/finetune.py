@@ -18,10 +18,7 @@ logger = getLogger(__name__)
 class Finetunable(Unfreezable):
     """Adds finetune capabilities to model
 
-    Usage notes:
-        - Inherit from the module as follows:
-            `class YourModule(FinetuneMixin, RideModule, pl.LightningModule)`
-        - `FinetuneMixin.__init__(self, hparams))` must be called at the end of `YourModule.__init__`
+    This module is automatically added when RideModule is inherited
     """
 
     hparams: ...
