@@ -85,6 +85,15 @@ def add_experiment_logger(
         return LoggerCollection([prev_logger, new_logger])
 
 
+def get_log_dir(module: pl.LightningModule):
+    loggers = (
+        module.logger if hasattr(module.logger, "__getitem__") else [module.loggers]
+    )
+    for lgr in loggers[::-1]:  # ResultLogger would be last
+        if hasattr(lgr, "log_dir"):
+            return lgr.log_dir
+
+
 def log_figures(module: pl.LightningModule, d: Dict[str, Figure]):
     assert isinstance(module, pl.LightningModule)
     module_loggers = (
