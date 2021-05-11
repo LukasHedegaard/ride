@@ -46,16 +46,6 @@ class Configs(_Configs):
         return attributedict({k: v.default for k, v in self.values.items()})
 
 
-def _init_subsubclass(cls):
-    orig_init = cls.__init__
-
-    def init(self, hparams: DictLike, *args, **kwargs):
-        super(cls, self).__init__(hparams, *args, **kwargs)
-        apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
-
-    cls.__init__ = init
-
-
 def _init_subclass(cls):
     # Validate inheritance order
     assert (
@@ -64,41 +54,28 @@ def _init_subclass(cls):
     class YourModule(RideModule, OtherMixin):
         ..."""
 
-    if cls.__bases__[0] is not RideModule:
-        _init_subsubclass(cls)
-        return
+    add_bases = []
 
+    # Extend funtionality with additional base-classes
+    from ride.finetune import Finetunable
+    from ride.lifecycle import Lifecycle  # Break cyclical dependency
+
+    # Ensure pl.LightningModule is the lowest-priority parent
     if not cls.__bases__[-1] == pl.LightningModule:
-        cls.__bases__ = (*cls.__bases__, pl.LightningModule)
+        add_bases.append(pl.LightningModule)
+
+    if not issubclass(cls, Lifecycle):
+        add_bases.append(Lifecycle)
+
+    if not issubclass(cls, Finetunable):
+        add_bases.append(Finetunable)
 
     # Warn if there is no forward
     if missing_or_not_in_other(
         cls, pl.LightningModule, {"forward"}, must_be_callable=True
     ):
-        # if not (some(cls, "forward") and callable(cls.forward)):
         logger.warning(
             f"No `forward` function found in {name(cls)}. Did you forget to define it?"
-        )
-
-    # Ensure lifecycle
-    lifecycle_steps = {
-        "training_step",
-        "validation_step",
-        "test_step",
-    }
-    missing_lifecycle_steps = missing_or_not_in_other(
-        cls, pl.LightningModule, lifecycle_steps
-    )
-    if missing_lifecycle_steps:
-        logger.info(f"Missing lifecycle steps {missing_lifecycle_steps} in {name(cls)}")
-        logger.info("🔧 Adding ride.Lifecycle automatically")
-        # Import here to break cyclical import
-        from ride.lifecycle import Lifecycle
-
-        cls.__bases__ = (
-            *cls.__bases__[:-1],
-            Lifecycle,
-            *cls.__bases__[-1:],
         )
 
     # Ensure dataset
@@ -113,24 +90,19 @@ def _init_subclass(cls):
         logger.info(
             "🔧 Adding ride.RideDataset automatically and assuming that `self.datamodule`, `self.input_shape`, and `self.output_shape` will be provided by user"
         )
-        cls.__bases__ = (
-            *cls.__bases__[:-1],
-            RideDataset,
-            *cls.__bases__[-1:],
-        )
+        add_bases.append(RideDataset)
 
     # Ensure optimizer
     if missing_or_not_in_other(cls, pl.LightningModule, {"configure_optimizers"}):
         logger.info(f"`configure_optimizers` not found in in {name(cls)}")
         logger.info("🔧 Adding ride.SgdOptimizer automatically")
-        # Import here to break cyclical import
-        from ride.optimizers import SgdOptimizer
 
-        cls.__bases__ = (
-            *cls.__bases__[:-1],
-            SgdOptimizer,
-            *cls.__bases__[-1:],
-        )
+        from ride.optimizers import SgdOptimizer  # Break cyclical dependency
+
+        add_bases.append(SgdOptimizer)
+
+    # Update class bases with pl.LightningModule as lowest rank
+    cls.__bases__ = (*cls.__bases__, *add_bases[::-1])
 
     # Monkeypatch derived module init
     orig_init = cls.__init__
@@ -138,14 +110,9 @@ def _init_subclass(cls):
     def init(self, hparams: DictLike = {}, *args, **kwargs):
         pl.LightningModule.__init__(self)
         self.hparams = merge_attributedicts(self.configs().default_values(), hparams)
-        sself = (
-            self
-            if type(self).__bases__[0] == RideModule
-            else supers(self)._superclasses[0]
-        )
-        supers(sself)[1:-1].__init__(self.hparams)
+        supers(self)[1:-1].__init__(self.hparams)
         apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
-        supers(sself).on_init_end(self.hparams, *args, **kwargs)
+        supers(self).on_init_end(self.hparams, *args, **kwargs)
         supers(self).validate_attributes()
 
     cls.__init__ = init
@@ -180,7 +147,7 @@ class RideModule:
     """
     Base-class for modules using the Ride ecosystem.
 
-    This module should be inherited as the highest-priority parent.
+    This module should be inherited as the highest-priority parent (first in sequence).
 
     Example::
 

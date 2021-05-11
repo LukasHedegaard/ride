@@ -80,28 +80,6 @@ def test_init_only_self():
     DummyModule()
 
 
-def test_nested_init_hparams():
-    """Test if modules initialises when hparams is also given"""
-
-    class DummyModuleNested(DummyModule):
-        def __init__(self, hparams, something_else=42):
-            # super().__init__(hparams)
-            self.something_else = something_else
-
-    parser = DummyModuleNested.configs().add_argparse_args(ArgumentParser())
-    args, _ = parser.parse_known_args()
-    args = apply_standard_args(args)
-
-    module = DummyModuleNested(args)
-    assert module.something_else == 42
-
-    module = DummyModuleNested(args, 1337)
-    assert module.something_else == 1337
-
-    module = DummyModuleNested(args, something_else=13)
-    assert module.something_else == 13
-
-
 def test_training_step_added_automatically():
     """Test if modules adds lifecycle automatically"""
 
