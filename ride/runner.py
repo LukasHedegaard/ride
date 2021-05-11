@@ -80,7 +80,7 @@ class Runner:
                 monitor=f"val/{args.optimization_metric}",  # Comment out when using pl.EvalResult
                 mode=self.Module.metrics()[args.optimization_metric].value,
                 save_last=True,
-                every_n_train_steps=args.checkpoint_every_n_steps,
+                every_n_train_steps=args.checkpoint_every_n_steps or None,
             )
         )
         logger.info(
