@@ -149,7 +149,7 @@ class Runner:
         if hasattr(self, "trainer"):
             self.trainer.logger = logger
         else:
-            self.trainer = Trainer.from_argparse_args(args, logger=logger)
+            self.trainer = Trainer.from_argparse_args(Namespace(**args), logger=logger)
 
         # Run eval
         self.trainer.test(model, dataloaders[mode]())
