@@ -160,6 +160,10 @@ class TestMain:
         args.test = True
         args.checkpoint_every_n_steps = 10
 
+        # Trainer args
+        args.limit_val_batches = 2
+        args.limit_test_batches = 2
+
         with caplog.at_level(logging.INFO):
             m.main(args)
 
@@ -170,7 +174,7 @@ class TestMain:
             "Running evaluation on validation set",
             "val/epoch",
             "Running evaluation on test set",
-            "test/epoch",
+            "test/loss",
         ]:
             assert any([check in msg for msg in caplog.messages])
 
@@ -185,6 +189,10 @@ class TestMain:
 
         test_result_path = Path(save_lines[-1].split(" ")[1])
         assert is_nonempty_file(test_result_path)
+
+        # Check that trainer args were passed
+        assert m.runner.trainer.limit_val_batches == 2
+        assert m.runner.trainer.limit_test_batches == 2
 
     def test_test_ensemble(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         """Test ensemble works"""
