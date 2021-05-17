@@ -57,9 +57,9 @@ def _init_subclass(cls):
     add_bases = []
 
     # Extend funtionality with additional base-classes
-    from ride.lifecycle import Lifecycle  # Break cyclical dependencies
+    # from ride.feature_extraction import FeatureExtractable
     from ride.finetune import Finetunable
-    from ride.feature_extraction import FeatureExtractable
+    from ride.lifecycle import Lifecycle  # Break cyclical dependencies
 
     # Ensure pl.LightningModule is the lowest-priority parent
     if not cls.__bases__[-1] == pl.LightningModule:
@@ -71,8 +71,8 @@ def _init_subclass(cls):
     if not issubclass(cls, Finetunable):
         add_bases.append(Finetunable)
 
-    if not issubclass(cls, FeatureExtractable):
-        add_bases.append(FeatureExtractable)
+    # if not issubclass(cls, FeatureExtractable):
+    #     add_bases.append(FeatureExtractable)
 
     # Warn if there is no forward
     if missing_or_not_in_other(
