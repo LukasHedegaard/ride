@@ -159,22 +159,11 @@ class ResultsLogger(LightningLoggerBase):
 
     @rank_zero_only
     def log_hyperparams(self, params):
-        ...  # Skip it: hparams are saved in main
-        # if self.log_dir:
-        #     dump_yaml(
-        #         path=Path(self.log_dir) / f"{self.prefix}_hparams.yaml",
-        #         data=params,
-        #     )
+        ...
 
     @rank_zero_only
     def log_metrics(self, metrics: Dict, step):
         self.results = {self._fix_name_perfix(k): float(v) for k, v in metrics.items()}
-        ...  # Skip it: results are saved in main
-        # if self.log_dir:
-        #     dump_yaml(
-        #         path=Path(self.log_dir) / f"{self.prefix}_results.yaml",
-        #         data={k: float(v) for k, v in self.results.items()},
-        #     )
 
     def log_figure(self, tag: str, fig: Figure):
         if self.log_dir:
