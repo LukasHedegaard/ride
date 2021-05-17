@@ -4,6 +4,9 @@
 
 <div align="left">
   <a href="https://pypi.org/project/ride/">
+    <img src="https://img.shields.io/pypi/pyversions/ride" height="20" >
+  </a>
+  <a href="https://pypi.org/project/ride/">
     <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20" >
   </a>
   <a href='https://ride.readthedocs.io/en/latest/?badge=latest'>
