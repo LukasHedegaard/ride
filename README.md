@@ -45,8 +45,10 @@ This project is an audacious attempt to provide battle-tested defaults for
 - _... and more_
 
 The implementation builds on the work at [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning), and provides the same __multi-gpu, multi-node__ support out of the box! 
-Currently, we're tracking <img src="http://img.shields.io/badge/PyTorch_Lightning-v1.3-792ee5.svg" height="20">
-
+Currently, we're tracking
+<a href="https://github.com/PyTorchLightning/pytorch-lightning">
+  <img src="http://img.shields.io/badge/PyTorch_Lightning-v1.3-792ee5.svg" height="20">
+</a>
 
 
 ## Programming model
