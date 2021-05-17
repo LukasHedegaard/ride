@@ -175,8 +175,6 @@ $ python simple_classifier.py --train --test --learning_rate 0.01 --hidden_dim 2
     ride: 💾 Saving /Users/UserName/project_name/logs/run_logs/your_id/version_1/test_results.yaml
     ```
 
-</details>
-
 
 ### Feature extraction and visualisation
 Extract features after layer `l1` and visualise them with [UMAP](https://arxiv.org/abs/1802.03426).
@@ -186,7 +184,7 @@ $ python simple_classifier.py --train --test --extract_features_after_layer = "l
 - _Example output:_
   <p align="center">
     <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_umap.png" height="300">
-  </div>
+  </p>
 
 ### Confusion matrix visualisation
 Plot the confution matrix for the test set.
@@ -196,7 +194,7 @@ $ python simple_classifier.py --train --test --test_confusion_matrix 1
 - _Example output:_
   <p align="center">
     <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_confusion_matrix.png" height="300">
-  </div>
+  </p>
 
 ### Advanced model finetuning
 Load model and finetune with [gradual unfreeze and discriminative learning rates](https://arxiv.org/abs/1801.06146)
