@@ -1,23 +1,20 @@
-from pathlib import Path
+from collections import OrderedDict
 from typing import Tuple
 
 import pytest
 import torch
 
+from ride import Configs, Main
 from ride.core import RideModule
-from ride.optimizers import SgdOptimizer
-from ride.utils.checkpoints import get_latest_checkpoint
-from ride.utils.utils import AttributeDict
 from ride.feature_extraction import FeatureExtractable
-from collections import OrderedDict
+from ride.optimizers import SgdOptimizer
+from ride.utils.utils import AttributeDict
 
 # from ride.finetune import Finetunable
 from .dummy_dataset import DummyRegressionDataLoader
 
-from ride import Main, Configs
 
-
-class DummyModule(
+class ExDummyModule(
     RideModule, FeatureExtractable, DummyRegressionDataLoader, SgdOptimizer
 ):
     def __init__(self, hparams):
@@ -53,8 +50,9 @@ class DummyModule(
         return c
 
 
-def default_main_and_args() -> Tuple[Main, AttributeDict]:
-    m = Main(DummyModule)
+@pytest.fixture()  # scope="module"
+def main_and_args() -> Tuple[Main, AttributeDict]:
+    m = Main(ExDummyModule)
     parser = m.argparse(run=False)
     args, _ = parser.parse_known_args()
     args.max_epochs = 1
@@ -71,11 +69,6 @@ def default_main_and_args() -> Tuple[Main, AttributeDict]:
     args.batch_size = 4
 
     return m, args
-
-
-@pytest.fixture()  # scope="module"
-def main_and_args() -> Tuple[Main, AttributeDict]:
-    return default_main_and_args()
 
 
 class TestFeatureExtraction:
