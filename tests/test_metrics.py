@@ -43,7 +43,7 @@ def test_MeanAveragePrecisionMetric():
     targets = torch.tensor(
         [[0, 1], [0, 1], [0, 1], [0, 1], [1, 0], [1, 0], [1, 0], [1, 0]]
     )
-    preds = torch.tensor([[0.1, 0.9] for _ in range(8)])
+    preds = torch.tensor([[0.1, 0.9] for _ in range(8)]).clone()
 
     pl_map = AveragePrecision(num_classes=len(net.classes))(preds, targets)
 
