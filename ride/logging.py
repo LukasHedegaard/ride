@@ -178,9 +178,10 @@ class ResultsLogger(LightningLoggerBase):
 
     def log_figure(self, tag: str, fig: Figure):
         if self.log_dir:
-            fig_path = str(Path(self.log_dir) / f"{tag.replace('/', '_')}.png")
-            logger.info(f"💾 Saving figure {tag} to {fig_path}")
-            fig.savefig(fig_path, bbox_inches="tight")
+            fig_path = Path(self.log_dir) / "figures" / f"{tag}.png"
+            logger.info(f"💾 Saving figure {tag} to {str(fig_path)}")
+            fig_path.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(str(fig_path), bbox_inches="tight")
 
     @rank_zero_only
     def finalize(self, status):

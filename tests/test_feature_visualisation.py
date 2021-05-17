@@ -122,7 +122,7 @@ class TestFeatureExtraction:
         for check in [
             "features/test/conv.npy",
             "features/test/conv_pca.npy",
-            "test_conv_pca.png",
+            "figures/test/conv_pca.png",
         ]:
             assert any([check in msg for msg in caplog.messages])
 
@@ -138,7 +138,7 @@ class TestFeatureExtraction:
         for check in [
             "features/test/lin.npy",
             "features/test/lin_tsne.npy",
-            "test_lin_tsne.png",
+            "figures/test/lin_tsne.png",
         ]:
             assert any([check in msg for msg in caplog.messages])
 
@@ -154,6 +154,6 @@ class TestFeatureExtraction:
         for check in [
             "features/test/l2.npy",
             "features/test/l2_umap.npy",
-            "test_l2_umap.png",
+            "figures/test/l2_umap.png",
         ]:
             assert any([check in msg for msg in caplog.messages])
