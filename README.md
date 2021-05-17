@@ -137,7 +137,7 @@ $ python simple_classifier.py --train --test --learning_rate 0.01 --hidden_dim 2
   - _Example output:_
     ```shell
     lightning: Global seed set to 123
-    ride: Running on host d40049
+    ride: Running on host HostName
     ride: ⭐️ View project repository at https://github.com/UserName/project_name/tree/commit_hash
     ride: Run data is saved locally at /Users/UserName/project_name/logs/run_logs/your_id/version_1
     ride: Logging using Tensorboard
