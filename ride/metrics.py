@@ -301,7 +301,9 @@ def make_confusion_matrix(
         .cpu()
         .numpy()
     )
-    ax = sns.heatmap(z, annot=len(classes) <= 20, vmin=0, vmax=1, cmap="viridis")
+    ax = sns.heatmap(
+        z, annot=len(classes) <= 20, fmt=".2f", vmin=0, vmax=1, cmap="Blues"
+    )
     for x, y in zip(ax.get_xticklabels(), ax.get_yticklabels()):
         x.set_text(f"{classes[int(x._text)]} ({x._text})")
         y.set_text(f"{classes[int(y._text)]} ({y._text})")
