@@ -4,12 +4,13 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 
 from ride.core import Configs, RideClassificationDataset
 from ride.feature_extraction import FeatureExtractable
 from ride.logging import get_log_dir
-from ride.metrics import MetricDict
+from ride.metrics import FigureDict
 from ride.utils.io import bump_version
 from ride.utils.logging import getLogger
 
@@ -89,12 +90,12 @@ class FeatureVisualisable(FeatureExtractable):
         prefix: str = None,
         *args,
         **kwargs,
-    ) -> MetricDict:
+    ) -> FigureDict:
         if not hasattr(self, "extracted_features"):
             return {}
 
         FeatureExtractable.metrics_epoch(
-            self, preds, targets, prefix, clear_extracted_features=(prefix == "test")
+            self, preds, targets, prefix, clear_extracted_features=(prefix != "test")
         )
         if (
             prefix != "test"
@@ -135,22 +136,19 @@ class FeatureVisualisable(FeatureExtractable):
                 if issubclass(type(self), RideClassificationDataset)
                 else scatter_plot(features)
             )
+            return {
+                f"{self.hparams.extract_features_after_layer}_{self.hparams.visualise_features}": fig
+            }
 
         except Exception as e:
             logger.error(f"Caught exception during feature visualisation: {e}")
-
-        return {
-            f"{self.hparams.extract_features_after_layer}_{self.hparams.visualise_features}": fig
-        }
+            return {}
 
 
 def scatter_plot(
     features: np.array, labels: np.array = None, classes: List[str] = None
 ):
-    import seaborn as sns
-
-    sns.set()
-    sns.set_style("whitegrid")
+    sns.set_theme()
 
     fig = plt.figure(figsize=(6, 6))
 
@@ -183,5 +181,6 @@ def scatter_plot(
     g.set(xticklabels=[])
     g.set(yticklabels=[])
     plt.axis("equal")
+    plt.tight_layout()
 
     return fig
