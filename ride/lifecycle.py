@@ -13,7 +13,6 @@ from ride.metrics import (
     MetricDict,
     MetricMixin,
     OptimisationDirection,
-    make_confusion_matrix,
     sort_out_figures,
 )
 from ride.utils.gpus import parse_num_gpus
@@ -103,14 +102,6 @@ class Lifecycle(MetricMixin):
             default=None,
             strategy="constant",
             description="Which gpus should be used. Can be either the number of gpus (e.g. '2') or a list of gpus (e.g. ('0,1').",
-        )
-        c.add(
-            name="test_confusion_matrix",
-            type=int,
-            default=0,
-            choices=[0, 1],
-            strategy="constant",
-            description="Create and save confusion matrix for test data.",
         )
         c.add(
             name="loss",
@@ -259,37 +250,6 @@ class Lifecycle(MetricMixin):
             ]
 
         self.common_epoch_end(step_outputs, prefix="test/")
-
-        # Make confusion matrix
-        if (
-            self.hparams.test_confusion_matrix
-            and hasattr(self, "num_classes")
-            and self.trainer.progress_bar_callback.is_enabled
-        ):
-            try:
-                preds = torch.tensor(
-                    [p for s in step_outputs for p in s["pred"].argmax(-1)]
-                )
-                targets = torch.tensor([t for s in step_outputs for t in s["target"]])
-
-                fig = make_confusion_matrix(
-                    preds,
-                    targets,
-                    self.num_classes,
-                    count=False,
-                    percent=False,
-                    figsize=(25, 25),
-                    categories=[
-                        f"{c} {i}"
-                        for i, c in enumerate(self.test_dataloader().dataset.classes)
-                    ],
-                    cbar=False,
-                )
-                log_figures(self, {"test/confusion_matrix": fig})
-            except Exception as e:  # pragma: no cover
-                logger.warning(
-                    f"Unable to save confusion matrix. Caught error: ''{e}''"
-                )
 
 
 def prefix_keys(prefix: str, dictionary: Dict) -> Dict:

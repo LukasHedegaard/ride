@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 from matplotlib.figure import Figure
 from ptflops import get_model_complexity_info
@@ -286,142 +287,27 @@ def params_count(model: torch.nn.Module):
     return np.sum([p.numel() for p in model.parameters()])
 
 
-def make_confusion_matrix(  # noqa: C901
-    preds,
-    targets,
-    num_classes,
-    group_names=None,
-    categories="auto",
-    count=True,
-    percent=True,
-    cbar=True,
-    xyticks=True,
-    xyplotlabels=True,
-    sum_stats=False,
-    figsize=None,
-    cmap="Blues",
-    title=None,
-    save_as=None,
-):
-    """
-    Modified from https://github.com/DTrimarchi10/confusion_matrix
-    This function will make a pretty plot of an sklearn Confusion Matrix cm using a Seaborn heatmap visualization.
-
-    Arguments
-    ---------
-    preds:         Predictions
-
-    targets:       Targets
-
-    group_names:   List of strings that represent the labels row by row to be shown in each square.
-
-    categories:    List of strings containing the categories to be displayed on the x,y axis. Default is 'auto'
-
-    count:         If True, show the raw number in the confusion matrix. Default is True.
-
-    percent:     If True, show the proportions for each category. Default is True.
-
-    cbar:          If True, show the color bar. The cbar values are based off the values in the confusion matrix.
-                   Default is True.
-
-    xyticks:       If True, show x and y ticks. Default is True.
-
-    xyplotlabels:  If True, show 'True Label' and 'Predicted Label' on the figure. Default is True.
-
-    sum_stats:     If True, display summary statistics below the figure. Default is True.
-
-    figsize:       Tuple representing the figure size. Default will be the matplotlib rcParams value.
-
-    cmap:          Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
-                   See http://matplotlib.org/examples/color/colormaps_reference.html
-
-    title:         Title for the heatmap. Default is None.
-
-    """
-
-    from seaborn import heatmap
-
-    font_logger = getLogger("matplotlib.font_manager")
-    font_logger.propagate = False
-
-    if len(preds.shape) > 1:
-        preds = preds.squeeze().argmax(-1)
-    assert targets.shape and preds.shape and len(targets.shape) == 1
-    cf = confusion_matrix(preds, targets, num_classes).cpu().numpy()
-
-    # CODE TO GENERATE TEXT INSIDE EACH SQUARE
-    blanks = ["" for i in range(cf.size)]
-
-    if group_names and len(group_names) == cf.size:
-        group_labels = ["{}\n".format(value) for value in group_names]
-    else:
-        group_labels = blanks
-
-    if count:
-        group_counts = ["{0:0.0f}\n".format(value) for value in cf.flatten()]
-    else:
-        group_counts = blanks
-
-    if percent:
-        group_percentages = [
-            "{0:.2%}".format(value) for value in cf.flatten() / np.sum(cf)
-        ]
-    else:
-        group_percentages = blanks
-
-    box_labels = [
-        f"{v1}{v2}{v3}".strip()
-        for v1, v2, v3 in zip(group_labels, group_counts, group_percentages)
-    ]
-    box_labels = np.asarray(box_labels).reshape(cf.shape[0], cf.shape[1])
-
-    # CODE TO GENERATE SUMMARY STATISTICS & TEXT FOR SUMMARY STATS
-    if sum_stats:
-        # Accuracy is sum of diagonal divided by total observations
-        accuracy = np.trace(cf) / float(np.sum(cf))
-
-        # if it is a binary confusion matrix, show some more stats
-        if len(cf) == 2:
-            # Metrics for Binary Confusion Matrices
-            precision = cf[1, 1] / sum(cf[:, 1])
-            recall = cf[1, 1] / sum(cf[1, :])
-            f1_score = 2 * precision * recall / (precision + recall)
-            stats_text = "\n\nAccuracy={:0.3f}\nPrecision={:0.3f}\nRecall={:0.3f}\nF1 Score={:0.3f}".format(
-                accuracy, precision, recall, f1_score
-            )
-        else:
-            stats_text = "\n\nAccuracy={:0.3f}".format(accuracy)
-    else:
-        stats_text = ""
-
-    # SET FIGURE PARAMETERS ACCORDING TO OTHER ARGUMENTS
-    if figsize is None:
-        # Get default figure size if not set
-        figsize = plt.rcParams.get("figure.figsize")
-
-    if xyticks is False:
-        # Do not show categories if xyticks is False
-        categories = False
-
-    # MAKE THE HEATMAP VISUALIZATION
-    fig = plt.figure(figsize=figsize)
-    heatmap(
-        cf,
-        annot=box_labels,
-        fmt="",
-        cmap=cmap,
-        cbar=cbar,
-        xticklabels=categories,
-        yticklabels=categories,
+def make_confusion_matrix(
+    preds: Tensor,
+    targets: Tensor,
+    classes: List[str],
+) -> Figure:
+    sns.set_theme()
+    fig = plt.figure()
+    z = (
+        confusion_matrix(
+            preds.argmax(1), targets, num_classes=len(classes), normalize="true"
+        )
+        .cpu()
+        .numpy()
     )
-
-    if xyplotlabels:
-        plt.ylabel("True label")
-        plt.xlabel("Predicted label" + stats_text)
-    else:
-        plt.xlabel(stats_text)
-
-    if title:
-        plt.title(title)
-
+    ax = sns.heatmap(z, annot=len(classes) <= 20, vmin=0, vmax=1, cmap="viridis")
+    for x, y in zip(ax.get_xticklabels(), ax.get_yticklabels()):
+        x.set_text(f"{classes[int(x._text)]} ({x._text})")
+        y.set_text(f"{classes[int(y._text)]} ({y._text})")
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+    plt.ylabel("True")
+    plt.xlabel("Predicted")
+    plt.tight_layout()
     return fig
