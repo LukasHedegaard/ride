@@ -182,9 +182,11 @@ Extract features after layer `l1` and visualise them with [UMAP](https://arxiv.o
 $ python simple_classifier.py --train --test --extract_features_after_layer = "l1" --visualise_features = "umap"
 ```
 - _Example output:_
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_umap.png" height="300">
-  </p>
+
+  <div align="center">
+    <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_umap.png" width="300">
+  </div>
+  
 
 ### Confusion matrix visualisation
 Plot the confution matrix for the test set.
@@ -192,9 +194,9 @@ Plot the confution matrix for the test set.
 $ python simple_classifier.py --train --test --test_confusion_matrix 1
 ```
 - _Example output:_
-  <p align="center">
-    <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_confusion_matrix.png" height="300">
-  </p>
+  <div align="center">
+    <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_confusion_matrix.png" width="400">
+  </div>
 
 ### Advanced model finetuning
 Load model and finetune with [gradual unfreeze and discriminative learning rates](https://arxiv.org/abs/1801.06146)
@@ -215,6 +217,7 @@ You can check the __timing__ and __FLOPs__ of the model with:
 $ python simple_classifier.py --profile_model
 ```
   - _Example output:_
+    
     ```shell
     Results:
       flops: 203530
