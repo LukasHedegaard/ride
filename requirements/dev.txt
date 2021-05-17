@@ -9,6 +9,8 @@ pytest
 pytest-cov
 pytest-xdist
 seaborn
+scikit-learn
+umap-learn
 ray[tune]~=1.2
 torchvision
 lightning-bolts

@@ -55,6 +55,7 @@ setup(
         "build": from_file("requirements/build.txt"),
         "dev": from_file("requirements/dev.txt"),
         "docs": from_file("requirements/docs.txt"),
+        "extras": from_file("requirements/extras.txt"),
     },
     packages=find_packages(exclude=["test"]),
     keywords=["deep learning", "pytorch", "AI"],
