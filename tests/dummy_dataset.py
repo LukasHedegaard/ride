@@ -103,7 +103,7 @@ class OverOneDataset(Dataset):
         return self.num_samples
 
     def __getitem__(self, idx):
-        x = 2 * torch.rand(self.input_shape)
+        x = torch.randn(self.input_shape)
         m = x.mean()
         y = (m > 0).to(torch.long)
         sample = [x, y, idx // 2]
@@ -134,7 +134,7 @@ class DummyClassificationDataLoader(RideClassificationDataset):
         num_workers = 1
         self.input_shape = (hparams.input_shape,)
         self.output_shape = 2
-        self.classes = ["0", "1"]
+        self.classes = ["fee", "fei"]
 
         self._train_dataloader = DataLoader(
             OverOneDataset(self.input_shape, num_samples=65),

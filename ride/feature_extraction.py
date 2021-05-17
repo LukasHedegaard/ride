@@ -1,14 +1,15 @@
-import torch
-import numpy
-
 from operator import attrgetter
 from pathlib import Path
+
+import numpy
+import torch
+
 from ride.core import Configs, RideMixin
+from ride.logging import get_log_dir
+from ride.metrics import MetricDict
+from ride.utils.io import bump_version
 from ride.utils.logging import getLogger
 from ride.utils.utils import rgetattr
-from ride.metrics import MetricDict
-from ride.logging import get_log_dir
-from ride.utils.io import bump_version
 
 logger = getLogger(__name__)
 
@@ -60,7 +61,13 @@ class FeatureExtractable(RideMixin):
         layer.register_forward_hook(store_features)
 
     def metrics_epoch(
-        self, preds: torch.Tensor, targets: torch.Tensor, **kwargs
+        self,
+        preds: torch.Tensor,
+        targets: torch.Tensor,
+        prefix: str = None,
+        clear_extracted_features=True,
+        *args,
+        **kwargs,
     ) -> MetricDict:
         if not hasattr(self, "extracted_features"):
             return {}
@@ -69,10 +76,14 @@ class FeatureExtractable(RideMixin):
         save_path = bump_version(
             Path(get_log_dir(self))
             / "features"
+            / (prefix or "")
             / f"{self.hparams.extract_features_after_layer.replace('.','_')}.npy"
         )
         save_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"💾 Saving extracted features to {str(save_path)}")
         numpy.save(save_path, self.extracted_features)
+
+        if clear_extracted_features and prefix != "test":
+            self.extracted_features = []
 
         return {}
