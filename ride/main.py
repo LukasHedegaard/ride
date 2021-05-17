@@ -181,6 +181,7 @@ class Main:
 
         # Ensure gpus is defined
         args.gpus = getattr(args, "gpus", "")
+        args.max_epochs = getattr(args, "max_epochs", 1)
 
         seed_everything(args.seed)
         self.log_dir = experiment_logger(
@@ -281,7 +282,7 @@ def make_save_results(root_path: str, verbose=True) -> Callable[[str, Any], None
         nonlocal root_path
         path = bump_version(root_path / relative_path)
         if verbose:
-            logger.info("Saving " + str(path))
+            logger.info("💾 Saving " + str(path))
         dump_yaml(path, data)
         return path
 

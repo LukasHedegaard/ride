@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 from corider import Configs as _Configs
 from pytorch_lightning.utilities.parsing import AttributeDict
 from supers import supers
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ride.utils.logging import getLogger
@@ -46,16 +47,6 @@ class Configs(_Configs):
         return attributedict({k: v.default for k, v in self.values.items()})
 
 
-def _init_subsubclass(cls):
-    orig_init = cls.__init__
-
-    def init(self, hparams: DictLike, *args, **kwargs):
-        super(cls, self).__init__(hparams, *args, **kwargs)
-        apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
-
-    cls.__init__ = init
-
-
 def _init_subclass(cls):
     # Validate inheritance order
     assert (
@@ -64,41 +55,32 @@ def _init_subclass(cls):
     class YourModule(RideModule, OtherMixin):
         ..."""
 
-    if cls.__bases__[0] is not RideModule:
-        _init_subsubclass(cls)
-        return
+    add_bases = []
 
+    # Extend funtionality with additional base-classes
+    from ride.feature_visualisation import FeatureVisualisable
+    from ride.finetune import Finetunable
+    from ride.lifecycle import Lifecycle  # Break cyclical dependencies
+
+    # Ensure pl.LightningModule is the lowest-priority parent
     if not cls.__bases__[-1] == pl.LightningModule:
-        cls.__bases__ = (*cls.__bases__, pl.LightningModule)
+        add_bases.append(pl.LightningModule)
+
+    if not issubclass(cls, Lifecycle):
+        add_bases.append(Lifecycle)
+
+    if not issubclass(cls, Finetunable):
+        add_bases.append(Finetunable)
+
+    if not issubclass(cls, FeatureVisualisable):
+        add_bases.append(FeatureVisualisable)
 
     # Warn if there is no forward
     if missing_or_not_in_other(
         cls, pl.LightningModule, {"forward"}, must_be_callable=True
     ):
-        # if not (some(cls, "forward") and callable(cls.forward)):
         logger.warning(
             f"No `forward` function found in {name(cls)}. Did you forget to define it?"
-        )
-
-    # Ensure lifecycle
-    lifecycle_steps = {
-        "training_step",
-        "validation_step",
-        "test_step",
-    }
-    missing_lifecycle_steps = missing_or_not_in_other(
-        cls, pl.LightningModule, lifecycle_steps
-    )
-    if missing_lifecycle_steps:
-        logger.info(f"Missing lifecycle steps {missing_lifecycle_steps} in {name(cls)}")
-        logger.info("🔧 Adding ride.Lifecycle automatically")
-        # Import here to break cyclical import
-        from ride.lifecycle import Lifecycle
-
-        cls.__bases__ = (
-            *cls.__bases__[:-1],
-            Lifecycle,
-            *cls.__bases__[-1:],
         )
 
     # Ensure dataset
@@ -113,39 +95,29 @@ def _init_subclass(cls):
         logger.info(
             "🔧 Adding ride.RideDataset automatically and assuming that `self.datamodule`, `self.input_shape`, and `self.output_shape` will be provided by user"
         )
-        cls.__bases__ = (
-            *cls.__bases__[:-1],
-            RideDataset,
-            *cls.__bases__[-1:],
-        )
+        add_bases.append(RideDataset)
 
     # Ensure optimizer
     if missing_or_not_in_other(cls, pl.LightningModule, {"configure_optimizers"}):
         logger.info(f"`configure_optimizers` not found in in {name(cls)}")
         logger.info("🔧 Adding ride.SgdOptimizer automatically")
-        # Import here to break cyclical import
-        from ride.optimizers import SgdOptimizer
 
-        cls.__bases__ = (
-            *cls.__bases__[:-1],
-            SgdOptimizer,
-            *cls.__bases__[-1:],
-        )
+        from ride.optimizers import SgdOptimizer  # Break cyclical dependency
+
+        add_bases.append(SgdOptimizer)
+
+    # Update class bases with pl.LightningModule as lowest rank
+    cls.__bases__ = (*cls.__bases__, *add_bases[::-1])
 
     # Monkeypatch derived module init
-    orig_init = cls.__init__
+    cls._orig_init = cls.__init__
 
     def init(self, hparams: DictLike = {}, *args, **kwargs):
         pl.LightningModule.__init__(self)
         self.hparams = merge_attributedicts(self.configs().default_values(), hparams)
-        sself = (
-            self
-            if type(self).__bases__[0] == RideModule
-            else supers(self)._superclasses[0]
-        )
-        supers(sself)[1:-1].__init__(self.hparams)
-        apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
-        supers(sself).on_init_end(self.hparams, *args, **kwargs)
+        supers(self)[1:-1].__init__(self.hparams)
+        apply_init_args(cls._orig_init, self, self.hparams, *args, **kwargs)
+        supers(self).on_init_end(self.hparams, *args, **kwargs)
         supers(self).validate_attributes()
 
     cls.__init__ = init
@@ -180,7 +152,7 @@ class RideModule:
     """
     Base-class for modules using the Ride ecosystem.
 
-    This module should be inherited as the highest-priority parent.
+    This module should be inherited as the highest-priority parent (first in sequence).
 
     Example::
 
@@ -211,10 +183,6 @@ class RideModule:
 
     @classmethod
     def with_dataset(cls, ds: "RideDataset"):
-        DerivedRideModule = type(
-            f"{name(cls)}With{name(ds)}", cls.__bases__, dict(cls.__dict__)
-        )
-
         new_bases = [b for b in cls.__bases__ if not issubclass(b, RideDataset)]
         old_dataset = [b for b in cls.__bases__ if issubclass(b, RideDataset)]
         assert len(old_dataset) <= 1, "`RideModule` should only have one `RideDataset`"
@@ -223,7 +191,10 @@ class RideModule:
                 ds, RideClassificationDataset
             ), "A `RideClassificationDataset` should be replaced by a `RideClassificationDataset`"
         new_bases.insert(-1, ds)
-        DerivedRideModule.__bases__ = tuple(new_bases)
+        cls.__init__ = cls._orig_init  # Revert to orig init
+        DerivedRideModule = type(
+            f"{name(cls)}With{name(ds)}", tuple(new_bases), dict(cls.__dict__)
+        )
 
         return DerivedRideModule
 
@@ -301,7 +272,7 @@ class RideDataset(RideMixin):
         return c
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
-        """ The train dataloader """
+        """The train dataloader"""
         assert some(
             self, "datamodule.train_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `train_dataloader` function."
@@ -310,7 +281,7 @@ class RideDataset(RideMixin):
     def val_dataloader(
         self, *args: Any, **kwargs: Any
     ) -> Union[DataLoader, List[DataLoader]]:
-        """ The val dataloader """
+        """The val dataloader"""
         assert some(
             self, "datamodule.val_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `val_dataloader` function."
@@ -319,7 +290,7 @@ class RideDataset(RideMixin):
     def test_dataloader(
         self, *args: Any, **kwargs: Any
     ) -> Union[DataLoader, List[DataLoader]]:
-        """ The test dataloader """
+        """The test dataloader"""
         assert some(
             self, "datamodule.test_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `test_dataloader` function."
@@ -351,9 +322,37 @@ class RideClassificationDataset(RideDataset):
     def num_classes(self) -> int:
         return len(self.classes)
 
+    @staticmethod
+    def configs() -> Configs:
+        c = RideDataset.configs()
+        c.add(
+            name="test_confusion_matrix",
+            type=int,
+            default=0,
+            choices=[0, 1],
+            strategy="constant",
+            description="Create and save confusion matrix for test data.",
+        )
+        return c
+
     def validate_attributes(self):
         RideDataset.validate_attributes(self)
         assert type(getattr(self, "classes", None)) in {
             list,
             tuple,
         }, "Ride RideClassificationDataset should define `classes` but none was found."
+
+    def metrics_epoch(
+        self,
+        preds: Tensor,
+        targets: Tensor,
+        prefix: str = None,
+        *args,
+        **kwargs,
+    ):  # -> "FigureDict":
+        if prefix != "test" or not self.hparams.test_confusion_matrix:
+            return {}
+        from ride.metrics import make_confusion_matrix
+
+        fig = make_confusion_matrix(preds, targets, self.classes)
+        return {"confusion_matrix": fig}

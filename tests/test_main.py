@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -160,6 +159,10 @@ class TestMain:
         args.test = True
         args.checkpoint_every_n_steps = 10
 
+        # Trainer args
+        args.limit_val_batches = 2
+        args.limit_test_batches = 2
+
         with caplog.at_level(logging.INFO):
             m.main(args)
 
@@ -170,21 +173,25 @@ class TestMain:
             "Running evaluation on validation set",
             "val/epoch",
             "Running evaluation on test set",
-            "test/epoch",
+            "test/loss",
         ]:
             assert any([check in msg for msg in caplog.messages])
 
         save_lines = [m for m in caplog.messages if "Saving" in m]
 
         # Check that result files exist
-        hparams_path = Path(save_lines[0].split(" ")[1])
+        hparams_path = Path(save_lines[0].split(" ")[2])
         assert is_nonempty_file(hparams_path)
 
-        val_result_path = Path(save_lines[-2].split(" ")[1])
+        val_result_path = Path(save_lines[-2].split(" ")[2])
         assert is_nonempty_file(val_result_path)
 
-        test_result_path = Path(save_lines[-1].split(" ")[1])
+        test_result_path = Path(save_lines[-1].split(" ")[2])
         assert is_nonempty_file(test_result_path)
+
+        # Check that trainer args were passed
+        assert m.runner.trainer.limit_val_batches == 2
+        assert m.runner.trainer.limit_test_batches == 2
 
     def test_test_ensemble(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         """Test ensemble works"""
@@ -280,7 +287,7 @@ class TestMain:
             assert any([check in msg for msg in caplog.messages])
 
         # Check that results are saved and path is printed
-        model_profile_path = Path(caplog.messages[-1].split(" ")[1])
+        model_profile_path = Path(caplog.messages[-1].split(" ")[2])
         assert is_nonempty_file(model_profile_path)
 
     def test_hparamsearch(self, main_and_args: Tuple[Main, AttributeDict]):
@@ -309,71 +316,3 @@ class TestMain:
 
         # Clean up
         hparams_space_path.unlink()
-
-    def test_complex_finetuning(
-        self, caplog, main_and_args: Tuple[Main, AttributeDict]
-    ):
-        """
-        Test complex fine-tuning setup, including
-        - finetune_from_weights
-        - discriminative_lr_fraction
-        - gradual_unfreeze
-        """
-        m, args = main_and_args
-        args.train = True
-        args.discriminative_lr_fraction = 0.5
-
-        # Create a run to start with
-        m.main(args)
-
-        latest_checkpoint = get_latest_checkpoint(m.log_dir)
-        assert latest_checkpoint.exists()
-        checkpoint = Path("test_complex_finetuning.ckpt")
-        shutil.copy(latest_checkpoint, checkpoint)
-
-        # Finetune from checkpoint
-        m, args = default_main_and_args()  # Need to make new main
-        args.finetune_from_weights = str(checkpoint)
-        args.unfreeze_layers_initial = 1
-        args.unfreeze_epoch_step = 1
-        args.unfreeze_from_epoch = 0
-        args.train = True
-
-        # One epoch, one unfrozen
-        args.max_epochs = 1
-
-        caplog.clear()
-        with caplog.at_level(logging.INFO):
-            m.main(args)
-
-        assert len(caplog.messages) > 0
-        assert any(["Unfreezing 1 layer(s)" in msg for msg in caplog.messages])
-        assert not any(["Unfreezing 2 layer(s)" in msg for msg in caplog.messages])
-
-        assert m.runner.trainer.model.l1.weight.requires_grad is False
-        assert m.runner.trainer.model.l1.bias.requires_grad is False
-        assert m.runner.trainer.model.l2.weight.requires_grad is True
-        assert m.runner.trainer.model.l2.bias.requires_grad is True
-
-        # Two epochs, both unfrozen
-        m, args = default_main_and_args()  # Need to make new main
-        args.finetune_from_weights = str(checkpoint)
-        args.unfreeze_layers_initial = 1
-        args.unfreeze_epoch_step = 1
-        args.unfreeze_from_epoch = 0
-        args.train = True
-        args.max_epochs = 2
-        # TODO: test with max_epochs > num layers
-
-        caplog.clear()
-        with caplog.at_level(logging.INFO):
-            m.main(args)
-
-        assert any(["Unfreezing 1 layer(s)" in msg for msg in caplog.messages])
-        assert any(["Unfreezing 2 layer(s)" in msg for msg in caplog.messages])
-        assert m.runner.trainer.model.l1.weight.requires_grad is True
-        assert m.runner.trainer.model.l1.bias.requires_grad is True
-        assert m.runner.trainer.model.l2.weight.requires_grad is True
-        assert m.runner.trainer.model.l2.bias.requires_grad is True
-
-        checkpoint.unlink()

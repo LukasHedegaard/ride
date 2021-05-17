@@ -7,7 +7,6 @@ from examples.mnist_dataset import MnistDataset
 
 class SimpleClassifier(
     ride.RideModule,
-    ride.Lifecycle,
     ride.SgdOneCycleOptimizer,
     ride.TopKAccuracyMetric(1, 3),
     MnistDataset,

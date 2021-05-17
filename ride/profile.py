@@ -32,7 +32,6 @@ def profile(model: torch.nn.Module, detailed=True):
         "device",
         "input_shape",
         "hparams.batch_size",
-        "hparams.gpus",
         "forward",
     ]:
         assert some(
@@ -44,7 +43,7 @@ def profile(model: torch.nn.Module, detailed=True):
 
     # Move model to GPU if available
     prev_device = model.device
-    gpus = parse_gpus(model.hparams.gpus)
+    gpus = parse_gpus(model.hparams.gpus) if hasattr(model.hparams, "gpus") else None
     new_device = f"cuda:{gpus[0]}" if gpus else "cpu"
     model.to(device=new_device)
 
@@ -91,10 +90,7 @@ def compute_num_runs(total_wait_time, single_run_time):
 def profile_repeatedly(
     model: torch.nn.Module, max_wait_seconds=30, num_runs=None
 ) -> Tuple[Dict[str, str], torch.autograd.profiler.EventList]:
-    for attr in [
-        "hparams.batch_size",
-        "hparams.gpus",
-    ]:
+    for attr in ["hparams.batch_size"]:
         assert some(
             model, attr
         ), f"{name(model)} should define `{attr}` but none was found."
@@ -123,7 +119,11 @@ def profile_repeatedly(
         "samples_per_second"
     ] = f"{samples_per_s.mean():.3f} +/- {samples_per_s.std():.3f} [{samples_per_s.min():.3f}, {samples_per_s.max():.3f}]"
     results_dict["num_runs"] = num_runs
-    results_dict["on_gpu"] = parse_num_gpus(model.hparams.gpus) > 0
+    results_dict["on_gpu"] = (
+        parse_num_gpus(model.hparams.gpus) > 0
+        if hasattr(model.hparams, "gpus")
+        else False
+    )
     results_dict["batch_size"] = batch_size
 
     return results_dict, single_run_prof

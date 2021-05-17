@@ -18,10 +18,7 @@ logger = getLogger(__name__)
 class Finetunable(Unfreezable):
     """Adds finetune capabilities to model
 
-    Usage notes:
-        - Inherit from the module as follows:
-            `class YourModule(FinetuneMixin, RideModule, pl.LightningModule)`
-        - `FinetuneMixin.__init__(self, hparams))` must be called at the end of `YourModule.__init__`
+    This module is automatically added when RideModule is inherited
     """
 
     hparams: ...
@@ -36,9 +33,6 @@ class Finetunable(Unfreezable):
             description=(
                 "Path to weights to finetune from. "
                 "Allowed extension include {'.ckpt', '.pyth', '.pth', '.pkl', '.pickle'}."
-                "For '.ckpt', the file is loaded using pytorch_lightning `load_from_checkpoint`. "
-                "For '.pyth' and '.pth', the file loaded using `torch.load`. "
-                "For '.pkl' and '.pickle', the file is loaded using `pickle.load`. "
             ),
         )
         c.add(
@@ -46,12 +40,6 @@ class Finetunable(Unfreezable):
             default="",
             type=str,
             description="Key in weights-file, which should contains model state_dict in case of '.pyth' or '.pth' files.",
-        )
-        c.add(
-            name="finetune_from_weights_caffe2",
-            default=0,
-            type=int,
-            description="Load weights from '.pkl' and '.pickle' files assuming a caffe2 format.",
         )
         c.add(
             name="finetune_params_skip",
@@ -146,34 +134,42 @@ def load_model_weights(file: str, hparams_passed, model_state_key):
         return pl.utilities.cloud_io.load(
             file, map_location=lambda storage, loc: storage
         )["state_dict"]
-    elif suffix in {".pyth", ".pth"}:
+    elif suffix in {".pyth", ".pth", ".pt"}:
         return try_pyth_load(file, model_state_key)
     elif suffix in {".pkl", ".pickle"}:
         return try_pickle_load(file)
     else:
         raise ArgumentError(
-            f"Unable to load model weights with suffix '{suffix}'. Suffix must be one of {'.ckpt', '.pyth', '.pth', '.pkl', '.pickle'}"
+            f"Unable to load model weights with suffix '{suffix}'. Suffix must be one of {'.ckpt', '.pyth', '.pth', '.pt', '.pkl', '.pickle'}"
         )
 
 
 def try_pyth_load(file, model_state_key):
-    loaded_model_state = torch.load(file, map_location="cpu")
+    loaded = torch.load(file, map_location="cpu")
+    if issubclass(type(loaded), torch.nn.Module):
+        return loaded.state_dict()
+
+    assert issubclass(
+        type(loaded), dict
+    ), "pyth checkpoint should either be a model or a dict of weights"
+
     guesses = [
         model_state_key,
         "state_dict",
         "model_state",
     ]
     for g in guesses:
-        if g in loaded_model_state.keys():
-            state_dict = loaded_model_state[g]
+        if g in loaded.keys():
+            state_dict = loaded[g]
             break
 
-    if len(loaded_model_state) > 13:  # Hail mary
-        state_dict = loaded_model_state
+    # Check if we already have a state_dict
+    if all([type(v) == torch.Tensor for v in loaded.values()]):
+        state_dict = loaded
 
-    if not state_dict:
+    if not state_dict:  # pragma: no cover
         raise KeyError(
-            f"None of the tried keys {guesses} fits loaded model state {loaded_model_state.keys()}. You can try another key using the `finetune_from_weights_key` hparam."
+            f"None of the tried keys {guesses} fits loaded model state {loaded.keys()}. You can try another key using the `finetune_from_weights_key` hparam."
         )
 
     return state_dict
@@ -199,7 +195,7 @@ def try_pickle_load(file):
 
         try:
             return pickle.load(f, encoding="latin1")
-        except Exception:
+        except Exception:  # pragma: no cover
             pass
 
-    raise ValueError(f"Unable to load file {file}")
+    raise ValueError(f"Unable to load file {file}")  # pragma: no cover

@@ -1,0 +1,5 @@
+lightning-bolts
+ray[tune]~=1.2
+scikit-learn
+torchvision
+umap-learn

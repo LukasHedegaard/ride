@@ -83,6 +83,7 @@ class TestRunner:
         runner, args = runner_and_args
         runner.train(args)
 
+    @pytest.mark.skip
     def test_train_auto_scale_batch_size(
         self, runner_and_args: Tuple[Runner, AttributeDict]
     ):
@@ -90,6 +91,7 @@ class TestRunner:
         args.auto_scale_batch_size = "power"
         runner.train(args)
 
+    @pytest.mark.skip
     def test_train_auto_lr_find(self, runner_and_args: Tuple[Runner, AttributeDict]):
         runner, args = runner_and_args
         args.auto_lr_find = True

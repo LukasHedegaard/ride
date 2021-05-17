@@ -1,5 +1,4 @@
 import io
-import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -15,6 +14,7 @@ from pytorch_lightning.loggers import (
 )
 from pytorch_lightning.utilities import rank_zero_only
 
+from ride.metrics import FigureDict
 from ride.utils.env import RUN_LOGS_PATH
 from ride.utils.logging import getLogger, process_rank
 
@@ -86,10 +86,19 @@ def add_experiment_logger(
         return LoggerCollection([prev_logger, new_logger])
 
 
-def log_figures(module: pl.LightningModule, d: Dict[str, Figure]):
+def get_log_dir(module: pl.LightningModule):
+    loggers = (
+        module.logger if hasattr(module.logger, "__getitem__") else [module.logger]
+    )
+    for lgr in loggers[::-1]:  # ResultLogger would be last
+        if hasattr(lgr, "log_dir"):
+            return lgr.log_dir
+
+
+def log_figures(module: pl.LightningModule, d: FigureDict):
     assert isinstance(module, pl.LightningModule)
     module_loggers = (
-        module.logger if hasattr(module.logger, "__getitem__") else [module.loggers]
+        module.logger if hasattr(module.logger, "__getitem__") else [module.logger]
     )
     image_loggers = []
     for lgr in module_loggers:
@@ -150,28 +159,18 @@ class ResultsLogger(LightningLoggerBase):
 
     @rank_zero_only
     def log_hyperparams(self, params):
-        ...  # Skip it: hparams are saved in main
-        # if self.log_dir:
-        #     dump_yaml(
-        #         path=Path(self.log_dir) / f"{self.prefix}_hparams.yaml",
-        #         data=params,
-        #     )
+        ...
 
     @rank_zero_only
     def log_metrics(self, metrics: Dict, step):
         self.results = {self._fix_name_perfix(k): float(v) for k, v in metrics.items()}
-        ...  # Skip it: results are saved in main
-        # if self.log_dir:
-        #     dump_yaml(
-        #         path=Path(self.log_dir) / f"{self.prefix}_results.yaml",
-        #         data={k: float(v) for k, v in self.results.items()},
-        #     )
 
     def log_figure(self, tag: str, fig: Figure):
         if self.log_dir:
-            fig_path = str(Path(self.log_dir) / f"{self.prefix}_{tag}.png")
-            logger.info(f"Saving confusion matrix to {fig_path}")
-            fig.savefig(fig_path)
+            fig_path = Path(self.log_dir) / "figures" / f"{tag}.png"
+            logger.info(f"💾 Saving figure {tag} to {str(fig_path)}")
+            fig_path.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(str(fig_path), bbox_inches="tight")
 
     @rank_zero_only
     def finalize(self, status):
@@ -191,44 +190,3 @@ class ResultsLogger(LightningLoggerBase):
 
 
 StepOutputs = List[Dict[str, Any]]
-
-
-class CheckpointEveryNSteps(pl.Callback):
-    """
-    Save a checkpoint every N steps, instead of Lightning's default that checkpoints
-    based on validation loss.
-
-    Courtesy of Andrew Jong
-    https://github.com/PyTorchLightning/pytorch-lightning/issues/2534
-    """
-
-    def __init__(
-        self,
-        save_step_frequency,
-        prefix="N-Step-Checkpoint",
-        use_modelcheckpoint_filename=False,
-    ):
-        """
-        Args:
-            save_step_frequency: how often to save in steps
-            prefix: add a prefix to the name, only used if
-                use_modelcheckpoint_filename=False
-            use_modelcheckpoint_filename: just use the ModelCheckpoint callback's
-                default filename, don't use ours.
-        """
-        self.save_step_frequency = save_step_frequency
-        self.prefix = prefix
-        self.use_modelcheckpoint_filename = use_modelcheckpoint_filename
-
-    def on_batch_end(self, trainer: pl.Trainer, _):
-        """ Check if we should save a checkpoint after every train batch """
-        epoch = trainer.current_epoch
-        global_step = trainer.global_step
-        if global_step % self.save_step_frequency == 0 and global_step != 0:
-            if self.use_modelcheckpoint_filename:
-                filename = trainer.checkpoint_callback.filename
-            else:
-                filename = f"{self.prefix}_{epoch}_{global_step}.ckpt"
-            ckpt_path = os.path.join(trainer.checkpoint_callback.dirpath, filename)
-            pl.utilities.rank_zero_info(f"Saving model to {str(ckpt_path)}")
-            trainer.save_checkpoint(ckpt_path)
