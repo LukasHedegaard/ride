@@ -4,11 +4,13 @@ from typing import Tuple
 import pytest
 import torch
 
+from pathlib import Path
 from ride import Configs, Main
 from ride.core import RideModule
 from ride.feature_visualisation import FeatureVisualisable
 from ride.optimizers import SgdOptimizer
 from ride.utils.utils import AttributeDict
+from ride.utils.io import is_nonempty_file
 
 from .dummy_dataset import DummyClassificationDataLoader, DummyRegressionDataLoader
 
@@ -119,12 +121,15 @@ class TestFeatureExtraction:
         with caplog.at_level(logging.DEBUG):
             m.main(args)
 
-        for check in [
-            "features/test/conv.npy",
-            "features/test/conv_pca.npy",
-            "figures/test/conv_pca.png",
-        ]:
+        # Paths are printed in main
+        for check in ["conv.npy", "conv_pca.npy", "conv_pca.png"]:
             assert any([check in msg for msg in caplog.messages])
+
+        # Files exist
+        d = Path(m.log_dir)
+        assert is_nonempty_file(d / "features" / "test" / "conv.npy")
+        assert is_nonempty_file(d / "features" / "test" / "conv_pca.npy")
+        assert is_nonempty_file(d / "figures" / "test" / "conv_pca.png")
 
     def test_1d_feat_tse(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         m, args = main_and_args
@@ -135,12 +140,15 @@ class TestFeatureExtraction:
         with caplog.at_level(logging.DEBUG):
             m.main(args)
 
-        for check in [
-            "features/test/lin.npy",
-            "features/test/lin_tsne.npy",
-            "figures/test/lin_tsne.png",
-        ]:
+        # Paths are printed in main
+        for check in ["lin.npy", "lin_tsne.npy", "lin_tsne.png"]:
             assert any([check in msg for msg in caplog.messages])
+
+        # Files exist
+        d = Path(m.log_dir)
+        assert is_nonempty_file(d / "features" / "test" / "lin.npy")
+        assert is_nonempty_file(d / "features" / "test" / "lin_tsne.npy")
+        assert is_nonempty_file(d / "figures" / "test" / "lin_tsne.png")
 
     def test_1d_feat_umap(self, caplog, main_and_args2: Tuple[Main, AttributeDict]):
         m, args = main_and_args2
@@ -151,9 +159,12 @@ class TestFeatureExtraction:
         with caplog.at_level(logging.DEBUG):
             m.main(args)
 
-        for check in [
-            "features/test/l2.npy",
-            "features/test/l2_umap.npy",
-            "figures/test/l2_umap.png",
-        ]:
+        # Paths are printed in main
+        for check in ["l2.npy", "l2_umap.npy", "l2_umap.png"]:
             assert any([check in msg for msg in caplog.messages])
+
+        # Files exist
+        d = Path(m.log_dir)
+        assert is_nonempty_file(d / "features" / "test" / "l2.npy")
+        assert is_nonempty_file(d / "features" / "test" / "l2_umap.npy")
+        assert is_nonempty_file(d / "figures" / "test" / "l2_umap.png")
