@@ -239,7 +239,7 @@ class Main:
         if args.validate:
             hprint("Running evaluation on validation set")
             val_results = self.runner.validate(args)
-            dprint(val_results)
+            # dprint(val_results)  # Also printed by Lightning
             results.append(val_results)
             save_results("val_results.yaml", val_results)
 
@@ -248,7 +248,7 @@ class Main:
                 f"Running evaluation on test set{' using ensemble testing' if args.test_ensemble else ''}"
             )
             test_results = self.runner.test(args)
-            dprint(test_results)
+            # dprint(test_results)  # Also printed by Lightning
             results.append(test_results)
             save_results("test_results.yaml", test_results)
 
