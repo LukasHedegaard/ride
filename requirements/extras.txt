@@ -1,6 +1,5 @@
 lightning-bolts
 ray[tune]~=1.2
-seaborn
 scikit-learn
 torchvision
 umap-learn

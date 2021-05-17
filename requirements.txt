@@ -4,6 +4,7 @@ torchmetrics
 python-dotenv
 supers
 matplotlib
+seaborn
 coloredlogs
 gputil>=1.4
 py-cpuinfo>=7.0
