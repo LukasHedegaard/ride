@@ -13,7 +13,7 @@
       <img src='https://readthedocs.org/projects/ride/badge/?version=latest' alt='Documentation Status' height="20"/>
   </a>
   <a href="https://www.codefactor.io/repository/github/lukashedegaard/ride">
-    <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" />
+    <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" height="20" />
   </a>
   <a href="https://codecov.io/gh/LukasHedegaard/ride">
     <img src="https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC" height="20"/>
@@ -178,14 +178,22 @@ $ python simple_classifier.py --train --test --learning_rate 0.01 --hidden_dim 2
 
 ### Feature extraction and visualisation
 Extract features after layer `l1` and visualise them with [UMAP](https://arxiv.org/abs/1802.03426).
-In addition, compute and plot the confution matrix for the test set.
 ```shell
-$ python simple_classifier.py --train --test --extract_features_after_layer = "l1" --visualise_features = "umap" --test_confusion_matrix 1
+$ python simple_classifier.py --train --test --extract_features_after_layer = "l1" --visualise_features = "umap"
 ```
 - _Example output:_
   <p align="center">
-    <img src="docs/figures/examples/mnist_umap.png" height="250">
-    <img src="docs/figures/examples/mnist_confusion_matrix.png" height="250">
+    <img src="docs/figures/examples/mnist_umap.png" height="300">
+  </div>
+
+### Confusion matrix visualisation
+Plot the confution matrix for the test set.
+```shell
+$ python simple_classifier.py --train --test --test_confusion_matrix 1
+```
+- _Example output:_
+  <p align="center">
+    <img src="docs/figures/examples/mnist_confusion_matrix.png" height="300">
   </div>
 
 ### Advanced model finetuning
