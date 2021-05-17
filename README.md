@@ -47,7 +47,7 @@ This project is an audacious attempt to provide battle-tested defaults for
 - __Command-line interface__ 💻
 - _... and more_
 
-The implementation builds on the work at [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning), and provides the same __multi-gpu, multi-node__ support out of the box! 
+The implementation builds on [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning) and provides the same __multi-gpu, multi-node__ support out of the box! 
 Currently, we're tracking
 <a href="https://github.com/PyTorchLightning/pytorch-lightning">
   <img src="http://img.shields.io/badge/PyTorch_Lightning-v1.3-792ee5.svg" height="20">
@@ -136,10 +136,10 @@ $ python simple_classifier.py --train --test --learning_rate 0.01 --hidden_dim 2
     ```shell
     lightning: Global seed set to 123
     ride: Running on host d40049
-    ride: ⭐️ View project repository at https://github.com/YourName/YourProject/tree/YourHash
-    ride: Run data is saved locally at /Users/YourName/YourProject/logs/run_logs/YourId/version_1
+    ride: ⭐️ View project repository at https://github.com/UserName/project_name/tree/commit_hash
+    ride: Run data is saved locally at /Users/UserName/project_name/logs/run_logs/your_id/version_1
     ride: Logging using Tensorboard
-    ride: 💾 Saving /Users/au478108/Projects/ride/logs/run_logs/unnamed/version_1/hparams.yaml
+    ride: 💾 Saving /Users/au478108/Projects/ride/logs/run_logs/your_id/version_1/hparams.yaml
     ride: 🚀 Running training
     ride: ✅ Checkpointing on val/loss with optimisation direction min
     lightning: GPU available: False, used: False
@@ -157,7 +157,7 @@ $ python simple_classifier.py --train --test --learning_rate 0.01 --hidden_dim 2
     lightning: Global seed set to 123                                                                                      
 
     Epoch 0: 100%|████████| 3751/3751 [00:20<00:00, 184.89it/s, loss=0.785, v_num=9, step_train/loss=0.762]
-    lightning: Epoch 0, global step 3437: val/loss reached 0.77671 (best 0.77671), saving model to "/Users/YourName/YourProject/logs/run_logs/YourId/version_1/checkpoints/epoch=0-step=3437.ckpt" as top 1
+    lightning: Epoch 0, global step 3437: val/loss reached 0.77671 (best 0.77671), saving model to "/Users/UserName/project_name/logs/run_logs/your_id/version_1/checkpoints/epoch=0-step=3437.ckpt" as top 1
     lightning: Saving latest checkpoint...
     Epoch 0: 100%|████████| 3751/3751 [00:20<00:00, 184.65it/s, loss=0.785, v_num=9, step_train/loss=0.762]
     ride: 🚀 Running evaluation on test set
@@ -170,7 +170,7 @@ $ python simple_classifier.py --train --test --learning_rate 0.01 --hidden_dim 2
     'test/top3acc': 0.8528000116348267}
     -------------------------------------
 
-    ride: 💾 Saving /Users/YourName/YourProject/logs/run_logs/YourId/version_1/test_results.yaml
+    ride: 💾 Saving /Users/UserName/project_name/logs/run_logs/your_id/version_1/test_results.yaml
     ```
 
 </details>
