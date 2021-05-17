@@ -33,9 +33,6 @@ class Finetunable(Unfreezable):
             description=(
                 "Path to weights to finetune from. "
                 "Allowed extension include {'.ckpt', '.pyth', '.pth', '.pkl', '.pickle'}."
-                "For '.ckpt', the file is loaded using pytorch_lightning `load_from_checkpoint`. "
-                "For '.pyth' and '.pth', the file loaded using `torch.load`. "
-                "For '.pkl' and '.pickle', the file is loaded using `pickle.load`. "
             ),
         )
         c.add(
@@ -43,12 +40,6 @@ class Finetunable(Unfreezable):
             default="",
             type=str,
             description="Key in weights-file, which should contains model state_dict in case of '.pyth' or '.pth' files.",
-        )
-        c.add(
-            name="finetune_from_weights_caffe2",
-            default=0,
-            type=int,
-            description="Load weights from '.pkl' and '.pickle' files assuming a caffe2 format.",
         )
         c.add(
             name="finetune_params_skip",
