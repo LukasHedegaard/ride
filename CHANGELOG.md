@@ -5,14 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.0] - 2021-05-17
 ### Fixed
 - Pass args correctly to trainer during testing
 
 ### Changed
 - CheckpointEveryNSteps now included in ModelCheckpoint c.f. pl==1.3
 - Import from torchmetrics instead of pl.metrics 
+- Moved confusion matrix to RideClassificationDataset and updated plot
 
 ### Added
+- Feature extraction and visualisation
 - Lifecycle and Finetuneable mixins always included via RideModule
 - Support for pytorch-lightning==1.3
 - Additional tests: Coverage is now at 92%
