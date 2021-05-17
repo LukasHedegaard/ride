@@ -41,7 +41,7 @@ def test_MeanAveragePrecisionMetric():
     _, targets, _ = next(iter(net.train_dataloader()))
     preds = torch.ones_like(targets, dtype=torch.float) * 0.1
 
-    pl_map = AveragePrecision(num_classes=len(net.classes))(preds, targets)
+    pl_map = AveragePrecision()(preds, targets)
 
     assert DummyModule.metric_names() == ["loss", "mAP"]
     assert net.metrics_step(preds, targets)["mAP"] == pl_map
