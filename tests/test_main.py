@@ -180,13 +180,13 @@ class TestMain:
         save_lines = [m for m in caplog.messages if "Saving" in m]
 
         # Check that result files exist
-        hparams_path = Path(save_lines[0].split(" ")[1])
+        hparams_path = Path(save_lines[0].split(" ")[2])
         assert is_nonempty_file(hparams_path)
 
-        val_result_path = Path(save_lines[-2].split(" ")[1])
+        val_result_path = Path(save_lines[-2].split(" ")[2])
         assert is_nonempty_file(val_result_path)
 
-        test_result_path = Path(save_lines[-1].split(" ")[1])
+        test_result_path = Path(save_lines[-1].split(" ")[2])
         assert is_nonempty_file(test_result_path)
 
         # Check that trainer args were passed
@@ -287,7 +287,7 @@ class TestMain:
             assert any([check in msg for msg in caplog.messages])
 
         # Check that results are saved and path is printed
-        model_profile_path = Path(caplog.messages[-1].split(" ")[1])
+        model_profile_path = Path(caplog.messages[-1].split(" ")[2])
         assert is_nonempty_file(model_profile_path)
 
     def test_hparamsearch(self, main_and_args: Tuple[Main, AttributeDict]):

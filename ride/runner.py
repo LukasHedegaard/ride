@@ -84,7 +84,7 @@ class Runner:
             )
         )
         logger.info(
-            f"Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics()[args.optimization_metric].value}"
+            f"✅ Checkpointing on val/{args.optimization_metric} with optimisation direction {self.Module.metrics()[args.optimization_metric].value}"
         )
         if args.monitor_lr:
             trainer_callbacks.append(LearningRateMonitor(logging_interval="step"))
