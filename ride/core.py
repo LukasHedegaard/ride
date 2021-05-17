@@ -272,7 +272,7 @@ class RideDataset(RideMixin):
         return c
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
-        """ The train dataloader """
+        """The train dataloader"""
         assert some(
             self, "datamodule.train_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `train_dataloader` function."
@@ -281,7 +281,7 @@ class RideDataset(RideMixin):
     def val_dataloader(
         self, *args: Any, **kwargs: Any
     ) -> Union[DataLoader, List[DataLoader]]:
-        """ The val dataloader """
+        """The val dataloader"""
         assert some(
             self, "datamodule.val_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `val_dataloader` function."
@@ -290,7 +290,7 @@ class RideDataset(RideMixin):
     def test_dataloader(
         self, *args: Any, **kwargs: Any
     ) -> Union[DataLoader, List[DataLoader]]:
-        """ The test dataloader """
+        """The test dataloader"""
         assert some(
             self, "datamodule.test_dataloader"
         ), f"{name(self)} should either have a `self.datamodule: pl.LightningDataModule` or overload the `test_dataloader` function."

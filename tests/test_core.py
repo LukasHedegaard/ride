@@ -76,7 +76,7 @@ class DummyModule(
 
 
 def test_init_only_self():
-    """Test if modules initialises if """
+    """Test if modules initialises if"""
     DummyModule()
 
 
