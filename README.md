@@ -185,7 +185,7 @@ $ python simple_classifier.py --train --test --extract_features_after_layer = "l
 ```
 - _Example output:_
   <p align="center">
-    <img src="docs/figures/examples/mnist_umap.png" height="300">
+    <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_umap.png" height="300">
   </div>
 
 ### Confusion matrix visualisation
@@ -195,7 +195,7 @@ $ python simple_classifier.py --train --test --test_confusion_matrix 1
 ```
 - _Example output:_
   <p align="center">
-    <img src="docs/figures/examples/mnist_confusion_matrix.png" height="300">
+    <img src="https://raw.githubusercontent.com/LukasHedegaard/ride/main/docs/figures/examples/mnist_confusion_matrix.png" height="300">
   </div>
 
 ### Advanced model finetuning
