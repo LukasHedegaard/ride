@@ -6,16 +6,19 @@ import torch
 
 from ride import Configs, Main
 from ride.core import RideModule
-from ride.feature_extraction import FeatureExtractable
+
+# from ride.feature_extraction import FeatureExtractable
 from ride.optimizers import SgdOptimizer
 from ride.utils.utils import AttributeDict
 
-# from ride.finetune import Finetunable
 from .dummy_dataset import DummyRegressionDataLoader
 
 
 class ExDummyModule(
-    RideModule, FeatureExtractable, DummyRegressionDataLoader, SgdOptimizer
+    RideModule,
+    DummyRegressionDataLoader,
+    SgdOptimizer,
+    # FeatureExtractable, # Not needed: FeatureVisualisable is part of core and inherits the functionality
 ):
     def __init__(self, hparams):
         self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)

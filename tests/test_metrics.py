@@ -25,7 +25,7 @@ def test_faulty_metric_warning(caplog):
 
 def test_MeanAveragePrecisionMetric():
     class DummyModule(
-        RideModule, DummyClassificationDataLoader, metrics.MeanAveragePrecisionMetric
+        RideModule, metrics.MeanAveragePrecisionMetric, DummyClassificationDataLoader
     ):
         def __init__(self, hparams):
             self.lin = torch.nn.Linear(self.input_shape[0], self.output_shape)

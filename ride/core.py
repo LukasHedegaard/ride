@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 from corider import Configs as _Configs
 from pytorch_lightning.utilities.parsing import AttributeDict
 from supers import supers
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from ride.utils.logging import getLogger
@@ -57,7 +58,7 @@ def _init_subclass(cls):
     add_bases = []
 
     # Extend funtionality with additional base-classes
-    # from ride.feature_extraction import FeatureExtractable
+    from ride.feature_visualisation import FeatureVisualisable
     from ride.finetune import Finetunable
     from ride.lifecycle import Lifecycle  # Break cyclical dependencies
 
@@ -71,8 +72,8 @@ def _init_subclass(cls):
     if not issubclass(cls, Finetunable):
         add_bases.append(Finetunable)
 
-    # if not issubclass(cls, FeatureExtractable):
-    #     add_bases.append(FeatureExtractable)
+    if not issubclass(cls, FeatureVisualisable):
+        add_bases.append(FeatureVisualisable)
 
     # Warn if there is no forward
     if missing_or_not_in_other(
@@ -109,13 +110,13 @@ def _init_subclass(cls):
     cls.__bases__ = (*cls.__bases__, *add_bases[::-1])
 
     # Monkeypatch derived module init
-    orig_init = cls.__init__
+    cls._orig_init = cls.__init__
 
     def init(self, hparams: DictLike = {}, *args, **kwargs):
         pl.LightningModule.__init__(self)
         self.hparams = merge_attributedicts(self.configs().default_values(), hparams)
         supers(self)[1:-1].__init__(self.hparams)
-        apply_init_args(orig_init, self, self.hparams, *args, **kwargs)
+        apply_init_args(cls._orig_init, self, self.hparams, *args, **kwargs)
         supers(self).on_init_end(self.hparams, *args, **kwargs)
         supers(self).validate_attributes()
 
@@ -182,10 +183,6 @@ class RideModule:
 
     @classmethod
     def with_dataset(cls, ds: "RideDataset"):
-        DerivedRideModule = type(
-            f"{name(cls)}With{name(ds)}", cls.__bases__, dict(cls.__dict__)
-        )
-
         new_bases = [b for b in cls.__bases__ if not issubclass(b, RideDataset)]
         old_dataset = [b for b in cls.__bases__ if issubclass(b, RideDataset)]
         assert len(old_dataset) <= 1, "`RideModule` should only have one `RideDataset`"
@@ -194,7 +191,10 @@ class RideModule:
                 ds, RideClassificationDataset
             ), "A `RideClassificationDataset` should be replaced by a `RideClassificationDataset`"
         new_bases.insert(-1, ds)
-        DerivedRideModule.__bases__ = tuple(new_bases)
+        cls.__init__ = cls._orig_init  # Revert to orig init
+        DerivedRideModule = type(
+            f"{name(cls)}With{name(ds)}", tuple(new_bases), dict(cls.__dict__)
+        )
 
         return DerivedRideModule
 
@@ -322,9 +322,37 @@ class RideClassificationDataset(RideDataset):
     def num_classes(self) -> int:
         return len(self.classes)
 
+    @staticmethod
+    def configs() -> Configs:
+        c = RideDataset.configs()
+        c.add(
+            name="test_confusion_matrix",
+            type=int,
+            default=0,
+            choices=[0, 1],
+            strategy="constant",
+            description="Create and save confusion matrix for test data.",
+        )
+        return c
+
     def validate_attributes(self):
         RideDataset.validate_attributes(self)
         assert type(getattr(self, "classes", None)) in {
             list,
             tuple,
         }, "Ride RideClassificationDataset should define `classes` but none was found."
+
+    def metrics_epoch(
+        self,
+        preds: Tensor,
+        targets: Tensor,
+        prefix: str = None,
+        *args,
+        **kwargs,
+    ):  # -> "FigureDict":
+        if prefix != "test" or not self.hparams.test_confusion_matrix:
+            return {}
+        from ride.metrics import make_confusion_matrix
+
+        fig = make_confusion_matrix(preds, targets, self.classes)
+        return {"confusion_matrix": fig}
