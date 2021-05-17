@@ -43,13 +43,24 @@ def test_MeanAveragePrecisionMetric():
     targets = torch.tensor(
         [[0, 1], [0, 1], [0, 1], [0, 1], [1, 0], [1, 0], [1, 0], [1, 0]]
     )
-    preds = torch.tensor([[0.1, 0.9] for _ in range(8)]).clone()
+    predictions = torch.tensor(
+        [
+            [0.1, 0.9],
+            [0.1, 0.9],
+            [0.1, 0.9],
+            [0.1, 0.9],
+            [0.1, 0.9],
+            [0.1, 0.9],
+            [0.1, 0.9],
+            [0.1, 0.9],
+        ]
+    )
 
-    pl_map = AveragePrecision(num_classes=len(net.classes))(preds, targets)
+    pl_map = AveragePrecision(num_classes=len(net.classes))(predictions, targets)
 
     assert DummyModule.metric_names() == ["loss", "mAP"]
-    assert net.metrics_step(preds, targets)["mAP"] == pl_map
-    assert net.metrics_epoch(preds, targets)["mAP"] == pl_map
+    assert net.metrics_step(predictions, targets)["mAP"] == pl_map
+    assert net.metrics_epoch(predictions, targets)["mAP"] == pl_map
 
 
 def test_TopKAccuracyMetric():
