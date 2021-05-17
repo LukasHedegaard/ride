@@ -39,22 +39,7 @@ def test_MeanAveragePrecisionMetric():
     net = DummyModule()
 
     _, targets, _ = next(iter(net.train_dataloader()))
-    targets = torch.nn.functional.one_hot(targets)
-    targets = torch.tensor(
-        [[0, 1], [0, 1], [0, 1], [0, 1], [1, 0], [1, 0], [1, 0], [1, 0]]
-    )
-    predictions = torch.tensor(
-        [
-            [0.1, 0.9],
-            [0.1, 0.9],
-            [0.1, 0.9],
-            [0.1, 0.9],
-            [0.1, 0.9],
-            [0.1, 0.9],
-            [0.1, 0.9],
-            [0.1, 0.9],
-        ]
-    )
+    predictions = torch.tensor([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 
     pl_map = AveragePrecision(num_classes=len(net.classes))(predictions, targets)
 
