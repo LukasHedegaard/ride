@@ -14,6 +14,7 @@ from pytorch_lightning.loggers import (
 )
 from pytorch_lightning.utilities import rank_zero_only
 
+from ride.metrics import FigureDict
 from ride.utils.env import RUN_LOGS_PATH
 from ride.utils.logging import getLogger, process_rank
 
@@ -87,17 +88,17 @@ def add_experiment_logger(
 
 def get_log_dir(module: pl.LightningModule):
     loggers = (
-        module.logger if hasattr(module.logger, "__getitem__") else [module.loggers]
+        module.logger if hasattr(module.logger, "__getitem__") else [module.logger]
     )
     for lgr in loggers[::-1]:  # ResultLogger would be last
         if hasattr(lgr, "log_dir"):
             return lgr.log_dir
 
 
-def log_figures(module: pl.LightningModule, d: Dict[str, Figure]):
+def log_figures(module: pl.LightningModule, d: FigureDict):
     assert isinstance(module, pl.LightningModule)
     module_loggers = (
-        module.logger if hasattr(module.logger, "__getitem__") else [module.loggers]
+        module.logger if hasattr(module.logger, "__getitem__") else [module.logger]
     )
     image_loggers = []
     for lgr in module_loggers:
@@ -177,9 +178,9 @@ class ResultsLogger(LightningLoggerBase):
 
     def log_figure(self, tag: str, fig: Figure):
         if self.log_dir:
-            fig_path = str(Path(self.log_dir) / f"{self.prefix}_{tag}.png")
-            logger.info(f"Saving confusion matrix to {fig_path}")
-            fig.savefig(fig_path)
+            fig_path = str(Path(self.log_dir) / f"{tag.replace('/', '_')}.png")
+            logger.info(f"💾 Saving figure {tag} to {fig_path}")
+            fig.savefig(fig_path, bbox_inches="tight")
 
     @rank_zero_only
     def finalize(self, status):

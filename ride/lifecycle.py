@@ -14,6 +14,7 @@ from ride.metrics import (
     MetricMixin,
     OptimisationDirection,
     make_confusion_matrix,
+    sort_out_figures,
 )
 from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger
@@ -170,9 +171,14 @@ class Lifecycle(MetricMixin):
         preds, targets = zip(*[(s["pred"], s["target"]) for s in step_outputs])
         preds = torch.vstack([p.unsqueeze(-1) for p in preds]).squeeze(-1)
         targets = torch.vstack([t.unsqueeze(-1) for t in targets]).squeeze(-1)
-        epoch_metrics = prefix_keys(prefix, self.collect_epoch_metrics(preds, targets))
-        metrics = {**mean_step_metrics, **epoch_metrics}
-        LightningModule.log_dict(self, metrics, sync_dist=self._sync_dist)
+        epoch_metrics = prefix_keys(
+            prefix,
+            self.collect_epoch_metrics(preds, targets, prefix.replace("/", "")),
+        )
+        epoch_metrics, epoch_figures = sort_out_figures(epoch_metrics)
+        all_metrics = {**mean_step_metrics, **epoch_metrics}
+        LightningModule.log_dict(self, all_metrics, sync_dist=self._sync_dist)
+        log_figures(self, epoch_figures)
 
     def training_step(self, batch, batch_idx=None):
         if batch_idx == 0:
@@ -279,7 +285,7 @@ class Lifecycle(MetricMixin):
                     ],
                     cbar=False,
                 )
-                log_figures(self, {"confusion_matrix": fig})
+                log_figures(self, {"test/confusion_matrix": fig})
             except Exception as e:  # pragma: no cover
                 logger.warning(
                     f"Unable to save confusion matrix. Caught error: ''{e}''"

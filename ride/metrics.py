@@ -1,10 +1,11 @@
 from enum import Enum
 from operator import attrgetter
-from typing import Dict, List
+from typing import Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from ptflops import get_model_complexity_info
 from supers import supers
 from torch import Tensor
@@ -15,10 +16,22 @@ from ride.core import Configs, RideMixin
 from ride.utils.logging import getLogger
 from ride.utils.utils import merge_dicts, name
 
+ExtendedMetricDict = Dict[str, Union[Tensor, Figure]]
 MetricDict = Dict[str, Tensor]
+FigureDict = Dict[str, Figure]
 StepOutputs = List[Dict[str, Tensor]]
 
 logger = getLogger(__name__)
+
+
+def sort_out_figures(d: ExtendedMetricDict) -> Tuple[MetricDict, FigureDict]:
+    mets, figs = {}, {}
+    for k, v in d.items():
+        if type(v) == Figure:
+            figs[k] = v
+        else:
+            mets[k] = v
+    return mets, figs
 
 
 class OptimisationDirection(Enum):
@@ -50,7 +63,7 @@ class MetricMixin(RideMixin):
         return {}  # pragma: no cover
 
     def metrics_epoch(
-        self, outputs: StepOutputs, prefix: str = "", **kwargs
+        self, preds: Tensor, targets: Tensor, prefix: str = "", *args, **kwargs
     ) -> MetricDict:
         return {}
 
@@ -63,9 +76,11 @@ class MetricMixin(RideMixin):
             for k, v in md.items()
         }
 
-    def collect_epoch_metrics(self, preds: Tensor, targets: Tensor) -> MetricDict:
+    def collect_epoch_metrics(
+        self, preds: Tensor, targets: Tensor, prefix: str = None
+    ) -> ExtendedMetricDict:
         device = preds.device
-        mdlist: List[MetricDict] = supers(self).metrics_epoch(preds, targets)  # type: ignore
+        mdlist: List[ExtendedMetricDict] = supers(self).metrics_epoch(preds, targets, prefix=prefix)  # type: ignore
         return {
             k: v.to(device=device) if hasattr(v, "to") else v
             for md in mdlist
@@ -84,7 +99,9 @@ class MeanAveragePrecisionMetric(MetricMixin):
     def _metrics(cls):
         return {"mAP": OptimisationDirection.MAX}
 
-    def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
+    def metrics_step(
+        self, preds: Tensor, targets: Tensor, *args, **kwargs
+    ) -> MetricDict:
         map = torch.tensor(-1.0)
         try:
             map = compute_map(self)(preds, targets)
@@ -92,7 +109,9 @@ class MeanAveragePrecisionMetric(MetricMixin):
             logger.error("Unable to compute mAP.")
         return {"mAP": map}
 
-    def metrics_epoch(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
+    def metrics_epoch(
+        self, preds: Tensor, targets: Tensor, *args, **kwargs
+    ) -> MetricDict:
         map = torch.tensor(-1.0)
         try:
             map = compute_map(self)(preds, targets)
