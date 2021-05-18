@@ -56,7 +56,7 @@ class FeatureExtractable(RideMixin):
         def store_features(sself, input, output):
             nonlocal self
             for o in output:
-                self.extracted_features.append(o.detach().numpy())
+                self.extracted_features.append(o.cpu().numpy())
 
         layer.register_forward_hook(store_features)
 
