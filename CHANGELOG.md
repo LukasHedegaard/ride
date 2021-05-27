@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2021-05-27
+### Fixed
+- Feature extraction on GPU
+
+### Added
+- Added explicit logging of hparams
+
 ## [0.4.0] - 2021-05-17
 ### Fixed
 - Pass args correctly to trainer during testing
