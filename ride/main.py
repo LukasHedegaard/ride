@@ -276,7 +276,7 @@ def dprint(d: dict):
 
 
 def make_save_results(root_path: str, verbose=True) -> Callable[[str, Any], None]:
-    if root_path is None:
+    if root_path is None:  # pragma: no cover
 
         def dummy(*args, **kwargs):
             return None
