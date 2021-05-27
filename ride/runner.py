@@ -96,6 +96,7 @@ class Runner:
             logger=_experiment_logger,
             callbacks=trainer_callbacks,
         )
+        _experiment_logger.log_hyperparams(dict(**model.hparams))
 
         # Load epoch state for Tune checkpoint
         if tune_checkpoint_dir:
@@ -151,6 +152,7 @@ class Runner:
         else:
             self.trainer = Trainer.from_argparse_args(Namespace(**args), logger=logger)
 
+        base_logger.log_hyperparams(dict(**model.hparams))
         # Run eval
         self.trainer.test(model, dataloaders[mode]())
 
