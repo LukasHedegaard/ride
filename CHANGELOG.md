@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added explicit logging of model profiling results
+
+### Fixed
+- Finetune weight loading checks
+
 ## [0.4.1] - 2021-05-27
 ### Fixed
 - Feature extraction on GPU
