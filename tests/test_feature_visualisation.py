@@ -1,16 +1,16 @@
 import logging
+from pathlib import Path
 from typing import Tuple
 
 import pytest
 import torch
 
-from pathlib import Path
 from ride import Configs, Main
 from ride.core import RideModule
 from ride.feature_visualisation import FeatureVisualisable
 from ride.optimizers import SgdOptimizer
-from ride.utils.utils import AttributeDict
 from ride.utils.io import is_nonempty_file
+from ride.utils.utils import AttributeDict
 
 from .dummy_dataset import DummyClassificationDataLoader, DummyRegressionDataLoader
 
