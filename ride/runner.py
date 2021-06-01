@@ -220,13 +220,21 @@ class Runner:
             verbose=True,
         )
 
-        info = {
+        elogger = experiment_logger(args.id, args.logging_backend)
+        elogger.log_hyperparams(dict(**model.hparams))
+        elogger.log_metrics(
+            {
+                "flops": int(flops),
+                "params": int(params),
+            }
+        )
+
+        return {
             "timing": timing_results_dict,
             "flops": int(flops),
             "params": int(params),
             "machine": get_machine_info(),
         }
-        return info
 
     # def profile_dataset(self, args: AttributeDict) -> Dict[str, Any]:
     #     ds = self.Module(hparams=args).train_dataloader().dataset
