@@ -54,9 +54,9 @@ def test_optimizers():
         optimizers.AdamWOptimizer,
         optimizers.SgdReduceLrOnPlateauOptimizer,
         optimizers.AdamWReduceLrOnPlateauOptimizer,
-        optimizers.SgdOneCycleOptimizer,
         optimizers.SgdCyclicLrOptimizer,
         optimizers.AdamWCyclicLrOptimizer,
+        optimizers.SgdOneCycleOptimizer,
         optimizers.AdamWOneCycleOptimizer,
     ]:
         DummyModule = dummy_module_with_optimimzer(Optimizer)
