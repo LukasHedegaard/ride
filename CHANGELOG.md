@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.2] - 2021-06-02
 ### Added
 - Added explicit logging of model profiling results
+- Automatic assignment of hparams.num_gpus
 
 ### Fixed
 - Finetune weight loading checks
 - Cyclic learning rate schedulers account for batch size
-- Automatic assignment of hparams.num_gpus
 
 ## [0.4.1] - 2021-05-27
 ### Fixed
