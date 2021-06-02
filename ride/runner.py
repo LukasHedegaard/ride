@@ -18,7 +18,6 @@ from ride.logging import (
     experiment_logger,
 )
 from ride.profile import profile_repeatedly
-from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger, process_rank
 from ride.utils.machine_info import get_machine_info
 from ride.utils.utils import attributedict
