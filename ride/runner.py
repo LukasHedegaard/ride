@@ -165,11 +165,9 @@ class Runner:
         return results
 
     def validate(self, args: AttributeDict) -> EvalutationResults:
-        args = attributedict(args)
         return self.evaluate(args, "val")
 
     def test(self, args: AttributeDict) -> EvalutationResults:
-        args = attributedict(args)
         return self.evaluate(args, "test")
 
     def train_and_val(
@@ -179,7 +177,6 @@ class Runner:
         tune_checkpoint_dir: str = None,
         experiment_logger: ExperimentLoggerCreator = experiment_logger,
     ) -> EvalutationResults:
-        args = attributedict(args)
         self.train(args, trainer_callbacks, tune_checkpoint_dir, experiment_logger)
         return self.evaluate(args, mode="val")
 
