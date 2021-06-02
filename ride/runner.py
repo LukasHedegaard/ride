@@ -67,7 +67,7 @@ class Runner:
 
         # Handle distributed backend modes in Lightning
         if not getattr(args, "distributed_backend", None):
-            if parse_num_gpus(args.gpus) > 1:
+            if model.hparams.num_gpus > 1:
                 args.distributed_backend = "ddp"
             else:
                 args.distributed_backend = None

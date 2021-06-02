@@ -11,6 +11,13 @@ from ride.core import Configs, OptimizerMixin
 from ride.utils.discriminative_lr import discriminative_lr
 
 
+def discounted_steps_per_epoch(base_steps: int, batch_size: int, num_gpus: int):
+    return max(
+        1,
+        round(base_steps / max(1, batch_size) / max(1, num_gpus)),
+    )
+
+
 class SgdOptimizer(OptimizerMixin):
     hparams: ...
     parameters: Callable
@@ -223,6 +230,7 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
         attrgetter("parameters")(self)
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.batch_size")(self)
+        attrgetter("hparams.num_gpus")(self)
         attrgetter("hparams.max_epochs")(self)
         for hparam in SgdCyclicLrOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
@@ -259,20 +267,15 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
             optimizer,
             base_lr=base_lr,
             max_lr=lr,
-            step_size_up=max(
-                1, round(len(self.train_dataloader()) / 4 / self.hparams.batch_size)
+            step_size_up=discounted_steps_per_epoch(
+                len(self.train_dataloader()) / 4,
+                self.hparams.batch_size,
+                self.hparams.num_gpus,
             ),
-            step_size_down=(
-                max(
-                    1,
-                    round(
-                        (
-                            len(self.train_dataloader())
-                            - len(self.train_dataloader()) / 4
-                        )
-                        / self.hparams.batch_size
-                    ),
-                )
+            step_size_down=discounted_steps_per_epoch(
+                len(self.train_dataloader()) - len(self.train_dataloader()) / 4,
+                self.hparams.batch_size,
+                self.hparams.num_gpus,
             ),
             cycle_momentum=False,  # Not supported
         )
@@ -324,20 +327,15 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
             optimizer,
             base_lr=base_lr,
             max_lr=lr,
-            step_size_up=max(
-                1, round(len(self.train_dataloader()) / 4 / self.hparams.batch_size)
+            step_size_up=discounted_steps_per_epoch(
+                len(self.train_dataloader()) / 4,
+                self.hparams.batch_size,
+                self.hparams.num_gpus,
             ),
-            step_size_down=(
-                max(
-                    1,
-                    round(
-                        (
-                            len(self.train_dataloader())
-                            - len(self.train_dataloader()) / 4
-                        )
-                        / self.hparams.batch_size
-                    ),
-                )
+            step_size_down=discounted_steps_per_epoch(
+                len(self.train_dataloader()) - len(self.train_dataloader()) / 4,
+                self.hparams.batch_size,
+                self.hparams.num_gpus,
             ),
             cycle_momentum=False,  # Not supported
         )
@@ -354,6 +352,7 @@ class SgdOneCycleOptimizer(OptimizerMixin):
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.max_epochs")(self)
         attrgetter("hparams.batch_size")(self)
+        attrgetter("hparams.num_gpus")(self)
         for hparam in SgdOneCycleOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
@@ -386,8 +385,10 @@ class SgdOneCycleOptimizer(OptimizerMixin):
         scheduler = torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
             max_lr=lr,
-            steps_per_epoch=max(
-                1, round(len(self.train_dataloader()) / self.hparams.batch_size)
+            steps_per_epoch=discounted_steps_per_epoch(
+                len(self.train_dataloader()),
+                self.hparams.batch_size,
+                self.hparams.num_gpus,
             ),
             epochs=self.hparams.max_epochs,
         )
@@ -404,6 +405,7 @@ class AdamWOneCycleOptimizer(OptimizerMixin):
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.batch_size")(self)
         attrgetter("hparams.max_epochs")(self)
+        attrgetter("hparams.num_gpus")(self)
         for hparam in AdamWOneCycleOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
@@ -436,8 +438,10 @@ class AdamWOneCycleOptimizer(OptimizerMixin):
         scheduler = torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
             max_lr=lr,
-            steps_per_epoch=max(
-                1, round(len(self.train_dataloader()) / self.hparams.batch_size)
+            steps_per_epoch=discounted_steps_per_epoch(
+                len(self.train_dataloader()),
+                self.hparams.batch_size,
+                self.hparams.num_gpus,
             ),
             epochs=self.hparams.max_epochs,
         )
