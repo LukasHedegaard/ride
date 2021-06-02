@@ -18,7 +18,6 @@ from ride.logging import (
     experiment_logger,
 )
 from ride.profile import profile_repeatedly
-from ride.utils.gpus import parse_num_gpus
 from ride.utils.logging import getLogger, process_rank
 from ride.utils.machine_info import get_machine_info
 from ride.utils.utils import attributedict
@@ -67,7 +66,7 @@ class Runner:
 
         # Handle distributed backend modes in Lightning
         if not getattr(args, "distributed_backend", None):
-            if parse_num_gpus(args.gpus) > 1:
+            if model.hparams.num_gpus > 1:
                 args.distributed_backend = "ddp"
             else:
                 args.distributed_backend = None
@@ -165,11 +164,9 @@ class Runner:
         return results
 
     def validate(self, args: AttributeDict) -> EvalutationResults:
-        args = attributedict(args)
         return self.evaluate(args, "val")
 
     def test(self, args: AttributeDict) -> EvalutationResults:
-        args = attributedict(args)
         return self.evaluate(args, "test")
 
     def train_and_val(
@@ -179,7 +176,6 @@ class Runner:
         tune_checkpoint_dir: str = None,
         experiment_logger: ExperimentLoggerCreator = experiment_logger,
     ) -> EvalutationResults:
-        args = attributedict(args)
         self.train(args, trainer_callbacks, tune_checkpoint_dir, experiment_logger)
         return self.evaluate(args, mode="val")
 
@@ -220,21 +216,21 @@ class Runner:
             verbose=True,
         )
 
-        info = {
+        elogger = experiment_logger(args.id, args.logging_backend)
+        elogger.log_hyperparams(dict(**model.hparams))
+        elogger.log_metrics(
+            {
+                "flops": int(flops),
+                "params": int(params),
+            }
+        )
+
+        return {
             "timing": timing_results_dict,
             "flops": int(flops),
             "params": int(params),
             "machine": get_machine_info(),
         }
-        return info
-
-    # def profile_dataset(self, args: AttributeDict) -> Dict[str, Any]:
-    #     ds = self.Module(hparams=args).train_dataloader().dataset
-    #     assert some_callable(
-    #         ds, "profile"
-    #     ), f"{name(ds)} should define a `profile` function"
-    #     info = ds.profile()
-    #     return info
 
     def find_learning_rate(self):
         raise NotImplementedError()

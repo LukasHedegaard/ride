@@ -93,9 +93,13 @@ class Finetunable(Unfreezable):
         )
 
         def key_ok(k):
-            return not (
-                self.hparams.finetune_params_skip
-                and re.match(self.hparams.finetune_params_skip, k)
+            return (
+                k in new_model_state
+                and k in state_dict
+                and not (
+                    self.hparams.finetune_params_skip
+                    and re.match(self.hparams.finetune_params_skip, k)
+                )
             )
 
         def size_ok(k):

@@ -1,7 +1,7 @@
 import logging
 
-import torch
 import pytest
+import torch
 from torchmetrics.classification.average_precision import AveragePrecision
 
 from ride import metrics

@@ -62,8 +62,8 @@ class Lifecycle(MetricMixin):
 
     def __init__(self, hparams=None, *args, **kwargs):
         self._epoch = 0
-        self._num_gpus = parse_num_gpus(hparams.gpus)
-        self._sync_dist = self._num_gpus > 1
+        self.hparams.num_gpus = parse_num_gpus(hparams.gpus)
+        self._sync_dist = self.hparams.num_gpus > 1
         if not some_callable(self, "loss", min_num_args=2):
             self.loss = attrgetter(hparams.loss)(F)
 
