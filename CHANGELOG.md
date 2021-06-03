@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2021-06-03
+### Added
+- Logging of layers that are unfrozen
+
+### Fixed
+- Cyclic learning rate schedulers now update on step
+
 ## [0.4.2] - 2021-06-02
 ### Added
 - Added explicit logging of model profiling results

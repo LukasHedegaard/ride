@@ -11,11 +11,8 @@ from ride.core import Configs, OptimizerMixin
 from ride.utils.discriminative_lr import discriminative_lr
 
 
-def discounted_steps_per_epoch(base_steps: int, batch_size: int, num_gpus: int):
-    return max(
-        1,
-        round(base_steps / max(1, batch_size) / max(1, num_gpus)),
-    )
+def discounted_steps_per_epoch(base_steps: int, num_gpus: int):
+    return max(1, round(base_steps / max(1, num_gpus)))
 
 
 class SgdOptimizer(OptimizerMixin):
@@ -269,17 +266,15 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
             max_lr=lr,
             step_size_up=discounted_steps_per_epoch(
                 len(self.train_dataloader()) / 4,
-                self.hparams.batch_size,
                 self.hparams.num_gpus,
             ),
             step_size_down=discounted_steps_per_epoch(
                 len(self.train_dataloader()) - len(self.train_dataloader()) / 4,
-                self.hparams.batch_size,
                 self.hparams.num_gpus,
             ),
-            cycle_momentum=False,  # Not supported
+            cycle_momentum=True,  # Not supported
         )
-        return [optimizer], [scheduler]
+        return [optimizer], {"scheduler": scheduler, "interval": "step"}
 
 
 class AdamWCyclicLrOptimizer(OptimizerMixin):
@@ -329,17 +324,15 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
             max_lr=lr,
             step_size_up=discounted_steps_per_epoch(
                 len(self.train_dataloader()) / 4,
-                self.hparams.batch_size,
                 self.hparams.num_gpus,
             ),
             step_size_down=discounted_steps_per_epoch(
                 len(self.train_dataloader()) - len(self.train_dataloader()) / 4,
-                self.hparams.batch_size,
                 self.hparams.num_gpus,
             ),
-            cycle_momentum=False,  # Not supported
+            cycle_momentum=False,
         )
-        return [optimizer], [scheduler]
+        return [optimizer], {"scheduler": scheduler, "interval": "step"}
 
 
 class SgdOneCycleOptimizer(OptimizerMixin):
@@ -387,12 +380,11 @@ class SgdOneCycleOptimizer(OptimizerMixin):
             max_lr=lr,
             steps_per_epoch=discounted_steps_per_epoch(
                 len(self.train_dataloader()),
-                self.hparams.batch_size,
                 self.hparams.num_gpus,
             ),
             epochs=self.hparams.max_epochs,
         )
-        return [optimizer], [scheduler]
+        return [optimizer], {"scheduler": scheduler, "interval": "step"}
 
 
 class AdamWOneCycleOptimizer(OptimizerMixin):
@@ -440,12 +432,11 @@ class AdamWOneCycleOptimizer(OptimizerMixin):
             max_lr=lr,
             steps_per_epoch=discounted_steps_per_epoch(
                 len(self.train_dataloader()),
-                self.hparams.batch_size,
                 self.hparams.num_gpus,
             ),
             epochs=self.hparams.max_epochs,
         )
-        return [optimizer], [scheduler]
+        return [optimizer], {"scheduler": scheduler, "interval": "step"}
 
 
 def discriminative_lr_and_params(
