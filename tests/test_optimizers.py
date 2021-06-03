@@ -67,7 +67,8 @@ def test_optimizers():
 
         ret = module.configure_optimizers()
         if type(ret) == tuple:
-            [optimizer], [scheduler] = ret
+            [optimizer], s = ret
+            scheduler = s["scheduler"] if type(s) == dict else s[0]
             assert issubclass(type(optimizer), torch.optim.Optimizer)
             assert hasattr(scheduler, "step")
         elif type(ret) == dict:
