@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Dict, Sequence
+from typing import Dict, Sequence, Tuple
 
 import torch
 
@@ -62,7 +62,7 @@ class Unfreezable(RideMixin):
     def on_init_end(
         self,
         hparams,
-        layers_to_unfreeze: Sequence[torch.nn.Module] = None,
+        layers_to_unfreeze: Sequence[Tuple[str, torch.nn.Module]] = None,
         *args,
         **kwargs,
     ):
@@ -93,39 +93,41 @@ class Unfreezable(RideMixin):
         if epoch in self.unfreeze_schedule:
             num_layers = self.unfreeze_schedule[epoch]
             logger.info(f"Epoch {epoch}: Unfreezing {num_layers} layer(s)")
-            unfreeze_from_end(self.layers_to_unfreeze, num_layers)
+            unfrozen_layers = unfreeze_from_end(self.layers_to_unfreeze, num_layers)
+            logger.debug(f"Unfrozen layers: {', '.join(unfrozen_layers)}")
 
 
 def get_modules_to_unfreeze(
     parent_module: torch.nn.Module, name_must_include=""
-) -> Sequence[torch.nn.Module]:
+) -> Sequence[Tuple[str, torch.nn.Module]]:
     return [
-        m
+        (n, m)
         for (n, m) in parent_module.named_modules()
         if (name_must_include in n) and (hasattr(m, "weight") or hasattr(m, "bias"))
     ]
 
 
 def unfreeze_from_end(
-    layers: Sequence[torch.nn.Module],
+    layers: Sequence[Tuple[str, torch.nn.Module]],
     num_layers_from_end: int,
     freeze_others=True,
 ):
     if freeze_others:
-        for layer in layers[:-num_layers_from_end:]:
+        for _, layer in layers[:-num_layers_from_end:]:
             for param in layer.parameters():
                 param.requires_grad = False
 
-    num_unfrozen = 0
+    unfrozen_names = []
     layer_iter = iter(layers[::-1])
-    while num_unfrozen < num_layers_from_end:
+    while len(unfrozen_names) < num_layers_from_end:
         try:
-            layer = next(layer_iter)
+            name, layer = next(layer_iter)
             for param in layer.parameters():
                 param.requires_grad = True
-            num_unfrozen += 1
+            unfrozen_names.append(name)
         except StopIteration:
             break
+    return unfrozen_names
 
 
 def linear_unfreeze_schedule(
