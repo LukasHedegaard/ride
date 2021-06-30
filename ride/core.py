@@ -168,7 +168,9 @@ class RideModule:
     """
 
     def __init_subclass__(cls):
-        _init_subclass(cls)
+        # Only initialise immediate children
+        if cls.__bases__[0] == RideModule:
+            _init_subclass(cls)
 
     @property
     def hparams(self) -> AttributeDict:
