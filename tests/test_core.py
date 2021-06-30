@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import torch
+import pytest
 
 from ride.core import AttributeDict, RideMixin, RideModule
 from ride.optimizers import SgdOptimizer
@@ -131,3 +132,28 @@ def test_module_with_no_forward_warns(caplog):
 
     assert len(caplog.messages) == 1
     assert "forward" in caplog.text
+
+
+@pytest.mark.skip(reason="Nested inheritance is not supported")
+def test_child_model():
+    """Test if inheritance from RideModule works"""
+
+    class DummyChild(DummyModule):
+        def __init__(self, hparams):
+            DummyModule.__init__(self, hparams)
+            self.some_variable = 42
+
+    parser = DummyChild.configs().add_argparse_args(ArgumentParser())
+    args, _ = parser.parse_known_args()
+    args = apply_standard_args(args)
+    module = DummyChild(args)
+    assert module.some_variable == 42
+    assert module.loss.__name__ == "mse_loss"
+    batch_size = 2
+    x = torch.ones((batch_size, *module.input_shape), dtype=torch.float)
+    y = torch.ones((batch_size, module.output_shape), dtype=torch.float)
+    step_output = module.training_step((x, y), batch_idx=0)
+
+    assert type(step_output["loss"]) is torch.Tensor
+    assert step_output["pred"].shape == y.shape
+    assert torch.equal(step_output["target"], y)
