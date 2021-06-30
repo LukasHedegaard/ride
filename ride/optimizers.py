@@ -4,7 +4,7 @@ Modules adding optimizers
 
 from operator import attrgetter
 from typing import Callable
-from numpy import ceil
+from math import ceil
 
 import torch
 
