@@ -4,6 +4,7 @@ Modules adding optimizers
 
 from operator import attrgetter
 from typing import Callable
+from numpy import ceil
 
 import torch
 
@@ -12,7 +13,7 @@ from ride.utils.discriminative_lr import discriminative_lr
 
 
 def discounted_steps_per_epoch(base_steps: int, num_gpus: int):
-    return max(1, round(base_steps / max(1, num_gpus)))
+    return max(1, ceil(base_steps / max(1, num_gpus)))
 
 
 class SgdOptimizer(OptimizerMixin):
