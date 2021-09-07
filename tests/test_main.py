@@ -260,7 +260,6 @@ class TestMain:
         # Automatically pick lastest checkpoint in directory
         args.resume_from_checkpoint = m.log_dir
         assert ".ckpt" not in args.resume_from_checkpoint
-        args.max_epochs = 2
         m.main(args)
 
     def test_profile_model(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
