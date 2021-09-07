@@ -1,6 +1,6 @@
 # from ride.profile import Profileable
 import inspect
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, List, Sequence, Union
 
 import pytorch_lightning as pl
@@ -199,6 +199,15 @@ class RideModule:
         )
 
         return DerivedRideModule
+
+    def warm_up(input_shape: Sequence[int], *args, **kwargs):
+        """Warms up the model state with a dummy input of shape `input_shape`.
+        This method is called prior to model profiling.
+
+        Args:
+            input_shape (Sequence[int]): input shape with which to warm the model up, including batch size.
+        """
+        ...
 
 
 class RideMixin(ABC):
