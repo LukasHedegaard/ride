@@ -199,7 +199,7 @@ class RideModule:
 
         return DerivedRideModule
 
-    def warm_up(input_shape: Sequence[int], *args, **kwargs):
+    def warm_up(self, input_shape: Sequence[int], *args, **kwargs):
         """Warms up the model state with a dummy input of shape `input_shape`.
         This method is called prior to model profiling.
 
