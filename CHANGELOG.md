@@ -5,8 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+
+## [0.4.4] - 2021-09-08
+### Added
+- `warm_up` function that is called prior to profil 
+
 ### Fixed
 - Learning rate schedulers discounted steps
+
 
 ## [0.4.3] - 2021-06-03
 ### Added
@@ -14,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Cyclic learning rate schedulers now update on step
+
 
 ## [0.4.2] - 2021-06-02
 ### Added
@@ -24,12 +32,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Finetune weight loading checks
 - Cyclic learning rate schedulers account for batch size
 
+
 ## [0.4.1] - 2021-05-27
 ### Fixed
 - Feature extraction on GPU
 
 ### Added
 - Added explicit logging of hparams
+
 
 ## [0.4.0] - 2021-05-17
 ### Fixed
