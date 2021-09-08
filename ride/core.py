@@ -102,7 +102,7 @@ def _init_subclass(cls):
         logger.info(f"`configure_optimizers` not found in in {name(cls)}")
         logger.info("🔧 Adding ride.SgdOptimizer automatically")
 
-        from ride.optimizers import SgdOptimizer  # Break cyclical dependency
+        from ride.optimizers import SgdOptimizer  # Avoid cyclical import
 
         add_bases.append(SgdOptimizer)
 
@@ -144,8 +144,7 @@ def apply_init_args(fn, self, hparams, *args, **kwargs):
     )
     if len(spec.args) == 1:
         return fn(self)
-    else:
-        return fn(self, hparams, *args, **valid_kwargs)
+    return fn(self, hparams, *args, **valid_kwargs)
 
 
 class RideModule:
@@ -168,7 +167,9 @@ class RideModule:
     """
 
     def __init_subclass__(cls):
-        _init_subclass(cls)
+        # Only initialise immediate children
+        if cls.__bases__[0] == RideModule:
+            _init_subclass(cls)
 
     @property
     def hparams(self) -> AttributeDict:
@@ -197,6 +198,15 @@ class RideModule:
         )
 
         return DerivedRideModule
+
+    def warm_up(input_shape: Sequence[int], *args, **kwargs):
+        """Warms up the model state with a dummy input of shape `input_shape`.
+        This method is called prior to model profiling.
+
+        Args:
+            input_shape (Sequence[int]): input shape with which to warm the model up, including batch size.
+        """
+        ...
 
 
 class RideMixin(ABC):

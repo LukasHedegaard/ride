@@ -66,17 +66,18 @@ def test_optimizers():
         module = DummyModule(args)
 
         ret = module.configure_optimizers()
-        if type(ret) == tuple:
-            [optimizer], [scheduler] = ret
+        if isinstance(ret, tuple):
+            [optimizer], s = ret
+            scheduler = s["scheduler"] if isinstance(s, dict) else s[0]
             assert issubclass(type(optimizer), torch.optim.Optimizer)
             assert hasattr(scheduler, "step")
-        elif type(ret) == dict:
+        elif isinstance(ret, dict):
             optimizer = ret["optimizer"]
             scheduler = ret["lr_scheduler"]
             monitor = ret["monitor"]
             assert issubclass(type(optimizer), torch.optim.Optimizer)
             assert hasattr(scheduler, "step")
-            assert type(monitor) == str
+            assert isinstance(monitor, str)
         else:
             assert issubclass(type(ret), torch.optim.Optimizer)
 

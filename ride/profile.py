@@ -49,6 +49,7 @@ def profile(model: torch.nn.Module, detailed=True):
 
     # Initialise data on CPU
     data = torch.randn(model.hparams.batch_size, *model.input_shape, device="cpu")
+    model.warm_up(tuple(data.shape))
 
     try:
         with torch.no_grad(), torch.autograd.profiler.profile(
@@ -73,8 +74,7 @@ def profile(model: torch.nn.Module, detailed=True):
 
     if detailed:
         return timing, prof
-    else:
-        return timing
+    return timing
 
 
 def compute_num_runs(total_wait_time, single_run_time):

@@ -34,37 +34,31 @@ Training wheels, side rails, and helicopter parent for your Deep Learning projec
 pip install ride
 ```
 
-## Zero-boilerplate AI research 
-This project is an audacious attempt to provide battle-tested defaults for
-- __Training and testing methods__ 🏋️‍♂️
-- __Checkpointing__ ✅
-- __Metrics__ 📈
-- __Finetuning schemes__ 👌
-- __Feature extraction__ 📸
-- __Visualisations__ 👁
-- __Hyperparameter search__ 📊
-- __Logging__ 📜
-- __Command-line interface__ 💻
-- _... and more_
+## ZERO-boilerplate AI research 
+`Ride` provides a feature-rich, battle-tested boilerplate, so that you can focus on the model-building and research. 🧪
 
-The implementation builds on [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning) and provides the same __multi-gpu, multi-node__ support out of the box! 
-<div align="left">
-Currently, we're tracking 
-<a href="https://github.com/PyTorchLightning/pytorch-lightning">
-  <img src="http://img.shields.io/badge/PyTorch_Lightning-v1.3-792ee5.svg" height="20">
-</a>
-</div>
+Out of the box, `Ride` gives you:
+- [x] __Training and testing methods__ 🏋️‍♂️
+- [x] __Checkpointing__ ✅
+- [x] __Metrics__ 📈
+- [x] __Finetuning schemes__ 👌
+- [x] __Feature extraction__ 📸
+- [x] __Visualisations__ 👁
+- [x] __Hyperparameter search__ 📊
+- [x] __Logging__ 📜
+- [x] __Command-line interface__ 💻
+- [x] __Multi-gpu, multi-node handling via__ [![Lightning](https://img.shields.io/badge/PyTorch_Lightning-v1.3-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+- [x] _... and more_
 
 
-## Programming model
-Did you ever take a peek to the source code of the PyTorch Lightning [LightningModule](https://github.com/PyTorchLightning/pytorch-lightning/blob/master/pytorch_lightning/core/lightning.py)?
-This core class of the Pytorch Lightning library makes heavy use of _Mixins_ and _multiple inheritance_ to group functionalities and "inject" them in the LightningModule. 
 
-In `ride` we build up our modules the same way, _mixing in_ functionality by inheriting from multiple base classes in our Model definition.
+## Boilerplate inheritance
+With `Ride`, we inject functionality by means of _inheritance_. 
+The same way, a `PyTorch` module would usually inherit from `torch.nn.Module`, we can _mix in_ a plethora of functionality by inheriting from the `RideModule`.
+In addition, boiler-plate for wiring up optimisers, metrics and datasets can be also _mixed in_ as seen below.
 
+### Complete project definition
 
-## Model definition
-Below, we have the __complete__ code for a simple classifier on the MNIST dataset:
 ```python
 # simple_classifier.py
 import torch
@@ -108,14 +102,15 @@ if __name__ == "__main__":
     ride.Main(SimpleClassifier).argparse()
 
 ```
-That's it! So what's going on, and aren't we missing a bunch of code?
+The above is the __complete__ code for a simple classifier on the MNIST dataset.
 
 All of the usual boiler-plate code has been _mixed in_ using multiple inheritance:
 - `RideModule` is a base-module which includes `pl.LightningModule` and makes some behind-the-scenes python-magic work. For instance, it modifies your `__init__` function to automatically initiate all the mixins correctly. Moreover, it mixes in `training_step`, `validation_step`, and `test_step`.
-- `SgdOneCycleOptimizer` mixes in the `configure_optimizers` function with SGD and [OneCycleLR scheduler](https://pytorch.org/vision/0.8/datasets.html#torchvision.datasets.MNIST).
+- `SgdOneCycleOptimizer` mixes in a `configure_optimizers` functionality with SGD and [OneCycleLR scheduler](https://pytorch.org/vision/0.8/datasets.html#torchvision.datasets.MNIST).
 - `TopKAccuracyMetric` adds top1acc and top3acc metrics, which can be used for checkpointing and benchmarking.
 - `MnistDataset` mixes in `train_dataloader`, `val_dataloader`, and `test_dataloader` functions for the [MNIST dataset](https://github.com/LukasHedegaard/co-rider). Dataset mixins always provide `input_shape` and `output_shape` attributes, which are handy for defining the networking structure as seen in `__init__`.
 
+## Configs
 In addition to inheriting lifecycle functions etc., the mixins also add `configs` to your module (powered by [co-rider](https://github.com/LukasHedegaard/co-rider)). 
 These define all of the configurable (hyper)parameters including their
 - _type_ 
@@ -330,7 +325,7 @@ $ python simple_classifier.py --help
 
 
 ## Environment
-Per default, `ride` projects are oriented around the current working directory and will save logs in the `~/logs folders`, and cache to `~/.cache`.
+Per default, `Ride` projects are oriented around the current working directory and will save logs in the `~/logs folders`, and cache to `~/.cache`.
 
 This behaviour can be overloaded by changing of the following environment variables (defaults noted):
 ```bash
@@ -345,8 +340,10 @@ LOG_LEVEL="INFO"          # One of "DEBUG", "INFO", "WARNING", "ERROR", "CRITICA
 
 
 
-## Bibtex
-If you end up using `ride` for your research and feel like citing it, here's a BibTex:
+## Citation
+
+### BibTeX
+If you use `Ride` for your research and feel like citing it, here's a BibTex:
 
 ```bibtex
 @article{hedegaard2021ride,
@@ -356,3 +353,10 @@ If you end up using `ride` for your research and feel like citing it, here's a B
   year={2021}
 }
 ```
+
+### Badge [![Ride](https://img.shields.io/badge/Built_to-Ride-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+A badge can be included in a README.md with the following snippet:
+```md
+[![Ride](https://img.shields.io/badge/Built_to-Ride-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+```
+

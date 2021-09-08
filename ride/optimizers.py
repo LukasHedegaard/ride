@@ -2,6 +2,7 @@
 Modules adding optimizers
 """
 
+from math import ceil
 from operator import attrgetter
 from typing import Callable
 
@@ -12,7 +13,7 @@ from ride.utils.discriminative_lr import discriminative_lr
 
 
 def discounted_steps_per_epoch(base_steps: int, num_gpus: int):
-    return max(1, round(base_steps / max(1, num_gpus)))
+    return max(1, ceil(base_steps / max(1, num_gpus)))
 
 
 class SgdOptimizer(OptimizerMixin):
@@ -259,7 +260,7 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
             weight_decay=self.hparams.weight_decay,
         )
         # Use recommendations from https://arxiv.org/abs/1506.01186
-        base_lr = [x / 4 for x in lr] if type(lr) == list else lr / 4
+        base_lr = [x / 4 for x in lr] if isinstance(lr, list) else lr / 4
         scheduler = torch.optim.lr_scheduler.CyclicLR(
             optimizer,
             base_lr=base_lr,
@@ -317,7 +318,7 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
             weight_decay=self.hparams.weight_decay,
         )
         # Use recommendations from https://arxiv.org/abs/1506.01186
-        base_lr = [x / 4 for x in lr] if type(lr) == list else lr / 4
+        base_lr = [x / 4 for x in lr] if isinstance(lr, list) else lr / 4
         scheduler = torch.optim.lr_scheduler.CyclicLR(
             optimizer,
             base_lr=base_lr,

@@ -1,8 +1,8 @@
 corider
-pytorch-lightning~=1.3
+pytorch-lightning==1.3
 torchmetrics
 python-dotenv
-supers
+supers>=0.2  
 matplotlib
 seaborn
 coloredlogs

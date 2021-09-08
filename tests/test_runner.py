@@ -126,7 +126,21 @@ class TestRunner:
     def test_profile_model(self, runner_and_args: Tuple[Runner, AttributeDict]):
         """Test that profiling model work"""
         runner, args = runner_and_args
+
+        msg = None
+
+        def warm_up(*args, **kwargs):
+            nonlocal msg
+            msg = "called"
+
+        old_warm_up = runner.Module.warm_up
+        runner.Module.warm_up = warm_up
+
         runner.profile_model(args, max_wait_seconds=1)
+
+        runner.Module.warm_up = old_warm_up
+
+        assert msg == "called"
 
     def test_teardown(self, runner_and_args: Tuple[Runner, AttributeDict]):
         runner, args = runner_and_args

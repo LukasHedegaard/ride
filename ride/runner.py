@@ -61,6 +61,7 @@ class Runner:
                 map_location=lambda storage, loc: storage,
             )
             model = self.Module._load_model_state(tune_ckpt, hparams=args)
+
         else:
             model = self.Module(hparams=args)
 
@@ -207,6 +208,8 @@ class Runner:
             sort_by="self_cpu_time_total"
         )
         logger.info(single_run_detailed_timing)
+
+        model.warm_up((1, *model.input_shape))
 
         flops, params = get_model_complexity_info(
             model,
