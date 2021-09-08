@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2021-09-08
+### Fixed
+- Fix `warm_up` function signature
+- Requirement versions
+
 
 ## [0.4.4] - 2021-09-08
 ### Added
