@@ -5,11 +5,11 @@ mypy
 black
 isort>=5.7
 flake8-black
-pytest
+pytest==6.2
 pytest-cov
 pytest-xdist
 scikit-learn
 umap-learn
-ray[tune]~=1.2
+ray[tune]==1.2
 torchvision
 lightning-bolts
