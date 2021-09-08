@@ -54,7 +54,7 @@ Out of the box, `Ride` gives you:
 
 ## Boilerplate inheritance
 With `Ride`, we inject functionality by means of _inheritance_. 
-The same way, a `PyTorch` module would usually inherit from `torch.nn.Module`, we can _mix in_ a plethora of functionality by inheriting from the `RideModule`.
+The same way, your network would usually inherit from `torch.nn.Module`, we can _mix in_ a plethora of functionality by inheriting from the `RideModule` (which also includes the `torch.nn.Module`).
 In addition, boiler-plate for wiring up optimisers, metrics and datasets can be also _mixed in_ as seen below.
 
 ### Complete project definition
