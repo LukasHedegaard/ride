@@ -74,8 +74,7 @@ def profile(model: torch.nn.Module, detailed=True):
 
     if detailed:
         return timing, prof
-    else:
-        return timing
+    return timing
 
 
 def compute_num_runs(total_wait_time, single_run_time):

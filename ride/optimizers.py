@@ -2,9 +2,9 @@
 Modules adding optimizers
 """
 
+from math import ceil
 from operator import attrgetter
 from typing import Callable
-from math import ceil
 
 import torch
 
@@ -260,7 +260,7 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
             weight_decay=self.hparams.weight_decay,
         )
         # Use recommendations from https://arxiv.org/abs/1506.01186
-        base_lr = [x / 4 for x in lr] if type(lr) == list else lr / 4
+        base_lr = [x / 4 for x in lr] if isinstance(lr, list) else lr / 4
         scheduler = torch.optim.lr_scheduler.CyclicLR(
             optimizer,
             base_lr=base_lr,
@@ -318,7 +318,7 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
             weight_decay=self.hparams.weight_decay,
         )
         # Use recommendations from https://arxiv.org/abs/1506.01186
-        base_lr = [x / 4 for x in lr] if type(lr) == list else lr / 4
+        base_lr = [x / 4 for x in lr] if isinstance(lr, list) else lr / 4
         scheduler = torch.optim.lr_scheduler.CyclicLR(
             optimizer,
             base_lr=base_lr,

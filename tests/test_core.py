@@ -1,9 +1,9 @@
 import logging
 from argparse import ArgumentParser
 
+import pytest
 import pytorch_lightning as pl
 import torch
-import pytest
 
 from ride.core import AttributeDict, RideMixin, RideModule
 from ride.optimizers import SgdOptimizer
@@ -94,7 +94,7 @@ def test_training_step_added_automatically():
     y = torch.ones((batch_size, module.output_shape), dtype=torch.float)
     step_output = module.training_step((x, y), batch_idx=0)
 
-    assert type(step_output["loss"]) is torch.Tensor
+    assert isinstance(step_output["loss"], torch.Tensor)
     assert step_output["pred"].shape == y.shape
     assert torch.equal(step_output["target"], y)
 
@@ -154,6 +154,6 @@ def test_child_model():
     y = torch.ones((batch_size, module.output_shape), dtype=torch.float)
     step_output = module.training_step((x, y), batch_idx=0)
 
-    assert type(step_output["loss"]) is torch.Tensor
+    assert isinstance(step_output["loss"], torch.Tensor)
     assert step_output["pred"].shape == y.shape
     assert torch.equal(step_output["target"], y)

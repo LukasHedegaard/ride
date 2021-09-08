@@ -1,6 +1,6 @@
 # from ride.profile import Profileable
 import inspect
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, List, Sequence, Union
 
 import pytorch_lightning as pl
@@ -102,7 +102,7 @@ def _init_subclass(cls):
         logger.info(f"`configure_optimizers` not found in in {name(cls)}")
         logger.info("🔧 Adding ride.SgdOptimizer automatically")
 
-        from ride.optimizers import SgdOptimizer  # Break cyclical dependency
+        from ride.optimizers import SgdOptimizer  # Avoid cyclical import
 
         add_bases.append(SgdOptimizer)
 
@@ -144,8 +144,7 @@ def apply_init_args(fn, self, hparams, *args, **kwargs):
     )
     if len(spec.args) == 1:
         return fn(self)
-    else:
-        return fn(self, hparams, *args, **valid_kwargs)
+    return fn(self, hparams, *args, **valid_kwargs)
 
 
 class RideModule:

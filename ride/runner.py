@@ -10,7 +10,6 @@ from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.utilities.cloud_io import load as pl_load
 from pytorch_lightning.utilities.parsing import AttributeDict
 
-
 from ride.core import RideDataset, RideModule
 from ride.logging import (
     ExperimentLoggerCreator,

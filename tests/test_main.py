@@ -234,7 +234,7 @@ class TestMain:
             ), caplog.at_level(logging.INFO):
                 m.main(args)
 
-            len(caplog.messages) > 0
+            assert len(caplog.messages) > 0
             for check in ["Scaling learning_rate from 0.01 to 0.015"]:
                 any([check in msg for msg in caplog.messages])
 
