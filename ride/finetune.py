@@ -168,7 +168,7 @@ def try_pyth_load(file, model_state_key):
             break
 
     # Check if we already have a state_dict
-    if all([type(v) == torch.Tensor for v in loaded.values()]):
+    if all([isinstance(v, torch.Tensor) for v in loaded.values()]):
         state_dict = loaded
 
     if not state_dict:  # pragma: no cover
