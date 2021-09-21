@@ -57,7 +57,7 @@ def profile(model: torch.nn.Module, detailed=True):
         ) if detailed else contextlib.suppress() as prof:
             # Transfer data from CPU to GPU, compute on GPU, and transfer back to CPU
             start = time()
-            model.forward(data.to(device=new_device)).to(device="cpu")
+            model(data.to(device=new_device)).to(device="cpu")
             stop = time()
     except Exception as e:
         raise ValueError(

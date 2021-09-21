@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Update profile to use model.__call__. This enable non-`forward` executions during profiling
+
 ## [0.4.5] - 2021-09-08
 ### Fixed
 - Fix `warm_up` function signature
