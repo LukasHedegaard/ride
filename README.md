@@ -47,7 +47,7 @@ Out of the box, `Ride` gives you:
 - [x] __Hyperparameter search__ 📊
 - [x] __Logging__ 📜
 - [x] __Command-line interface__ 💻
-- [x] __Multi-gpu, multi-node handling via__ [![Lightning](https://img.shields.io/badge/PyTorch_Lightning-v1.3-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+- [x] __Multi-gpu, multi-node handling via__ <img src="https://img.shields.io/badge/PyTorch_Lightning-v1.3-643DD9.svg" height="20">
 - [x] _... and more_
 
 
@@ -354,9 +354,17 @@ If you use `Ride` for your research and feel like citing it, here's a BibTex:
 }
 ```
 
-### Badge [![Ride](https://img.shields.io/badge/Built_to-Ride-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+### Badge <a href="https://github.com/LukasHedegaard/ride"><img src="https://img.shields.io/badge/Built_to-Ride-643DD9.svg" height="20"></a>
 A badge can be included in a README.md with the following snippet:
+
+.MD
 ```md
 [![Ride](https://img.shields.io/badge/Built_to-Ride-643DD9.svg)](https://github.com/LukasHedegaard/ride)
 ```
 
+.HTML
+```md
+<a href="https://github.com/LukasHedegaard/ride">
+  <img src="https://img.shields.io/badge/Built_to-Ride-643DD9.svg" height="20">
+</a>
+```
