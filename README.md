@@ -38,16 +38,16 @@ pip install ride
 `Ride` provides a feature-rich, battle-tested boilerplate, so that you can focus on the model-building and research. 🧪
 
 Out of the box, `Ride` gives you:
-- [x] __Training and testing methods__ 🏋️‍♂️
-- [x] __Checkpointing__ ✅
-- [x] __Metrics__ 📈
-- [x] __Finetuning schemes__ 👌
-- [x] __Feature extraction__ 📸
-- [x] __Visualisations__ 👁
-- [x] __Hyperparameter search__ 📊
-- [x] __Logging__ 📜
-- [x] __Command-line interface__ 💻
-- [x] __Multi-gpu, multi-node handling via__ <img src="https://img.shields.io/badge/PyTorch_Lightning-v1.3-643DD9.svg" height="20">
+- __Training and testing methods__ 🏋️‍♂️
+- __Checkpointing__ ✅
+- __Metrics__ 📈
+- __Finetuning schemes__ 👌
+- __Feature extraction__ 📸
+- __Visualisations__ 👁
+- __Hyperparameter search__ 📊
+- __Logging__ 📜
+- __Command-line interface__ 💻
+- __Multi-gpu, multi-node handling via__ <img src="https://img.shields.io/badge/PyTorch_Lightning-v1.3-643DD9.svg" height="20">
 - [x] _... and more_
 
 
