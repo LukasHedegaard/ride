@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.4.6] - 2021-09-21
 ### Fixed
 - Update profile to use model.__call__. This enable non-`forward` executions during profiling.
 - Add DefaultMethods Mixin with `warm_up` to make `warm_up` overloadable by Mixins.
+
 
 ## [0.4.5] - 2021-09-08
 ### Fixed
