@@ -157,3 +157,35 @@ def test_child_model():
     assert isinstance(step_output["loss"], torch.Tensor)
     assert step_output["pred"].shape == y.shape
     assert torch.equal(step_output["target"], y)
+
+
+def test_default_methods_overload():
+    # RideMixins can overload default_methods, e.g. `warm_up`
+
+    msg = None
+
+    class MyWarmup(RideMixin):
+        def warm_up(self, input_shape, *args, **kwargs):
+            nonlocal msg
+            msg = input_shape
+
+    class DummyModuleWithWarmup(RideModule, MyWarmup, DummyRegressionDataLoader):
+        def __init__(self):
+            self.lin = torch.nn.Linear(
+                self.input_shape[0],  # from DummyRegressionDataLoader
+                self.output_shape,  # from DummyRegressionDataLoader
+            )
+
+        def forward(self, x):
+            return self.lin(x)
+
+    parser = DummyModuleWithWarmup.configs().add_argparse_args(ArgumentParser())
+    args, _ = parser.parse_known_args()
+    args = apply_standard_args(args)
+    module = DummyModuleWithWarmup(args)
+
+    assert msg is None
+
+    module.warm_up((1, 2, 3))
+
+    assert msg == (1, 2, 3)

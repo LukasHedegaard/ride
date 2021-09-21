@@ -66,6 +66,9 @@ def _init_subclass(cls):
     if not cls.__bases__[-1] == pl.LightningModule:
         add_bases.append(pl.LightningModule)
 
+    if not issubclass(cls, DefaultMethods):
+        add_bases.append(DefaultMethods)
+
     if not issubclass(cls, Lifecycle):
         add_bases.append(Lifecycle)
 
@@ -199,15 +202,6 @@ class RideModule:
 
         return DerivedRideModule
 
-    def warm_up(self, input_shape: Sequence[int], *args, **kwargs):
-        """Warms up the model state with a dummy input of shape `input_shape`.
-        This method is called prior to model profiling.
-
-        Args:
-            input_shape (Sequence[int]): input shape with which to warm the model up, including batch size.
-        """
-        ...
-
 
 class RideMixin(ABC):
     """Abstract base-class for Ride mixins"""
@@ -219,6 +213,17 @@ class RideMixin(ABC):
         ...
 
     def validate_attributes(self):
+        ...
+
+
+class DefaultMethods(RideMixin):
+    def warm_up(self, input_shape: Sequence[int], *args, **kwargs):
+        """Warms up the model state with a dummy input of shape `input_shape`.
+        This method is called prior to model profiling.
+
+        Args:
+            input_shape (Sequence[int]): input shape with which to warm the model up, including batch size.
+        """
         ...
 
 
