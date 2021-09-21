@@ -37,12 +37,15 @@ from ride.hparamsearch import Hparamsearch  # noqa: E402
 from ride.logging import experiment_logger  # noqa: E402
 from ride.runner import Runner  # noqa: E402
 from ride.utils.checkpoints import find_checkpoint  # noqa: E402
-from ride.utils.env import LOGS_PATH  # noqa: E402
+from ride.utils import env  # noqa: E402
 from ride.utils.io import bump_version, dump_yaml  # noqa: E402
 from ride.utils.utils import attributedict, to_dict  # noqa: E402
 from pytorch_lightning.utilities.parsing import AttributeDict  # noqa: E402
 
 logger = getLogger(__name__)
+
+
+logger.debug(yaml.dump({"Environment": {n: str(getattr(env, n)) for n in env.__all__}}))
 
 
 class Main:
@@ -173,8 +176,8 @@ class Main:
         if run:
             parsed_args = parser.parse_args(args)
             return self.main(parsed_args)
-        else:
-            return parser
+
+        return parser
 
     def main(self, args: AttributeDict):  # noqa: C901
         args = attributedict(args)
@@ -200,7 +203,7 @@ class Main:
         results = []
 
         if not args.default_root_dir:
-            args.default_root_dir = str(LOGS_PATH)
+            args.default_root_dir = str(env.LOGS_PATH)
 
         save_results = make_save_results(self.log_dir)
 
