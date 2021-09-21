@@ -176,8 +176,8 @@ class Main:
         if run:
             parsed_args = parser.parse_args(args)
             return self.main(parsed_args)
-        else:
-            return parser
+
+        return parser
 
     def main(self, args: AttributeDict):  # noqa: C901
         args = attributedict(args)
