@@ -10,7 +10,7 @@ import torch
 from ride.core import Configs
 from ride.unfreeze import Unfreezable
 from ride.utils.logging import getLogger
-from ride.utils.utils import attributedict, rgetattr, to_dict
+from ride.utils.utils import attributedict, to_dict
 
 logger = getLogger(__name__)
 
@@ -114,16 +114,15 @@ class Finetunable(Unfreezable):
         names_not_loaded = {
             n for n in names_not_loaded if "num_batches_tracked" not in n
         }
-        for n in {n for n in names_not_loaded if "weight" in n or "bias" in n}:
-            p = rgetattr(self, n)
-            p.requires_grad = True
 
-        msg = "Copying and freezing parameters"
+        msg = "Copying parameters"
         if names_not_loaded:
             msg += f" (skipped {names_not_loaded})"
         logger.debug(msg)
 
-        Unfreezable.on_init_end(self, hparams, *args, **kwargs)
+        Unfreezable.on_init_end(
+            self, hparams, names_to_unfreeze=names_not_loaded, *args, **kwargs
+        )
 
 
 def load_model_weights(file: str, hparams_passed, model_state_key):

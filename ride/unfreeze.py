@@ -63,6 +63,7 @@ class Unfreezable(RideMixin):
         self,
         hparams,
         layers_to_unfreeze: Sequence[Tuple[str, torch.nn.Module]] = None,
+        names_to_unfreeze: Sequence[str] = None,
         *args,
         **kwargs,
     ):
@@ -74,9 +75,11 @@ class Unfreezable(RideMixin):
             )
         )
 
-        # Gradual unfreeze linear schedule
-        self.unfreeze_schedule = (
-            linear_unfreeze_schedule(
+        self.unfreeze_schedule = {}
+
+        if self.hparams.unfreeze_from_epoch > -1:
+            # Gradual unfreeze linear schedule
+            self.unfreeze_schedule = linear_unfreeze_schedule(
                 initial_epoch=self.hparams.unfreeze_from_epoch,
                 total_layers=len(self.layers_to_unfreeze),
                 step_size=self.hparams.unfreeze_layer_step,
@@ -84,9 +87,7 @@ class Unfreezable(RideMixin):
                 max_layers=self.hparams.unfreeze_layers_max,
                 epoch_step=self.hparams.unfreeze_epoch_step,
             )
-            if self.hparams.unfreeze_from_epoch > -1
-            else {}
-        )
+            freeze_layers_except_names(self, names_to_unfreeze)
 
     def on_traning_epoch_start(self, epoch: int):
         # Called by TrainValTestStepsMixin
@@ -95,6 +96,25 @@ class Unfreezable(RideMixin):
             logger.info(f"Epoch {epoch}: Unfreezing {num_layers} layer(s)")
             unfrozen_layers = unfreeze_from_end(self.layers_to_unfreeze, num_layers)
             logger.debug(f"Unfrozen layers: {', '.join(unfrozen_layers)}")
+
+
+def freeze_layers_except_names(
+    parent_module: torch.nn.Module, names_to_unfreeze: Sequence[str]
+):
+    names_to_unfreeze = names_to_unfreeze or []
+    names_to_unfreeze = [
+        n.replace(".weight", "").replace(".bias", "") for n in names_to_unfreeze
+    ]
+    unfrozen_names = []
+    for (name, layer) in parent_module.named_modules():
+        requires_grad = any(n in name for n in names_to_unfreeze)
+        if requires_grad:
+            unfrozen_names.append(name)
+        for param in layer.parameters():
+            param.requires_grad = requires_grad
+
+    if unfrozen_names:
+        logger.debug(f"Unfrozen layers: {', '.join(unfrozen_names)}")
 
 
 def get_modules_to_unfreeze(
@@ -110,7 +130,7 @@ def get_modules_to_unfreeze(
 def unfreeze_from_end(
     layers: Sequence[Tuple[str, torch.nn.Module]],
     num_layers_from_end: int,
-    freeze_others=True,
+    freeze_others=False,
 ):
     if freeze_others:
         for _, layer in layers[:-num_layers_from_end:]:
