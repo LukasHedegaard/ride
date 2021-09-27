@@ -69,10 +69,9 @@ class MetricMixin(RideMixin):
         return {}
 
     def collect_metrics(self, preds: Tensor, targets: Tensor) -> MetricDict:
-        device = preds.device
         mdlist: List[MetricDict] = supers(self).metrics_step(preds, targets)  # type: ignore
         return {
-            k: v.to(device=device) if hasattr(v, "to") else v
+            k: v.to(device=self.device) if hasattr(v, "to") else v
             for md in mdlist
             for k, v in md.items()
         }
@@ -80,10 +79,9 @@ class MetricMixin(RideMixin):
     def collect_epoch_metrics(
         self, preds: Tensor, targets: Tensor, prefix: str = None
     ) -> ExtendedMetricDict:
-        device = preds.device
         mdlist: List[ExtendedMetricDict] = supers(self).metrics_epoch(preds, targets, prefix=prefix)  # type: ignore
         return {
-            k: v.to(device=device) if hasattr(v, "to") else v
+            k: v.to(device=self.device) if hasattr(v, "to") else v
             for md in mdlist
             for k, v in md.items()
         }
@@ -96,6 +94,23 @@ class MeanAveragePrecisionMetric(MetricMixin):
         for attribute in ["hparams.loss", "classes"]:
             attrgetter(attribute)(self)
 
+    def _compute_mean_average_precision(self, preds, targets):
+        num_classes = len(getattr(self, "classes", 2))
+        try:
+            average_precision = AveragePrecision(num_classes=num_classes or None)
+            ap = average_precision(preds, targets)
+        except RuntimeError as e:  # pragma: no cover
+            logger.error("Unable to compute Average Precision: ", e)
+            return torch.tensor(float("nan"))
+
+        if isinstance(getattr(self, "ignore_classes", None), list):
+            ap = [t for i, t in enumerate(ap) if i not in self.ignore_classes]
+
+        if isinstance(ap, list):
+            ap = torch.tensor([t for t in ap if not t.isnan()])
+
+        return ap.mean()
+
     @classmethod
     def _metrics(cls):
         return {"mAP": OptimisationDirection.MAX}
@@ -103,31 +118,12 @@ class MeanAveragePrecisionMetric(MetricMixin):
     def metrics_step(
         self, preds: Tensor, targets: Tensor, *args, **kwargs
     ) -> MetricDict:
-        map = torch.tensor(-1.0)
-        try:
-            map = compute_map(self)(preds, targets)
-        except RuntimeError:  # pragma: no cover
-            logger.error("Unable to compute mAP.")
-        return {"mAP": map}
+        return {"mAP": self._compute_mean_average_precision(preds, targets)}
 
     def metrics_epoch(
         self, preds: Tensor, targets: Tensor, *args, **kwargs
     ) -> MetricDict:
-        map = torch.tensor(-1.0)
-        try:
-            map = compute_map(self)(preds, targets)
-        except RuntimeError:  # pragma: no cover
-            logger.error("Unable to compute mAP.")
-        return {"mAP": map}
-
-
-def compute_map(self):
-    if "map_fn" not in vars():
-        if "binary" in self.hparams.loss:
-            map_fn = AveragePrecision(pos_label=1)
-        else:
-            map_fn = AveragePrecision(pos_label=1, num_classes=len(self.classes))
-    return map_fn
+        return {"mAP": self._compute_mean_average_precision(preds, targets)}
 
 
 def TopKAccuracyMetric(*Ks) -> MetricMixin:
