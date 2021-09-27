@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Weight freezing during model loading.
+- Fix discriminative_lr param selection for NoneType parameters.
 
 
 ## [0.4.6] - 2021-09-21
