@@ -49,7 +49,7 @@ class Unfreezable(RideMixin):
             name="unfreeze_layer_step",
             type=int,
             default=1,
-            description="Number additional layers to unfreeze at each unfreeze step.",
+            description="Number additional layers to unfreeze at each unfreeze step. If `-1`, all layers are unfrozon after a step",
         )
         c.add(
             name="unfreeze_layers_max",
