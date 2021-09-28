@@ -29,7 +29,7 @@ def singleton_experiment_logger() -> ExperimentLoggerCreator:
     def experiment_logger(
         name: str = None,
         logging_backend: str = "tensorboard",
-        Module=None,
+        project_name: str = None,
         save_dir=RUN_LOGS_PATH,
     ) -> ExperimentLogger:
         nonlocal _loggers
@@ -48,7 +48,7 @@ def singleton_experiment_logger() -> ExperimentLoggerCreator:
                 _loggers[logging_backend] = WandbLogger(
                     save_dir=save_dir,
                     name=name,
-                    project=(Module.__name__ if Module else None),
+                    project=project_name,
                 )
                 _loggers[logging_backend].log_dir = getattr(
                     _loggers[logging_backend].experiment._settings, "_sync_dir", None

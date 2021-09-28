@@ -188,7 +188,7 @@ class Main:
 
         seed_everything(args.seed)
         self.log_dir = experiment_logger(
-            args.id, args.logging_backend, self.Module
+            args.id, args.logging_backend, getattr(self.Module, "__name__")
         ).log_dir
         init_logging(
             self.log_dir,
