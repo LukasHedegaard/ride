@@ -225,7 +225,7 @@ class Main:
             hprint("Searching for optimal model hyperparameters")
             best_hparams = self.hparamsearch.run(args)
             if not best_hparams:
-                raise RuntimeError("Hparamsearch was unable to identy best hparams")
+                raise RuntimeError("Hparamsearch was unable to identify best hparams")
             logger.info("Hparamsearch completed")
             dprint(best_hparams)
             results.append(best_hparams)
