@@ -9,14 +9,17 @@
   <a href="https://pypi.org/project/ride/">
     <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20" >
   </a>
-  <a href='https://ride.readthedocs.io/en/latest/?badge=latest'>
-      <img src='https://readthedocs.org/projects/ride/badge/?version=latest' alt='Documentation Status' height="20"/>
+  <a href="https://pepy.tech/project/ride">
+    <img src="https://pepy.tech/badge/ride/month" height="20">
   </a>
   <a href="https://www.codefactor.io/repository/github/lukashedegaard/ride">
     <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" height="20" />
   </a>
   <a href="https://codecov.io/gh/LukasHedegaard/ride">
     <img src="https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC" height="20"/>
+  </a>
+  <a href='https://ride.readthedocs.io/en/latest/?badge=latest'>
+      <img src='https://readthedocs.org/projects/ride/badge/?version=latest' alt='Documentation Status' height="20"/>
   </a>
   <a href="https://opensource.org/licenses/Apache-2.0">
     <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" height="20">
