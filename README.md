@@ -6,8 +6,8 @@
   <a href="https://pypi.org/project/ride/">
     <img src="https://img.shields.io/pypi/pyversions/ride" height="20" >
   </a>
-  <a href="https://pypi.org/project/ride/">
-    <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20" >
+  <a href="https://badge.fury.io/py/ride">
+    <img src="https://badge.fury.io/py/ride.svg" height="20" >
   </a>
   <a href="https://pepy.tech/project/ride">
     <img src="https://pepy.tech/badge/ride/month" height="20">
