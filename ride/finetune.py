@@ -109,8 +109,6 @@ class Finetunable(Unfreezable):
 
         self.load_state_dict(to_load, strict=False)  # type: ignore
 
-        logger.debug("Loading model state")
-
         names_missing = set(new_model_state.keys()) - set(to_load.keys())
         names_missing = {n for n in names_missing if "num_batches_tracked" not in n}
 
