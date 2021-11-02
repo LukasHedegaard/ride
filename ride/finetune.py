@@ -115,10 +115,21 @@ class Finetunable(Unfreezable):
             n for n in names_not_loaded if "num_batches_tracked" not in n
         }
 
-        msg = "Copying parameters"
-        if names_not_loaded:
-            msg += f" (skipped {names_not_loaded})"
-        logger.debug(msg)
+        logger.debug("Loading model state")
+
+        names_missing = set(new_model_state.keys()) - set(to_load.keys())
+        names_missing = {n for n in names_missing if "num_batches_tracked" not in n}
+
+        if names_missing:
+            logger.debug(f"missing keys: {names_missing}")
+
+        names_unexpected = set(state_dict.keys()) - set(new_model_state.keys())
+        names_unexpected = {
+            n for n in names_unexpected if "num_batches_tracked" not in n
+        }
+
+        if names_unexpected:
+            logger.debug(f"unexpected keys: {names_unexpected}")
 
         Unfreezable.on_init_end(
             self, hparams, names_to_unfreeze=names_not_loaded, *args, **kwargs

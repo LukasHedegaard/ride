@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix wandb project naming during hparamsearch.
 - Optimizer Schedulers take `accumulate_grad_batches` into account.
 
+### Changed
+- Key debug statements while loading models to include both missing and unexpected keys.
+
 
 ## [0.4.6] - 2021-09-21
 ### Fixed
