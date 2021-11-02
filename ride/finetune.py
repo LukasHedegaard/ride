@@ -109,19 +109,13 @@ class Finetunable(Unfreezable):
 
         self.load_state_dict(to_load, strict=False)  # type: ignore
 
-        # Unfreeze skipped params
-        names_not_loaded = set(new_model_state.keys()) - set(to_load.keys())
-        names_not_loaded = {
-            n for n in names_not_loaded if "num_batches_tracked" not in n
-        }
-
         logger.debug("Loading model state")
 
         names_missing = set(new_model_state.keys()) - set(to_load.keys())
         names_missing = {n for n in names_missing if "num_batches_tracked" not in n}
 
         if names_missing:
-            logger.debug(f"missing keys: {names_missing}")
+            logger.debug(f"missing keys: {sorted(names_missing)}")
 
         names_unexpected = set(state_dict.keys()) - set(new_model_state.keys())
         names_unexpected = {
@@ -129,10 +123,10 @@ class Finetunable(Unfreezable):
         }
 
         if names_unexpected:
-            logger.debug(f"unexpected keys: {names_unexpected}")
+            logger.debug(f"unexpected keys: {sorted(names_unexpected)}")
 
         Unfreezable.on_init_end(
-            self, hparams, names_to_unfreeze=names_not_loaded, *args, **kwargs
+            self, hparams, names_to_unfreeze=names_missing, *args, **kwargs
         )
 
 
