@@ -22,7 +22,7 @@ MetricDict = Dict[str, Tensor]
 FigureDict = Dict[str, Figure]
 StepOutputs = List[Dict[str, Tensor]]
 
-logger = getLogger(__name__)
+logger = getLogger(__name__, log_once=True)
 
 
 def sort_out_figures(d: ExtendedMetricDict) -> Tuple[MetricDict, FigureDict]:
