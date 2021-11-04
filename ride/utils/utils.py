@@ -139,7 +139,9 @@ def missing_or_not_in_other(
 
 
 def name(any):
-    if hasattr(any, "__name__"):
+    if isinstance(any, str):
+        return any
+    elif hasattr(any, "__name__"):
         return any.__name__
     else:
         return any.__class__.__name__

@@ -1,1 +1,1 @@
-from .utils import attributedict, some  # noqa: F401
+from .utils import attributedict, some, name  # noqa: F401
