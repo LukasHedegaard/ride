@@ -95,7 +95,7 @@ class MeanAveragePrecisionMetric(MetricMixin):
             attrgetter(attribute)(self)
 
     def _compute_mean_average_precision(self, preds, targets):
-        num_classes = len(getattr(self, "classes", 2))
+        num_classes = len(getattr(self, "classes", range(2)))
         try:
             average_precision = AveragePrecision(num_classes=num_classes or None)
             ap = average_precision(preds, targets)
