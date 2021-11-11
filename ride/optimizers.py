@@ -15,7 +15,9 @@ from ride.utils.discriminative_lr import discriminative_lr
 def discounted_steps_per_epoch(
     base_steps: int, num_gpus: int, accumulate_grad_batches: int
 ):
-    return max(1, ceil(base_steps / max(1, num_gpus) / max(1, accumulate_grad_batches)))
+    return max(
+        1, ceil(base_steps / max(1, num_gpus) / max(1, accumulate_grad_batches or 1))
+    )
 
 
 class SgdOptimizer(OptimizerMixin):
