@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Key debug statements while loading models to include both missing and unexpected keys.
+- Bumped PL to version 1.4. Holding back on 1.5 due to Tune integration issues.
+- Bumped Tune to version 1.8.
 
 
 ## [0.4.6] - 2021-09-21
