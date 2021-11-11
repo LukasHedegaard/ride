@@ -93,7 +93,7 @@ class Unfreezable(RideMixin):
         # Called by TrainValTestStepsMixin
         if epoch in self.unfreeze_schedule:
             num_layers = self.unfreeze_schedule[epoch]
-            logger.info(f"Epoch {epoch}: Unfreezing {num_layers} layer(s)")
+            logger.info(f"Epoch {epoch}, unfreezing {num_layers} layer(s)")
             unfrozen_layers = unfreeze_from_end(self.layers_to_unfreeze, num_layers)
             logger.debug(f"Unfrozen layers: {', '.join(unfrozen_layers)}")
 
