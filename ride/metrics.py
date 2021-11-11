@@ -1,3 +1,4 @@
+from collections import Iterable
 from enum import Enum
 from operator import attrgetter
 from typing import Dict, List, Tuple, Union
@@ -85,6 +86,70 @@ class MetricMixin(RideMixin):
             for md in mdlist
             for k, v in md.items()
         }
+
+
+def MetricSelector(
+    mapping: Dict[str, Union[MetricMixin, Iterable[MetricMixin]]] = None,
+    **kwargs: Union[MetricMixin, Iterable[MetricMixin]],
+) -> MetricMixin:
+    if not isinstance(mapping, dict):
+        mapping = {}
+
+    mapping = {**mapping, **kwargs}
+    # Ensure mapping is Dict[str, List[MetricMixin]]
+    mapping = {
+        k: (list(v) if isinstance(v, Iterable) else [v]) for k, v in mapping.items()
+    }
+    metric_set = set([item for sublist in mapping.values() for item in sublist])
+    assert all(
+        isinstance(m, MetricMixin) for m in metric_set
+    ), "All passed values should be of type ride.metrics.MetricMixin"
+
+    class MetricSelectorMixin(MetricMixin):
+        @staticmethod
+        def configs() -> Configs:
+            c = Configs()
+            c.add(
+                name="metric_selection",
+                type=str,
+                strategy="constant",
+                description="Selection key for MetricSelector.",
+                choices=list(mapping.keys()),
+            )
+            for Metric in metric_set:
+                c += Metric.configs()
+            return c
+
+        @classmethod
+        def _metrics(cls):
+            ms = {}
+            for Metric in metric_set:
+                ms = {**ms, **Metric._metrics()}
+            return ms
+
+        def __init__(self, hparams, *args, **kwargs):
+            self.metrics_selection = mapping[self.hparams.metric_selection]
+            for m in self.metrics_selection:
+                m.__init__(self, hparams, *args, **kwargs)
+
+        def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
+            res = {}
+            for m in self.metrics_selection:
+                res = {**res, **m.metrics_step(preds, targets, **kwargs)}
+            return res
+
+        def metrics_epoch(
+            self, preds: Tensor, targets: Tensor, prefix: str = "", *args, **kwargs
+        ) -> MetricDict:
+            res = {}
+            for m in self.metrics_selection:
+                res = {
+                    **res,
+                    **m.metrics_epoch(preds, targets, prefix, *args, **kwargs),
+                }
+            return res
+
+    return MetricSelectorMixin
 
 
 class MeanAveragePrecisionMetric(MetricMixin):
