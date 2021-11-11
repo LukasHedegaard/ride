@@ -72,6 +72,9 @@ class Runner:
             else:
                 args.distributed_backend = None
 
+        # Ensure callbacks are not stacked if multiple calls are made
+        trainer_callbacks = trainer_callbacks.copy()
+
         # Prepare logger and callbacks
         trainer_callbacks.append(
             ModelCheckpoint(
