@@ -50,6 +50,8 @@ class DummyModule(
 
 def default_main_and_args() -> Tuple[Main, AttributeDict]:
     m = Main(DummyModule)
+    if hasattr(m.runner, "trainer"):
+        del m.runner.trainer
     parser = m.argparse(run=False)
     args, _ = parser.parse_known_args()
     args.max_epochs = 1
@@ -162,20 +164,21 @@ class TestMain:
         # Trainer args
         args.limit_val_batches = 2
         args.limit_test_batches = 2
+        args.max_epochs = 2
 
         with caplog.at_level(logging.INFO):
             m.main(args)
 
-        for check in [
-            "Running training",
-            "val/loss",
-            "saving model to",
-            "Running evaluation on validation set",
-            "val/epoch",
-            "Running evaluation on test set",
-            "test/loss",
-        ]:
-            assert any([check in msg for msg in caplog.messages])
+        print(caplog.messages)
+        assert any(["Running training" in msg for msg in caplog.messages])
+        assert any(["val/loss" in msg for msg in caplog.messages])
+        assert any(["Epoch 0" in msg for msg in caplog.messages])
+        assert any(
+            ["Running evaluation on validation set" in msg for msg in caplog.messages]
+        )
+        assert any(["val/epoch" in msg for msg in caplog.messages])
+        assert any(["Running evaluation on test set" in msg for msg in caplog.messages])
+        assert any(["test/loss" in msg for msg in caplog.messages])
 
         save_lines = [m for m in caplog.messages if "Saving" in m]
 
