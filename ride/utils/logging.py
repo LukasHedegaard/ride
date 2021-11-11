@@ -62,6 +62,7 @@ _ansi_colors = {
     "cyan": 36,
     "white": 37,
     "reset": 39,
+    "purple": 56,
     "bright_black": 90,
     "bright_red": 91,
     "bright_green": 92,
@@ -181,7 +182,7 @@ def style_logging():
     lightning_logger.propagate = bool(process_rank == 0)
 
     # Set coloring
-    lightning_logger.name = style(lightning_logger.name, fg="yellow", bold=True)
+    lightning_logger.name = style(lightning_logger.name, fg="purple", bold=True)
 
     ride_logger = logging.getLogger("ride")
     ride_logger.name = style(ride_logger.name, fg="cyan", bold=True)
