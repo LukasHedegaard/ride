@@ -1,7 +1,7 @@
-from collections import Iterable
+from collections import abc
 from enum import Enum
 from operator import attrgetter
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from ptflops import get_model_complexity_info
 from supers import supers
 from torch import Tensor
-from torchmetrics.classification.average_precision import AveragePrecision
+from torchmetrics.functional.classification import average_precision
 from torchmetrics.functional.classification.confusion_matrix import confusion_matrix
 
 from ride.core import Configs, RideMixin
@@ -88,7 +88,7 @@ class MetricMixin(RideMixin):
         }
 
 
-def MetricSelector(
+def MetricSelector(  # noqa: C901
     mapping: Dict[str, Union[MetricMixin, Iterable[MetricMixin]]] = None,
     **kwargs: Union[MetricMixin, Iterable[MetricMixin]],
 ) -> MetricMixin:
@@ -98,11 +98,11 @@ def MetricSelector(
     mapping = {**mapping, **kwargs}
     # Ensure mapping is Dict[str, List[MetricMixin]]
     mapping = {
-        k: (list(v) if isinstance(v, Iterable) else [v]) for k, v in mapping.items()
+        k: (list(v) if isinstance(v, abc.Iterable) else [v]) for k, v in mapping.items()
     }
     metric_set = set([item for sublist in mapping.values() for item in sublist])
     assert all(
-        isinstance(m, MetricMixin) for m in metric_set
+        issubclass(M, MetricMixin) for M in metric_set
     ), "All passed values should be of type ride.metrics.MetricMixin"
 
     class MetricSelectorMixin(MetricMixin):
@@ -111,13 +111,15 @@ def MetricSelector(
             c = Configs()
             c.add(
                 name="metric_selection",
+                default="",
                 type=str,
                 strategy="constant",
                 description="Selection key for MetricSelector.",
                 choices=list(mapping.keys()),
             )
             for Metric in metric_set:
-                c += Metric.configs()
+                if hasattr(Metric, "configs"):
+                    c += Metric.configs()
             return c
 
         @classmethod
@@ -128,14 +130,21 @@ def MetricSelector(
             return ms
 
         def __init__(self, hparams, *args, **kwargs):
+            assert (
+                self.hparams.metric_selection in mapping
+            ), f"You must specify a `metric_selection` hyperparameter. Choices: {list(mapping.keys())}"
             self.metrics_selection = mapping[self.hparams.metric_selection]
             for m in self.metrics_selection:
                 m.__init__(self, hparams, *args, **kwargs)
 
+        def on_init_end(self, *args, **kwargs):
+            for m in self.metrics_selection:
+                m.on_init_end(self, *args, **kwargs)
+
         def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
             res = {}
             for m in self.metrics_selection:
-                res = {**res, **m.metrics_step(preds, targets, **kwargs)}
+                res = {**res, **m.metrics_step(self, preds, targets, **kwargs)}
             return res
 
         def metrics_epoch(
@@ -145,7 +154,7 @@ def MetricSelector(
             for m in self.metrics_selection:
                 res = {
                     **res,
-                    **m.metrics_epoch(preds, targets, prefix, *args, **kwargs),
+                    **m.metrics_epoch(self, preds, targets, prefix, *args, **kwargs),
                 }
             return res
 
@@ -161,8 +170,11 @@ class MeanAveragePrecisionMetric(MetricMixin):
 
     def _compute_mean_average_precision(self, preds, targets):
         try:
-            average_precision = AveragePrecision(num_classes=targets.shape[-1] or None)
-            ap = average_precision(preds, targets)
+            ap = average_precision(
+                preds,
+                targets,
+                num_classes=targets.shape[-1],
+            )
         except RuntimeError as e:  # pragma: no cover
             logger.error("Unable to compute Average Precision: ", e)
             return torch.tensor(float("nan"))

@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add preprocess_batch method to Lifecycle.
-- Add option for string type in utils.name
+- Add option for string type in utils.name.
+- Add Metric Selector.
 
 ### Fixed
 - Weight freezing during model loading.

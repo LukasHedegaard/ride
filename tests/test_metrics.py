@@ -2,10 +2,11 @@ import logging
 
 import pytest
 import torch
-from torchmetrics.classification.average_precision import AveragePrecision
+from torchmetrics.functional.classification import average_precision
 
 from ride import metrics
 from ride.core import RideModule
+from ride.utils.utils import attributedict
 
 from .dummy_dataset import DummyClassificationDataLoader
 
@@ -44,7 +45,7 @@ def test_MeanAveragePrecisionMetric():
     )
     preds = torch.tensor([[0.1, 0.9] for _ in range(8)]).clone()
 
-    pl_map = AveragePrecision(num_classes=2)(preds, targets)
+    pl_map = average_precision(preds, targets, num_classes=2)
 
     net = DummyModule()
     assert DummyModule.metric_names() == ["loss", "mAP"]
@@ -95,3 +96,46 @@ def test_FlopsWeightedAccuracyMetric():
     assert DummyModule.metric_names() == ["flops", "flops_weighted_acc", "loss"]
     assert net.metrics_step(preds, targets)["flops"] == torch.tensor(22.0)
     assert torch.tensor(0.0) < net.metrics_step(preds, targets)["flops_weighted_acc"]
+
+
+def test_MetricSelector():
+    class DummyModule(
+        RideModule,
+        DummyClassificationDataLoader,
+        metrics.MetricSelector(
+            {
+                "one": metrics.TopKAccuracyMetric(1),
+                "two": [
+                    metrics.FlopsWeightedAccuracyMetric,
+                    metrics.TopKAccuracyMetric(2),
+                ],
+            }
+        ),
+    ):
+        def __init__(self, hparams):
+            self.lin = torch.nn.Linear(self.input_shape[0], self.output_shape)
+            self.loss = torch.nn.functional.mse_loss
+
+        def forward(self, x):
+            x = x.view(x.size(0), -1)
+            x = torch.relu(self.lin(x))
+            return x
+
+    hparams = attributedict(DummyModule.configs().default_values())
+    hparams.metric_selection = "two"
+    net = DummyModule(hparams)
+    targets = torch.tensor([[0], [0], [0], [0], [1], [1], [1], [1]])
+    preds = torch.tensor([[0.1, 0.9] for _ in range(8)])
+
+    assert set(DummyModule.metric_names()) == {
+        "flops",
+        "flops_weighted_acc",
+        "loss",
+        "top1acc",
+        "top2acc",
+    }
+    step_output = net.metrics_step(preds, targets)
+    assert net.metrics_step(preds, targets)["flops"] == torch.tensor(22.0)
+    assert torch.tensor(0.0) < step_output["flops_weighted_acc"]
+    assert torch.tensor(0.0) < step_output["top2acc"]
+    assert "top1acc" not in step_output
