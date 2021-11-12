@@ -1,15 +1,15 @@
 wandb
-pytest
 flake8
 mypy
 black
 isort>=5.7
 flake8-black
 pytest~=6.2.0
+pytest-order
 pytest-cov
 pytest-xdist
 scikit-learn
 umap-learn
-ray[tune]~=1.2.0
+ray[tune]>=1.2,<2.0
 torchvision
 lightning-bolts

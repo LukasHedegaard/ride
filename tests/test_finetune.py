@@ -145,29 +145,6 @@ class TestFinetuning:
         shutil.copy(latest_checkpoint, checkpoint)
 
         # Finetune from checkpoint
-        m, args = default_main_and_args()  # Need to make new main
-        args.finetune_from_weights = str(checkpoint)
-        args.unfreeze_layers_initial = 1
-        args.unfreeze_epoch_step = 1
-        args.unfreeze_from_epoch = 0
-        args.train = True
-
-        # One epoch, one unfrozen
-        args.max_epochs = 1
-
-        caplog.clear()
-        with caplog.at_level(logging.INFO):
-            m.main(args)
-
-        assert len(caplog.messages) > 0
-        assert any(["Unfreezing 1 layer(s)" in msg for msg in caplog.messages])
-        assert not any(["Unfreezing 2 layer(s)" in msg for msg in caplog.messages])
-
-        assert m.runner.trainer.model.l1.weight.requires_grad is False
-        assert m.runner.trainer.model.l1.bias.requires_grad is False
-        assert m.runner.trainer.model.l2.weight.requires_grad is True
-        assert m.runner.trainer.model.l2.bias.requires_grad is True
-
         # Two epochs, both unfrozen
         m, args = default_main_and_args()  # Need to make new main
         args.finetune_from_weights = str(checkpoint)
@@ -175,15 +152,14 @@ class TestFinetuning:
         args.unfreeze_epoch_step = 1
         args.unfreeze_from_epoch = 0
         args.train = True
-        args.max_epochs = 2
-        # TODO: test with max_epochs > num layers
+        args.max_epochs = 3
 
         caplog.clear()
         with caplog.at_level(logging.INFO):
             m.main(args)
 
-        assert any(["Unfreezing 1 layer(s)" in msg for msg in caplog.messages])
-        assert any(["Unfreezing 2 layer(s)" in msg for msg in caplog.messages])
+        assert any(["Epoch 0, unfreezing 1 layer(s)" in msg for msg in caplog.messages])
+        assert any(["Epoch 1, unfreezing 2 layer(s)" in msg for msg in caplog.messages])
         assert m.runner.trainer.model.l1.weight.requires_grad is True
         assert m.runner.trainer.model.l1.bias.requires_grad is True
         assert m.runner.trainer.model.l2.weight.requires_grad is True

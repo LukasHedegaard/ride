@@ -171,9 +171,13 @@ class Lifecycle(MetricMixin):
         LightningModule.log_dict(self, all_metrics, sync_dist=self._sync_dist)
         log_figures(self, epoch_figures)
 
+    def preprocess_batch(self, batch):
+        return batch
+
     def training_step(self, batch, batch_idx=None):
         if batch_idx == 0:
             supers(self).on_traning_epoch_start(self._epoch)
+        batch = self.preprocess_batch(batch)
         x, target = batch[0], batch[1]
         pred = self.forward(x)
         return self.common_step(pred, target, prefix="train/", log=True)
@@ -183,6 +187,7 @@ class Lifecycle(MetricMixin):
         self.common_epoch_end(step_outputs, prefix="train/")
 
     def validation_step(self, batch, batch_idx=None):
+        batch = self.preprocess_batch(batch)
         x, target = batch[0], batch[1]
         pred = self.forward(x)
         return self.common_step(pred, target, prefix="val/")
@@ -194,6 +199,7 @@ class Lifecycle(MetricMixin):
         if batch is None:
             return None
 
+        batch = self.preprocess_batch(batch)
         x, target = batch[0], batch[1]
         pred = self.forward(x)
 
@@ -203,10 +209,10 @@ class Lifecycle(MetricMixin):
                 "pred": pred,
                 "target": target,
             }
-        else:
-            identifier = batch[-1]
-            # Delay computation of metrics to epoch end
-            return {"pred": pred, "target": target, "identifier": identifier}
+
+        identifier = batch[-1]
+        # Delay computation of metrics to epoch end
+        return {"pred": pred, "target": target, "identifier": identifier}
 
     def test_epoch_end(self, step_outputs):
         if self.hparams.test_ensemble:

@@ -52,6 +52,11 @@ class MnistDataset(RideClassificationDataset):
             pin_memory=self.hparams.num_workers > 1,
             drop_last=False,
         )
+        self.datamodule.prepare_data()
+        self.datamodule.setup()
+        self.datamodule.train_dataloader = self.datamodule.train_dataloader()
+        self.datamodule.val_dataloader = self.datamodule.val_dataloader()
+        self.datamodule.test_dataloader = self.datamodule.test_dataloader()
         self.output_shape = 10
         self.classes = list(range(10))
         self.input_shape = self.datamodule.dims

@@ -29,7 +29,7 @@ def singleton_experiment_logger() -> ExperimentLoggerCreator:
     def experiment_logger(
         name: str = None,
         logging_backend: str = "tensorboard",
-        Module=None,
+        project_name: str = None,
         save_dir=RUN_LOGS_PATH,
     ) -> ExperimentLogger:
         nonlocal _loggers
@@ -48,7 +48,7 @@ def singleton_experiment_logger() -> ExperimentLoggerCreator:
                 _loggers[logging_backend] = WandbLogger(
                     save_dir=save_dir,
                     name=name,
-                    project=(Module.__name__ if Module else None),
+                    project=project_name,
                 )
                 _loggers[logging_backend].log_dir = getattr(
                     _loggers[logging_backend].experiment._settings, "_sync_dir", None
@@ -82,8 +82,8 @@ def add_experiment_logger(
 
     if isinstance(prev_logger, LoggerCollection):
         return LoggerCollection([*prev_logger._logger_iterable, new_logger])
-    else:
-        return LoggerCollection([prev_logger, new_logger])
+
+    return LoggerCollection([prev_logger, new_logger])
 
 
 def get_log_dir(module: pl.LightningModule):
@@ -111,18 +111,19 @@ def log_figures(module: pl.LightningModule, d: FigureDict):
         elif type(lgr) == WandbLogger:
             try:
                 import wandb  # noqa: F401
+
+                wandb_log = lgr.experiment.log
+
+                def log_figure(tag, fig):
+                    im = wandb.Image(fig2img(fig), caption=tag)
+                    return wandb_log({tag: im})
+
+                image_loggers.append(log_figure)
             except ImportError:
                 logger.error(
                     "Before using the WandbLogger, first install WandB using `pip install wandb`"
                 )
 
-            wandb_log = lgr.experiment.log
-
-            def log_figure(tag, fig):
-                im = wandb.Image(fig2img(fig), caption=tag)
-                return wandb_log({tag: im})
-
-            image_loggers.append(log_figure)
         elif type(lgr) == ResultsLogger:
             image_loggers.append(lgr.log_figure)
 
@@ -150,8 +151,8 @@ class ResultsLogger(LightningLoggerBase):
 
         if s.startswith(replace):
             return f"{self.prefix}/{s[5:]}"
-        else:
-            return f"{self.prefix}/{s}"
+
+        return f"{self.prefix}/{s}"
 
     @property
     def experiment(self):

@@ -73,6 +73,9 @@ def main_and_args() -> Tuple[Main, AttributeDict]:
     return default_main_and_args()
 
 
+# For unknown reasons, `test_train_val_test_combination` fails when run after the other tests
+# in the suite. When running it first, everything works as expected...
+@pytest.mark.order(1)
 class TestMain:
     def test_help(self, capsys, caplog):
         """Test that command help works"""
@@ -162,20 +165,19 @@ class TestMain:
         # Trainer args
         args.limit_val_batches = 2
         args.limit_test_batches = 2
+        args.max_epochs = 2
 
         with caplog.at_level(logging.INFO):
             m.main(args)
 
-        for check in [
-            "Running training",
-            "val/loss",
-            "saving model to",
-            "Running evaluation on validation set",
-            "val/epoch",
-            "Running evaluation on test set",
-            "test/loss",
-        ]:
-            assert any([check in msg for msg in caplog.messages])
+        messages = "\n".join(caplog.messages)
+        assert "Running training" in messages
+        assert "val/loss" in messages
+        assert "Epoch" in messages
+        assert "Running evaluation on validation set" in messages
+        assert "val/epoch" in messages
+        assert "Running evaluation on test set" in messages
+        assert "test/loss" in messages
 
         save_lines = [m for m in caplog.messages if "Saving" in m]
 

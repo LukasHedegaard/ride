@@ -16,6 +16,7 @@ def apply_standard_args(args):
     args.id = "automated_test"
     args.test_ensemble = 0
     args.loss = "mse_loss"
+    args.accumulate_grad_batches = 1
     return args
 
 

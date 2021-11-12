@@ -12,8 +12,12 @@ from ride.core import Configs, OptimizerMixin
 from ride.utils.discriminative_lr import discriminative_lr
 
 
-def discounted_steps_per_epoch(base_steps: int, num_gpus: int):
-    return max(1, ceil(base_steps / max(1, num_gpus)))
+def discounted_steps_per_epoch(
+    base_steps: int, num_gpus: int, accumulate_grad_batches: int
+):
+    return max(
+        1, ceil(base_steps / max(1, num_gpus) / max(1, accumulate_grad_batches or 1))
+    )
 
 
 class SgdOptimizer(OptimizerMixin):
@@ -103,8 +107,8 @@ class AdamWOptimizer(OptimizerMixin):
         c.add(
             name="weight_decay",
             type=float,
-            default=1e-5,
-            choices=(1e-6, 1e-3),
+            default=1e-2,
+            choices=(1e-6, 1e-1),
             strategy="loguniform",
             description="Weight decay.",
         )
@@ -230,6 +234,7 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
         attrgetter("hparams.batch_size")(self)
         attrgetter("hparams.num_gpus")(self)
         attrgetter("hparams.max_epochs")(self)
+        attrgetter("hparams.accumulate_grad_batches")(self)
         for hparam in SgdCyclicLrOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
@@ -268,10 +273,12 @@ class SgdCyclicLrOptimizer(OptimizerMixin):
             step_size_up=discounted_steps_per_epoch(
                 len(self.train_dataloader()) / 4,
                 self.hparams.num_gpus,
+                self.hparams.accumulate_grad_batches,
             ),
             step_size_down=discounted_steps_per_epoch(
-                len(self.train_dataloader()) - len(self.train_dataloader()) / 4,
+                (len(self.train_dataloader()) - len(self.train_dataloader()) / 4),
                 self.hparams.num_gpus,
+                self.hparams.accumulate_grad_batches,
             ),
             cycle_momentum=True,  # Not supported
         )
@@ -288,6 +295,7 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
         attrgetter("train_dataloader")(self)
         attrgetter("hparams.batch_size")(self)
         attrgetter("hparams.max_epochs")(self)
+        attrgetter("hparams.accumulate_grad_batches")(self)
         for hparam in AdamWCyclicLrOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
@@ -326,10 +334,12 @@ class AdamWCyclicLrOptimizer(OptimizerMixin):
             step_size_up=discounted_steps_per_epoch(
                 len(self.train_dataloader()) / 4,
                 self.hparams.num_gpus,
+                self.hparams.accumulate_grad_batches,
             ),
             step_size_down=discounted_steps_per_epoch(
                 len(self.train_dataloader()) - len(self.train_dataloader()) / 4,
                 self.hparams.num_gpus,
+                self.hparams.accumulate_grad_batches,
             ),
             cycle_momentum=False,
         )
@@ -347,6 +357,7 @@ class SgdOneCycleOptimizer(OptimizerMixin):
         attrgetter("hparams.max_epochs")(self)
         attrgetter("hparams.batch_size")(self)
         attrgetter("hparams.num_gpus")(self)
+        attrgetter("hparams.accumulate_grad_batches")(self)
         for hparam in SgdOneCycleOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
@@ -382,6 +393,7 @@ class SgdOneCycleOptimizer(OptimizerMixin):
             steps_per_epoch=discounted_steps_per_epoch(
                 len(self.train_dataloader()),
                 self.hparams.num_gpus,
+                self.hparams.accumulate_grad_batches,
             ),
             epochs=self.hparams.max_epochs,
         )
@@ -399,6 +411,7 @@ class AdamWOneCycleOptimizer(OptimizerMixin):
         attrgetter("hparams.batch_size")(self)
         attrgetter("hparams.max_epochs")(self)
         attrgetter("hparams.num_gpus")(self)
+        attrgetter("hparams.accumulate_grad_batches")(self)
         for hparam in AdamWOneCycleOptimizer.configs().names:
             attrgetter(f"hparams.{hparam}")(self)
 
@@ -434,6 +447,7 @@ class AdamWOneCycleOptimizer(OptimizerMixin):
             steps_per_epoch=discounted_steps_per_epoch(
                 len(self.train_dataloader()),
                 self.hparams.num_gpus,
+                self.hparams.accumulate_grad_batches,
             ),
             epochs=self.hparams.max_epochs,
         )

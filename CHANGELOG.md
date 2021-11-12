@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2021-11-12
+### Added
+- Add preprocess_batch method to Lifecycle.
+- Add option for string type in utils.name.
+- Add Metric Selector.
+
+### Fixed
+- Weight freezing during model loading.
+- Fix discriminative_lr param selection for NoneType parameters.
+- Fix wandb project naming during hparamsearch.
+- Optimizer Schedulers take `accumulate_grad_batches` into account.
+
+### Changed
+- Key debug statements while loading models to include both missing and unexpected keys.
+- Bumped PL to version 1.4. Holding back on 1.5 due to Tune integration issues.
+- Bumped Tune to version 1.8.
+
 
 ## [0.4.6] - 2021-09-21
 ### Fixed

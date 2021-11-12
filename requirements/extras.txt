@@ -1,5 +1,5 @@
 lightning-bolts
-ray[tune]~=1.2
+ray[tune]>=1.2,<2.0
 scikit-learn
 torchvision
 umap-learn

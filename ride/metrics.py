@@ -1,6 +1,7 @@
+from collections import abc
 from enum import Enum
 from operator import attrgetter
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +11,7 @@ from matplotlib.figure import Figure
 from ptflops import get_model_complexity_info
 from supers import supers
 from torch import Tensor
-from torchmetrics.classification.average_precision import AveragePrecision
+from torchmetrics.functional.classification import average_precision
 from torchmetrics.functional.classification.confusion_matrix import confusion_matrix
 
 from ride.core import Configs, RideMixin
@@ -22,7 +23,7 @@ MetricDict = Dict[str, Tensor]
 FigureDict = Dict[str, Figure]
 StepOutputs = List[Dict[str, Tensor]]
 
-logger = getLogger(__name__)
+logger = getLogger(__name__, log_once=True)
 
 
 def sort_out_figures(d: ExtendedMetricDict) -> Tuple[MetricDict, FigureDict]:
@@ -69,10 +70,9 @@ class MetricMixin(RideMixin):
         return {}
 
     def collect_metrics(self, preds: Tensor, targets: Tensor) -> MetricDict:
-        device = preds.device
         mdlist: List[MetricDict] = supers(self).metrics_step(preds, targets)  # type: ignore
         return {
-            k: v.to(device=device) if hasattr(v, "to") else v
+            k: v.to(device=self.device) if hasattr(v, "to") else v
             for md in mdlist
             for k, v in md.items()
         }
@@ -80,13 +80,85 @@ class MetricMixin(RideMixin):
     def collect_epoch_metrics(
         self, preds: Tensor, targets: Tensor, prefix: str = None
     ) -> ExtendedMetricDict:
-        device = preds.device
         mdlist: List[ExtendedMetricDict] = supers(self).metrics_epoch(preds, targets, prefix=prefix)  # type: ignore
         return {
-            k: v.to(device=device) if hasattr(v, "to") else v
+            k: v.to(device=self.device) if hasattr(v, "to") else v
             for md in mdlist
             for k, v in md.items()
         }
+
+
+def MetricSelector(  # noqa: C901
+    mapping: Dict[str, Union[MetricMixin, Iterable[MetricMixin]]] = None,
+    **kwargs: Union[MetricMixin, Iterable[MetricMixin]],
+) -> MetricMixin:
+    if not isinstance(mapping, dict):
+        mapping = {}
+
+    mapping = {**mapping, **kwargs}
+    # Ensure mapping is Dict[str, List[MetricMixin]]
+    mapping = {
+        k: (list(v) if isinstance(v, abc.Iterable) else [v]) for k, v in mapping.items()
+    }
+    metric_set = set([item for sublist in mapping.values() for item in sublist])
+    assert all(
+        issubclass(M, MetricMixin) for M in metric_set
+    ), "All passed values should be of type ride.metrics.MetricMixin"
+
+    class MetricSelectorMixin(MetricMixin):
+        @staticmethod
+        def configs() -> Configs:
+            c = Configs()
+            c.add(
+                name="metric_selection",
+                default="",
+                type=str,
+                strategy="constant",
+                description="Selection key for MetricSelector.",
+                choices=list(mapping.keys()),
+            )
+            for Metric in metric_set:
+                if hasattr(Metric, "configs"):
+                    c += Metric.configs()
+            return c
+
+        @classmethod
+        def _metrics(cls):
+            ms = {}
+            for Metric in metric_set:
+                ms = {**ms, **Metric._metrics()}
+            return ms
+
+        def __init__(self, hparams, *args, **kwargs):
+            assert (
+                self.hparams.metric_selection in mapping
+            ), f"You must specify a `metric_selection` hyperparameter. Choices: {list(mapping.keys())}"
+            self.metrics_selection = mapping[self.hparams.metric_selection]
+            for m in self.metrics_selection:
+                m.__init__(self, hparams, *args, **kwargs)
+
+        def on_init_end(self, *args, **kwargs):
+            for m in self.metrics_selection:
+                m.on_init_end(self, *args, **kwargs)
+
+        def metrics_step(self, preds: Tensor, targets: Tensor, **kwargs) -> MetricDict:
+            res = {}
+            for m in self.metrics_selection:
+                res = {**res, **m.metrics_step(self, preds, targets, **kwargs)}
+            return res
+
+        def metrics_epoch(
+            self, preds: Tensor, targets: Tensor, prefix: str = "", *args, **kwargs
+        ) -> MetricDict:
+            res = {}
+            for m in self.metrics_selection:
+                res = {
+                    **res,
+                    **m.metrics_epoch(self, preds, targets, prefix, *args, **kwargs),
+                }
+            return res
+
+    return MetricSelectorMixin
 
 
 class MeanAveragePrecisionMetric(MetricMixin):
@@ -96,6 +168,25 @@ class MeanAveragePrecisionMetric(MetricMixin):
         for attribute in ["hparams.loss", "classes"]:
             attrgetter(attribute)(self)
 
+    def _compute_mean_average_precision(self, preds, targets):
+        try:
+            ap = average_precision(
+                preds,
+                targets,
+                num_classes=targets.shape[-1],
+            )
+        except RuntimeError as e:  # pragma: no cover
+            logger.error("Unable to compute Average Precision: ", e)
+            return torch.tensor(float("nan"))
+
+        if isinstance(getattr(self, "ignore_classes", None), list):
+            ap = [t for i, t in enumerate(ap) if i not in self.ignore_classes]
+
+        if isinstance(ap, list):
+            ap = torch.tensor([t for t in ap if not t.isnan()])
+
+        return ap.mean()
+
     @classmethod
     def _metrics(cls):
         return {"mAP": OptimisationDirection.MAX}
@@ -103,31 +194,12 @@ class MeanAveragePrecisionMetric(MetricMixin):
     def metrics_step(
         self, preds: Tensor, targets: Tensor, *args, **kwargs
     ) -> MetricDict:
-        map = torch.tensor(-1.0)
-        try:
-            map = compute_map(self)(preds, targets)
-        except RuntimeError:  # pragma: no cover
-            logger.error("Unable to compute mAP.")
-        return {"mAP": map}
+        return {"mAP": self._compute_mean_average_precision(preds, targets)}
 
     def metrics_epoch(
         self, preds: Tensor, targets: Tensor, *args, **kwargs
     ) -> MetricDict:
-        map = torch.tensor(-1.0)
-        try:
-            map = compute_map(self)(preds, targets)
-        except RuntimeError:  # pragma: no cover
-            logger.error("Unable to compute mAP.")
-        return {"mAP": map}
-
-
-def compute_map(self):
-    if "map_fn" not in vars():
-        if "binary" in self.hparams.loss:
-            map_fn = AveragePrecision(pos_label=1)
-        else:
-            map_fn = AveragePrecision(pos_label=1, num_classes=len(self.classes))
-    return map_fn
+        return {"mAP": self._compute_mean_average_precision(preds, targets)}
 
 
 def TopKAccuracyMetric(*Ks) -> MetricMixin:

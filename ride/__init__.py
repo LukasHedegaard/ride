@@ -13,6 +13,7 @@ from .metrics import (  # noqa: F401, E402
     FlopsMetric,
     FlopsWeightedAccuracyMetric,
     MeanAveragePrecisionMetric,
+    MetricSelector,
     TopKAccuracyMetric,
 )
 from .optimizers import (  # noqa: F401, E402

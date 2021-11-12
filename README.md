@@ -6,17 +6,20 @@
   <a href="https://pypi.org/project/ride/">
     <img src="https://img.shields.io/pypi/pyversions/ride" height="20" >
   </a>
-  <a href="https://pypi.org/project/ride/">
-    <img src="https://github.com/LukasHedegaard/ride/workflows/Python%20package/badge.svg" height="20" >
+  <a href="https://badge.fury.io/py/ride">
+    <img src="https://badge.fury.io/py/ride.svg" height="20" >
   </a>
-  <a href='https://ride.readthedocs.io/en/latest/?badge=latest'>
-      <img src='https://readthedocs.org/projects/ride/badge/?version=latest' alt='Documentation Status' height="20"/>
+  <a href="https://pepy.tech/project/ride">
+    <img src="https://pepy.tech/badge/ride/month" height="20">
   </a>
   <a href="https://www.codefactor.io/repository/github/lukashedegaard/ride">
     <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" height="20" />
   </a>
   <a href="https://codecov.io/gh/LukasHedegaard/ride">
     <img src="https://codecov.io/gh/LukasHedegaard/ride/branch/main/graph/badge.svg?token=SJ59JOWNAC" height="20"/>
+  </a>
+  <a href='https://ride.readthedocs.io/en/latest/?badge=latest'>
+      <img src='https://readthedocs.org/projects/ride/badge/?version=latest' alt='Documentation Status' height="20"/>
   </a>
   <a href="https://opensource.org/licenses/Apache-2.0">
     <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" height="20">
@@ -38,16 +41,16 @@ pip install ride
 `Ride` provides a feature-rich, battle-tested boilerplate, so that you can focus on the model-building and research. 🧪
 
 Out of the box, `Ride` gives you:
-- [x] __Training and testing methods__ 🏋️‍♂️
-- [x] __Checkpointing__ ✅
-- [x] __Metrics__ 📈
-- [x] __Finetuning schemes__ 👌
-- [x] __Feature extraction__ 📸
-- [x] __Visualisations__ 👁
-- [x] __Hyperparameter search__ 📊
-- [x] __Logging__ 📜
-- [x] __Command-line interface__ 💻
-- [x] __Multi-gpu, multi-node handling via__ [![Lightning](https://img.shields.io/badge/PyTorch_Lightning-v1.3-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+- __Training and testing methods__ 🏋️‍♂️
+- __Checkpointing__ ✅
+- __Metrics__ 📈
+- __Finetuning schemes__ 👌
+- __Feature extraction__ 📸
+- __Visualisations__ 👁
+- __Hyperparameter search__ 📊
+- __Logging__ 📜
+- __Command-line interface__ 💻
+- __Multi-gpu, multi-node handling via__ <img src="https://img.shields.io/badge/PyTorch_Lightning-v1.4-643DD9.svg" height="20">
 - [x] _... and more_
 
 
@@ -354,9 +357,17 @@ If you use `Ride` for your research and feel like citing it, here's a BibTex:
 }
 ```
 
-### Badge [![Ride](https://img.shields.io/badge/Built_to-Ride-643DD9.svg)](https://github.com/LukasHedegaard/ride)
+### Badge <a href="https://github.com/LukasHedegaard/ride"><img src="https://img.shields.io/badge/Built_to-Ride-643DD9.svg" height="20"></a>
 A badge can be included in a README.md with the following snippet:
+
+.MD
 ```md
 [![Ride](https://img.shields.io/badge/Built_to-Ride-643DD9.svg)](https://github.com/LukasHedegaard/ride)
 ```
 
+.HTML
+```md
+<a href="https://github.com/LukasHedegaard/ride">
+  <img src="https://img.shields.io/badge/Built_to-Ride-643DD9.svg" height="20">
+</a>
+```

@@ -187,9 +187,11 @@ class Main:
         args.max_epochs = getattr(args, "max_epochs", 1)
 
         seed_everything(args.seed)
+
         self.log_dir = experiment_logger(
-            args.id, args.logging_backend, self.Module
+            args.id, args.logging_backend, getattr(self.Module, "__name__")
         ).log_dir
+
         init_logging(
             self.log_dir,
             args.logging_backend,
@@ -225,7 +227,7 @@ class Main:
             hprint("Searching for optimal model hyperparameters")
             best_hparams = self.hparamsearch.run(args)
             if not best_hparams:
-                raise RuntimeError("Hparamsearch was unable to identy best hparams")
+                raise RuntimeError("Hparamsearch was unable to identify best hparams")
             logger.info("Hparamsearch completed")
             dprint(best_hparams)
             results.append(best_hparams)

@@ -138,13 +138,9 @@ def build_param_dicts(
         if hasattr(layer, "requires_grad"):  # and layer.requires_grad:
             # To implement for custom nn.Parameter()
             logger.debug("Custom nn.Parameter() not supported")
-        if hasattr(layer, "weight"):  # and layer.weight.requires_grad
+        if getattr(layer, "weight", None) is not None:
             param.append(layer.weight)
-        if (
-            hasattr(layer, "bias")
-            and hasattr(layer.bias, "requires_grad")
-            # and layer.bias.requires_grad
-        ):
+        if getattr(layer, "bias", None) is not None:
             param.append(layer.bias)
         if param:
             params.append({"params": param, "lr": f"{lr[idx]}"})

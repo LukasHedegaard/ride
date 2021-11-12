@@ -10,7 +10,7 @@ import torch
 from ride.core import Configs
 from ride.unfreeze import Unfreezable
 from ride.utils.logging import getLogger
-from ride.utils.utils import attributedict, rgetattr, to_dict
+from ride.utils.utils import attributedict, to_dict
 
 logger = getLogger(__name__)
 
@@ -109,21 +109,23 @@ class Finetunable(Unfreezable):
 
         self.load_state_dict(to_load, strict=False)  # type: ignore
 
-        # Unfreeze skipped params
-        names_not_loaded = set(new_model_state.keys()) - set(to_load.keys())
-        names_not_loaded = {
-            n for n in names_not_loaded if "num_batches_tracked" not in n
+        names_missing = set(new_model_state.keys()) - set(to_load.keys())
+        names_missing = {n for n in names_missing if "num_batches_tracked" not in n}
+
+        if names_missing:
+            logger.debug(f"missing keys: {sorted(names_missing)}")
+
+        names_unexpected = set(state_dict.keys()) - set(new_model_state.keys())
+        names_unexpected = {
+            n for n in names_unexpected if "num_batches_tracked" not in n
         }
-        for n in {n for n in names_not_loaded if "weight" in n or "bias" in n}:
-            p = rgetattr(self, n)
-            p.requires_grad = True
 
-        msg = "Copying and freezing parameters"
-        if names_not_loaded:
-            msg += f" (skipped {names_not_loaded})"
-        logger.debug(msg)
+        if names_unexpected:
+            logger.debug(f"unexpected keys: {sorted(names_unexpected)}")
 
-        Unfreezable.on_init_end(self, hparams, *args, **kwargs)
+        Unfreezable.on_init_end(
+            self, hparams, names_to_unfreeze=names_missing, *args, **kwargs
+        )
 
 
 def load_model_weights(file: str, hparams_passed, model_state_key):
