@@ -1,5 +1,6 @@
 wandb
 pytest
+pytest-order
 flake8
 mypy
 black

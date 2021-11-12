@@ -187,9 +187,11 @@ class Main:
         args.max_epochs = getattr(args, "max_epochs", 1)
 
         seed_everything(args.seed)
+
         self.log_dir = experiment_logger(
             args.id, args.logging_backend, getattr(self.Module, "__name__")
         ).log_dir
+
         init_logging(
             self.log_dir,
             args.logging_backend,
