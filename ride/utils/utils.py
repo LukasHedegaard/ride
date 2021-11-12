@@ -39,9 +39,8 @@ def once(fn: Callable):
         h = hash((args, str(kwargs)))
         if h in mem:
             return
-        else:
-            mem.add(h)
-            return fn(*args, **kwargs)
+        mem.add(h)
+        return fn(*args, **kwargs)
 
     return wrapped
 
@@ -66,15 +65,14 @@ def attributedict(dict_like: DictLike) -> AttributeDict:
         return AttributeDict(vars(dict_like))
     elif isinstance(dict_like, dict):
         return AttributeDict(**dict_like)
-    else:
-        raise ValueError(f"Unable to convert type {type(dict_like)} to AttributeDict")
+
+    raise ValueError(f"Unable to convert type {type(dict_like)} to AttributeDict")
 
 
 def to_dict(d):
     if type(d) == Namespace:
         return vars(d)
-    else:
-        return dict(d)
+    return dict(d)
 
 
 def merge_dicts(*args):
@@ -138,13 +136,12 @@ def missing_or_not_in_other(
     }
 
 
-def name(any):
-    if isinstance(any, str):
-        return any
-    elif hasattr(any, "__name__"):
-        return any.__name__
-    else:
-        return any.__class__.__name__
+def name(thing):
+    if isinstance(thing, str):
+        return thing
+    elif hasattr(thing, "__name__"):
+        return thing.__name__
+    return thing.__class__.__name__
 
 
 def prefix_keys(prefix: str, dictionary: Dict) -> Dict:

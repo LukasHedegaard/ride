@@ -82,8 +82,8 @@ def add_experiment_logger(
 
     if isinstance(prev_logger, LoggerCollection):
         return LoggerCollection([*prev_logger._logger_iterable, new_logger])
-    else:
-        return LoggerCollection([prev_logger, new_logger])
+
+    return LoggerCollection([prev_logger, new_logger])
 
 
 def get_log_dir(module: pl.LightningModule):
@@ -111,18 +111,19 @@ def log_figures(module: pl.LightningModule, d: FigureDict):
         elif type(lgr) == WandbLogger:
             try:
                 import wandb  # noqa: F401
+
+                wandb_log = lgr.experiment.log
+
+                def log_figure(tag, fig):
+                    im = wandb.Image(fig2img(fig), caption=tag)
+                    return wandb_log({tag: im})
+
+                image_loggers.append(log_figure)
             except ImportError:
                 logger.error(
                     "Before using the WandbLogger, first install WandB using `pip install wandb`"
                 )
 
-            wandb_log = lgr.experiment.log
-
-            def log_figure(tag, fig):
-                im = wandb.Image(fig2img(fig), caption=tag)
-                return wandb_log({tag: im})
-
-            image_loggers.append(log_figure)
         elif type(lgr) == ResultsLogger:
             image_loggers.append(lgr.log_figure)
 

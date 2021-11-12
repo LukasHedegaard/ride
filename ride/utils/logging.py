@@ -21,8 +21,8 @@ def _process_rank():
 
         hvd.init()
         return hvd.rank()
-    else:
-        return pl.utilities.rank_zero_only.rank
+
+    return pl.utilities.rank_zero_only.rank
 
 
 process_rank = _process_rank()

@@ -209,10 +209,10 @@ class Lifecycle(MetricMixin):
                 "pred": pred,
                 "target": target,
             }
-        else:
-            identifier = batch[-1]
-            # Delay computation of metrics to epoch end
-            return {"pred": pred, "target": target, "identifier": identifier}
+
+        identifier = batch[-1]
+        # Delay computation of metrics to epoch end
+        return {"pred": pred, "target": target, "identifier": identifier}
 
     def test_epoch_end(self, step_outputs):
         if self.hparams.test_ensemble:
