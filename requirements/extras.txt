@@ -1,4 +1,4 @@
-lightning-bolts
+lightning-bolts==0.4
 ray[tune]>=1.2,<2.0
 scikit-learn
 torchvision
