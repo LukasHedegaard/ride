@@ -151,8 +151,8 @@ class ResultsLogger(LightningLoggerBase):
 
         if s.startswith(replace):
             return f"{self.prefix}/{s[5:]}"
-        else:
-            return f"{self.prefix}/{s}"
+
+        return f"{self.prefix}/{s}"
 
     @property
     def experiment(self):
