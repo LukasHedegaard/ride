@@ -1,11 +1,13 @@
+import collections
 from itertools import groupby
 from operator import attrgetter
-from typing import Callable, Dict
+from typing import Any, Callable, Dict, Sequence, Union
 
 import torch
 import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 from supers import supers
+from torch import Tensor
 
 from ride.core import Configs
 from ride.logging import log_figures
@@ -141,14 +143,14 @@ class Lifecycle(MetricMixin):
                     logger=True,
                     sync_dist=self._sync_dist,
                 )
-        return {
-            "loss": metrics[loss_key],
-            **{
-                k: v.detach() if hasattr(v, "detach") else v for k, v in metrics.items()
-            },
-            "pred": pred.detach().cpu(),
-            "target": target.detach().cpu(),
-        }
+        return detach_to_cpu(
+            {
+                "loss": metrics[loss_key],
+                **metrics,
+                "pred": pred,
+                "target": target,
+            }
+        )
 
     def common_epoch_end(
         self, step_outputs, prefix="train/", exclude_keys={"pred", "target"}
@@ -160,8 +162,8 @@ class Lifecycle(MetricMixin):
             if k not in exclude_keys
         }
         preds, targets = zip(*[(s["pred"], s["target"]) for s in step_outputs])
-        preds = torch.vstack([p.unsqueeze(-1) for p in preds]).squeeze(-1)
-        targets = torch.vstack([t.unsqueeze(-1) for t in targets]).squeeze(-1)
+        preds = cat_steps(preds)
+        targets = cat_steps(targets)
         epoch_metrics = prefix_keys(
             prefix,
             self.collect_epoch_metrics(preds, targets, prefix.replace("/", "")),
@@ -206,8 +208,8 @@ class Lifecycle(MetricMixin):
         if not self.hparams.test_ensemble:
             return {
                 **self.common_step(pred, target, prefix="test/"),
-                "pred": pred,
-                "target": target,
+                "pred": detach_to_cpu(pred),
+                "target": detach_to_cpu(target),
             }
 
         identifier = batch[-1]
@@ -260,3 +262,26 @@ class Lifecycle(MetricMixin):
 
 def prefix_keys(prefix: str, dictionary: Dict) -> Dict:
     return {f"{prefix}{k}": v for k, v in dictionary.items()}
+
+
+def detach_to_cpu(x: Union[Tensor, Sequence[Tensor], Dict[Any, Tensor]]):
+    if isinstance(x, Tensor):
+        return x.detach().cpu()
+    if isinstance(x, collections.abc.Sequence):
+        return [detach_to_cpu(t) for t in x]
+    if isinstance(x, dict):
+        return {k: detach_to_cpu(v) for k, v in x.items()}
+    return x
+
+
+def cat_steps(steps: Sequence[Union[Tensor, Sequence[Tensor], Dict[Any, Tensor]]]):
+    if len(steps) == 0:
+        return steps
+    step = steps[0]
+    if isinstance(step, Tensor):
+        return torch.cat(steps)
+    if isinstance(step, collections.abc.Sequence):
+        return [cat_steps([s[i] for s in steps]) for i in range(len(step))]
+    if isinstance(step, dict):
+        return {k: cat_steps([s[k] for s in steps]) for k in step.keys()}
+    raise ValueError("Steps should contain either a Tensor of Dict")
