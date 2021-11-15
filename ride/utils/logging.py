@@ -182,7 +182,7 @@ def style_logging():
     lightning_logger.propagate = bool(process_rank == 0)
 
     # Set coloring
-    lightning_logger.name = style(lightning_logger.name, fg="purple", bold=True)
+    lightning_logger.name = style(lightning_logger.name, fg="yellow", bold=True)
 
     ride_logger = logging.getLogger("ride")
     ride_logger.name = style(ride_logger.name, fg="cyan", bold=True)
