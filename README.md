@@ -51,7 +51,7 @@ Out of the box, `Ride` gives you:
 - __Logging__ 📜
 - __Command-line interface__ 💻
 - __Multi-gpu, multi-node handling via__ <img src="https://img.shields.io/badge/PyTorch_Lightning-v1.4-643DD9.svg" height="20">
-- [x] _... and more_
+- _... and more_
 
 
 

@@ -1,6 +1,6 @@
 import time
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __author__ = "Lukas Hedegaard"
 __author_email__ = "lukasxhedegaard@gmail.com"
 __license__ = "Apache-2.0"

@@ -90,6 +90,7 @@ class MetricMixin(RideMixin):
 
 def MetricSelector(  # noqa: C901
     mapping: Dict[str, Union[MetricMixin, Iterable[MetricMixin]]] = None,
+    default_config: str = "",
     **kwargs: Union[MetricMixin, Iterable[MetricMixin]],
 ) -> MetricMixin:
     if not isinstance(mapping, dict):
@@ -111,7 +112,7 @@ def MetricSelector(  # noqa: C901
             c = Configs()
             c.add(
                 name="metric_selection",
-                default="",
+                default=default_config,
                 type=str,
                 strategy="constant",
                 description="Selection key for MetricSelector.",
