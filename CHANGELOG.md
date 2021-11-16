@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add pred and target dict support in Lifecycle.
 
+### Fixed
+- Avoid detaching loss in step.
+
+
 ## [0.5.0] - 2021-11-12
 ### Added
 - Add preprocess_batch method to Lifecycle.

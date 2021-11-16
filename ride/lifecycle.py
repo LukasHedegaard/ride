@@ -143,14 +143,12 @@ class Lifecycle(MetricMixin):
                     logger=True,
                     sync_dist=self._sync_dist,
                 )
-        return detach_to_cpu(
-            {
-                "loss": metrics[loss_key],
-                **metrics,
-                "pred": pred,
-                "target": target,
-            }
-        )
+        return {
+            "loss": metrics[loss_key],
+            **detach_to_cpu(metrics),
+            "pred": detach_to_cpu(pred),
+            "target": detach_to_cpu(target),
+        }
 
     def common_epoch_end(
         self, step_outputs, prefix="train/", exclude_keys={"pred", "target"}
