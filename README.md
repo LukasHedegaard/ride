@@ -342,6 +342,20 @@ LOG_LEVEL="INFO"          # One of "DEBUG", "INFO", "WARNING", "ERROR", "CRITICA
 ```
 
 
+## Examples
+Library Examples:
+- [SimpleClassifier](https://github.com/LukasHedegaard/ride/blob/main/examples/simple_classifier.py)
+- [MNIST Dataloader](https://github.com/LukasHedegaard/ride/blob/main/examples/mnist_dataset.py)
+
+Community Examples:
+- [I3D]()
+- [R(2+1)D](https://github.com/LukasHedegaard/co3d/tree/main/models/r2plus1d)
+- [SlowFast](https://github.com/LukasHedegaard/co3d/tree/main/models/slowfast)
+- [CoSlow](https://github.com/LukasHedegaard/co3d/tree/main/models/coresnet)
+- [X3D](https://github.com/LukasHedegaard/co3d/tree/main/models/x3d)
+- [CoX3D](https://github.com/LukasHedegaard/co3d/tree/main/models/cox3d)
+
+
 
 ## Citation
 
@@ -358,7 +372,7 @@ If you use `Ride` for your research and feel like citing it, here's a BibTex:
 ```
 
 ### Badge <a href="https://github.com/LukasHedegaard/ride"><img src="https://img.shields.io/badge/Built_to-Ride-643DD9.svg" height="20"></a>
-A badge can be included in a README.md with the following snippet:
+
 
 .MD
 ```md
