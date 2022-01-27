@@ -10,6 +10,7 @@ from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.utilities.cloud_io import load as pl_load
 from pytorch_lightning.utilities.parsing import AttributeDict
 
+from ride import profile
 from ride.core import RideDataset, RideModule
 from ride.logging import (
     ExperimentLoggerCreator,
@@ -17,7 +18,6 @@ from ride.logging import (
     add_experiment_logger,
     experiment_logger,
 )
-from ride.profile import profile_repeatedly
 from ride.utils.logging import getLogger, process_rank
 from ride.utils.machine_info import get_machine_info
 from ride.utils.utils import attributedict
@@ -203,7 +203,11 @@ class Runner:
         else:
             model = self.Module(hparams=args)
 
-        timing_results_dict, single_profile = profile_repeatedly(
+        memory_stats, memory_summary = profile.inference_memory(model)
+        if memory_summary:
+            logger.info(memory_summary)
+
+        timing_results_dict, single_profile = profile.inference_timing(
             model, max_wait_seconds, num_runs
         )
 
@@ -213,7 +217,6 @@ class Runner:
         logger.info(single_run_detailed_timing)
 
         model.warm_up((1, *model.input_shape))
-
         flops, params = get_model_complexity_info(
             model,
             model.input_shape,
@@ -226,8 +229,16 @@ class Runner:
         elogger.log_hyperparams(dict(**model.hparams))
         elogger.log_metrics(
             {
-                "flops": int(flops),
-                "params": int(params),
+                k: float(v)
+                for k, v in {
+                    "flops": flops,
+                    "params": params,
+                    "µs_per_sample": timing_results_dict["mean_µs_per_sample"],
+                    "samples_per_second": timing_results_dict[
+                        "mean_samples_per_second"
+                    ],
+                    **memory_stats,
+                }.items()
             }
         )
 
@@ -236,6 +247,9 @@ class Runner:
             "flops": int(flops),
             "params": int(params),
             "machine": get_machine_info(),
+            "memory": {
+                k: f"{v} ({profile.format_bytes(v)})" for k, v in memory_stats.items()
+            },
         }
 
     def find_learning_rate(self):

@@ -1,7 +1,7 @@
 import contextlib
 from abc import abstractmethod
 from time import time
-from typing import Any, Dict, Tuple, overload
+from typing import Any, Dict, Optional, Tuple, overload
 
 import numpy as np
 import torch
@@ -14,19 +14,66 @@ from ride.utils.utils import name, some
 logger = getLogger(__name__)
 
 
+def inference_memory(
+    model: torch.nn.Module, abbreviated=True
+) -> Tuple[Dict[str, int], Optional[str]]:
+    prevously_training = model.training
+    model.eval()
+
+    # Move model to GPU if available
+    prev_device = model.device
+    gpus = parse_gpus(model.hparams.gpus) if hasattr(model.hparams, "gpus") else None
+    if not gpus:  # Cannot profile
+        if prevously_training:
+            model.train()
+        return {}, None
+
+    dev = f"cuda:{gpus[0]}"
+    data = torch.randn(1, *model.input_shape, device=dev)
+    model.to(device=dev)
+
+    memory_summary = None
+    stats = {}
+
+    with torch.no_grad():
+        try:
+            model.warm_up(tuple(data.shape))
+            torch.cuda.reset_peak_memory_stats(device=dev)
+            model(data)
+            memory_summary = torch.cuda.memory_summary(
+                device=dev, abbreviated=abbreviated
+            )
+            stats = {
+                "memory_allocated": torch.cuda.memory_allocated(device=dev),
+                "max_memory_allocated": torch.cuda.max_memory_allocated(device=dev),
+            }
+        except Exception as e:
+            raise ValueError(
+                f"Caught exception while attempting to profile model memory. "
+                "Did you ensure that you model has a correct `input_shape` attribute (omitting the batch_size dimension)? "
+                f"Exception contents: {e}"
+            )
+        finally:
+            model.to(device=prev_device)
+            if prevously_training:
+                model.train()
+
+    return stats, memory_summary
+
+
 @overload
-def profile(model: torch.nn.Module, detailed=False) -> float:
+def time_single_inference(model: torch.nn.Module, detailed=False) -> float:
     ...  # pragma: no cover
 
 
 @overload
-def profile(
+def time_single_inference(
     model: torch.nn.Module, detailed=True
 ) -> Tuple[float, torch.autograd.profiler.EventList,]:
     ...  # pragma: no cover
 
 
-def profile(model: torch.nn.Module, detailed=True):
+def time_single_inference(model: torch.nn.Module, detailed=True):
     for attr in [
         "device",
         "input_shape",
@@ -60,7 +107,7 @@ def profile(model: torch.nn.Module, detailed=True):
             stop = time()
     except Exception as e:
         raise ValueError(
-            f"Caught exception while attempting to profile model. "
+            f"Caught exception while attempting to profile model inference. "
             "Did you ensure that you model has a correct `input_shape` attribute (omitting the batch_size dimension)? "
             f"Exception contents: {e}"
         )
@@ -86,7 +133,7 @@ def compute_num_runs(total_wait_time, single_run_time):
     return additional_runs
 
 
-def profile_repeatedly(
+def inference_timing(
     model: torch.nn.Module, max_wait_seconds=30, num_runs=None
 ) -> Tuple[Dict[str, str], torch.autograd.profiler.EventList]:
     for attr in ["hparams.batch_size"]:
@@ -95,7 +142,7 @@ def profile_repeatedly(
         ), f"{name(model)} should define `{attr}` but none was found."
 
     # Make initial run to gauge its time. Also serves as a "dry-run"
-    single_run_seconds, single_run_prof = profile(model, detailed=True)
+    single_run_seconds, single_run_prof = time_single_inference(model, detailed=True)
 
     num_runs = (
         num_runs if num_runs else compute_num_runs(max_wait_seconds, single_run_seconds)
@@ -103,7 +150,7 @@ def profile_repeatedly(
 
     times_s = []
     for _ in tqdm(range(num_runs), desc="Profiling"):
-        times_s.append(profile(model, detailed=False))
+        times_s.append(time_single_inference(model, detailed=False))
 
     batch_size = model.hparams.batch_size
     s_per_sample = np.array(times_s) / batch_size
@@ -111,6 +158,8 @@ def profile_repeatedly(
     µs_per_sample = s_per_sample * 1e6
 
     results_dict = {}
+    results_dict["mean_µs_per_sample"] = float(µs_per_sample.mean())
+    results_dict["mean_samples_per_second"] = float(samples_per_s.mean())
     results_dict[
         "time_per_sample"
     ] = f"{format_time(µs_per_sample.mean())} +/- {format_time(µs_per_sample.std())} [{format_time(µs_per_sample.min())}, {format_time(µs_per_sample.max())}]"
@@ -132,6 +181,17 @@ class ProfileableDataset:
     @abstractmethod
     def profile(self) -> Dict[str, Any]:
         ...  # pragma: no cover
+
+
+def format_bytes(bytes: int) -> str:
+    # 2**10 = 1024
+    power = 2 ** 10
+    n = 0
+    power_labels = {0: "", 1: "K", 2: "M", 3: "G", 4: "T"}
+    while bytes > power:
+        bytes /= power
+        n += 1
+    return f"{bytes:.3f} {power_labels[n]}B"
 
 
 def format_time(time_us):
