@@ -136,7 +136,6 @@ class Hparamsearch:
             num_samples=args.trials,
             scheduler=scheduler,
             progress_reporter=reporter,
-            queue_trials=False,
             raise_on_failed_trial=False,
         )
 
