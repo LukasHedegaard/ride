@@ -233,11 +233,23 @@ class Runner:
                 for k, v in {
                     "flops": flops,
                     "params": params,
-                    "µs_per_sample": timing_results_dict["mean_µs_per_sample"],
-                    "samples_per_second": timing_results_dict[
-                        "mean_samples_per_second"
+                    "micro_seconds_per_sample_mean": timing_results_dict[
+                        "micro_seconds_per_sample_std"
+                    ],
+                    "micro_seconds_per_sample_std": timing_results_dict[
+                        "micro_seconds_per_sample_std"
+                    ],
+                    "samples_per_second_mean": timing_results_dict[
+                        "samples_per_second_mean"
+                    ],
+                    "samples_per_second_std": timing_results_dict[
+                        "samples_per_second_std"
                     ],
                     **memory_stats,
+                    **{
+                        f"{k}_MB": profile.format_bytes_fixed(v, prefix="M")
+                        for k, v in memory_stats.items()
+                    },
                 }.items()
             }
         )

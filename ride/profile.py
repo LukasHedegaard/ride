@@ -158,8 +158,10 @@ def inference_timing(
     µs_per_sample = s_per_sample * 1e6
 
     results_dict = {}
-    results_dict["mean_µs_per_sample"] = float(µs_per_sample.mean())
-    results_dict["mean_samples_per_second"] = float(samples_per_s.mean())
+    results_dict["micro_seconds_per_sample_mean"] = float(µs_per_sample.mean())
+    results_dict["micro_seconds_per_sample_std"] = float(µs_per_sample.std())
+    results_dict["samples_per_second_mean"] = float(samples_per_s.mean())
+    results_dict["samples_per_second_std"] = float(samples_per_s.std())
     results_dict[
         "time_per_sample"
     ] = f"{format_time(µs_per_sample.mean())} +/- {format_time(µs_per_sample.std())} [{format_time(µs_per_sample.min())}, {format_time(µs_per_sample.max())}]"
@@ -183,15 +185,26 @@ class ProfileableDataset:
         ...  # pragma: no cover
 
 
-def format_bytes(bytes: int) -> str:
-    # 2**10 = 1024
-    power = 2 ** 10
-    n = 0
+def format_bytes(bytes: int, prefix: str = None) -> str:
+    power = 1024  # = 2 ** 10
     power_labels = {0: "", 1: "K", 2: "M", 3: "G", 4: "T"}
+
+    n = 0
     while bytes > power:
         bytes /= power
         n += 1
     return f"{bytes:.3f} {power_labels[n]}B"
+
+
+def format_bytes_fixed(bytes: int, prefix: str = "M") -> float:
+    power = 1024  # = 2 ** 10
+    labels_power = {"K": 1, "M": 2, "G": 3, "T": 4}
+    prefix = prefix.upper()
+    assert prefix in labels_power
+
+    for _ in range(labels_power[prefix]):
+        bytes /= power
+    return bytes
 
 
 def format_time(time_us):
