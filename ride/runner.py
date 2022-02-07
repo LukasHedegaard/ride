@@ -216,14 +216,18 @@ class Runner:
         )
         logger.info(single_run_detailed_timing)
 
-        model.warm_up((1, *model.input_shape))
-        flops, params = get_model_complexity_info(
-            model,
-            model.input_shape,
-            as_strings=False,
-            print_per_layer_stat=True,
-            verbose=True,
-        )
+        try:
+            model.warm_up((1, *model.input_shape))
+            flops, params = get_model_complexity_info(
+                model,
+                model.input_shape,
+                as_strings=False,
+                print_per_layer_stat=True,
+                verbose=True,
+            )
+        except Exception as e:  # pragma: no cover
+            logger.error("Unable to compute FLOPs. Caught error:", e)
+            flops, params = -1, -1
 
         elogger = experiment_logger(args.id, args.logging_backend)
         elogger.log_hyperparams(dict(**model.hparams))
