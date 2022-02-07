@@ -87,7 +87,7 @@ def even_mults(start: float, stop: float, n: int) -> np.ndarray:
     "Build log-stepped array from `start` to `stop` in `n` steps."
     mult = stop / start
     step = mult ** (1 / (n - 1))
-    return np.array([start * (step ** i) for i in range(n)])
+    return np.array([start * (step**i) for i in range(n)])
 
 
 flatten_model = (

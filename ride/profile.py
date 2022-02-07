@@ -73,7 +73,7 @@ def time_single_inference(
     ...  # pragma: no cover
 
 
-def time_single_inference(model: torch.nn.Module, detailed=True):
+def time_single_inference(model: torch.nn.Module, detailed=True, warm_up=True):
     for attr in [
         "device",
         "input_shape",
@@ -95,7 +95,8 @@ def time_single_inference(model: torch.nn.Module, detailed=True):
 
     # Initialise data on CPU
     data = torch.randn(model.hparams.batch_size, *model.input_shape, device="cpu")
-    model.warm_up(tuple(data.shape))
+    if warm_up:
+        model.warm_up(tuple(data.shape))
 
     try:
         with torch.no_grad(), torch.autograd.profiler.profile(
@@ -150,7 +151,7 @@ def inference_timing(
 
     times_s = []
     for _ in tqdm(range(num_runs), desc="Profiling"):
-        times_s.append(time_single_inference(model, detailed=False))
+        times_s.append(time_single_inference(model, detailed=False, warm_up=False))
 
     batch_size = model.hparams.batch_size
     s_per_sample = np.array(times_s) / batch_size
