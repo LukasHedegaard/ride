@@ -501,7 +501,7 @@ class SgdMultiStepLR(OptimizerMixin):
         )
         steps_per_epoch = (
             self.hparams.limit_train_batches
-            if self.hparams.limit_train_batches
+            if self.hparams.limit_train_batches > 1
             else discounted_steps_per_epoch(
                 len(self.train_dataloader()),
                 self.hparams.num_gpus,
@@ -566,7 +566,7 @@ class AdamWMultiStepLR(OptimizerMixin):
         )
         steps_per_epoch = (
             self.hparams.limit_train_batches
-            if self.hparams.limit_train_batches
+            if self.hparams.limit_train_batches > 1
             else discounted_steps_per_epoch(
                 len(self.train_dataloader()),
                 self.hparams.num_gpus,
