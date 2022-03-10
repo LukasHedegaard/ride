@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Defensive fallback for FLOPs measurement.
+- Add MultiStepLR optimizers.
 
 ### Fixed
 - WandB logger log_dir extraction.
