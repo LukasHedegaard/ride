@@ -202,6 +202,9 @@ class Runner:
         else:
             model = self.Module(hparams=args)
 
+        if torch.cuda.is_available():
+            model = model.cuda()
+
         sample = torch.randn(
             getattr(model.hparams, "batch_size", 1), *model.input_shape
         )
