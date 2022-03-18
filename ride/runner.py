@@ -1,16 +1,18 @@
 import os
 from argparse import Namespace
+from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Type
 
-from ptflops import get_model_complexity_info
+import torch
+from pytorch_benchmark.benchmark import benchmark as pb_benchmark
+from pytorch_benchmark.benchmark import warm_up as pb_warm_up
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.core.lightning import LightningModule
 from pytorch_lightning.utilities.cloud_io import load as pl_load
 from pytorch_lightning.utilities.parsing import AttributeDict
 
-from ride import profile
 from ride.core import RideDataset, RideModule
 from ride.logging import (
     ExperimentLoggerCreator,
@@ -19,8 +21,7 @@ from ride.logging import (
     experiment_logger,
 )
 from ride.utils.logging import getLogger, process_rank
-from ride.utils.machine_info import get_machine_info
-from ride.utils.utils import attributedict
+from ride.utils.utils import attributedict, flatten_dict, some_callable
 
 EvalutationResults = Dict[str, float]
 
@@ -195,78 +196,34 @@ class Runner:
             args, trainer_callbacks, tune_checkpoint_dir, experiment_logger
         )
 
-    def profile_model(
-        self, args: AttributeDict, max_wait_seconds: float = 10, num_runs: int = None
-    ) -> Dict[str, Any]:
+    def profile_model(self, args: AttributeDict, num_runs: int = 100) -> Dict[str, Any]:
         if hasattr(self, "trained_model"):
             model = self.trained_model
         else:
             model = self.Module(hparams=args)
 
-        memory_stats, memory_summary = profile.inference_memory(model)
-        if memory_summary:
-            logger.info(memory_summary)
-
-        timing_results_dict, single_profile = profile.inference_timing(
-            model, max_wait_seconds, num_runs
+        sample = torch.randn(
+            getattr(model.hparams, "batch_size", 1), *model.input_shape
         )
 
-        single_run_detailed_timing = single_profile.key_averages().table(
-            sort_by="self_cpu_time_total"
+        results = pb_benchmark(
+            model,
+            sample,
+            num_runs=num_runs,
+            warm_up_fn=model.warm_up if some_callable(model, "warm_up") else pb_warm_up,
         )
-        logger.info(single_run_detailed_timing)
-
-        try:
-            model.warm_up((1, *model.input_shape))
-            flops, params = get_model_complexity_info(
-                model,
-                model.input_shape,
-                as_strings=False,
-                print_per_layer_stat=True,
-                verbose=True,
-            )
-        except Exception as e:  # pragma: no cover
-            logger.error("Unable to compute FLOPs. Caught error:", e)
-            flops, params = -1, -1
 
         elogger = experiment_logger(args.id, args.logging_backend)
         elogger.log_hyperparams(dict(**model.hparams))
         elogger.log_metrics(
             {
-                k: float(v)
-                for k, v in {
-                    "flops": flops,
-                    "params": params,
-                    "micro_seconds_per_sample_mean": timing_results_dict[
-                        "micro_seconds_per_sample_std"
-                    ],
-                    "micro_seconds_per_sample_std": timing_results_dict[
-                        "micro_seconds_per_sample_std"
-                    ],
-                    "samples_per_second_mean": timing_results_dict[
-                        "samples_per_second_mean"
-                    ],
-                    "samples_per_second_std": timing_results_dict[
-                        "samples_per_second_std"
-                    ],
-                    **memory_stats,
-                    **{
-                        f"{k}_MB": profile.format_bytes_fixed(v, prefix="M")
-                        for k, v in memory_stats.items()
-                    },
-                }.items()
+                k: v
+                for k, v in flatten_dict(results, sep="__").items()
+                if isinstance(v, Number)
             }
         )
 
-        return {
-            "timing": timing_results_dict,
-            "flops": int(flops),
-            "params": int(params),
-            "machine": get_machine_info(),
-            "memory": {
-                k: f"{v} ({profile.format_bytes(v)})" for k, v in memory_stats.items()
-            },
-        }
+        return results
 
     def find_learning_rate(self):
         raise NotImplementedError()

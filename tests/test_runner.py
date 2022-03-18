@@ -136,7 +136,7 @@ class TestRunner:
         old_warm_up = runner.Module.warm_up
         runner.Module.warm_up = warm_up
 
-        runner.profile_model(args, max_wait_seconds=1)
+        runner.profile_model(args, num_runs=10)
 
         runner.Module.warm_up = old_warm_up
 

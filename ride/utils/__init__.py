@@ -1,1 +1,1 @@
-from .utils import attributedict, name, some  # noqa: F401
+from .utils import attributedict, flatten_dict, name, some  # noqa: F401
