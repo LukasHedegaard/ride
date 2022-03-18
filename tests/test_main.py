@@ -268,7 +268,7 @@ class TestMain:
         """Test that profiling model works"""
         m, args = main_and_args
         args.profile_model = True
-        args.profile_model_num_runs = 10
+        args.profile_model_num_runs = 2
 
         caplog.clear()
 
@@ -279,11 +279,10 @@ class TestMain:
         assert len(caplog.messages) > 0
 
         for check in [
-            "Results",
+            "Timing results",
             "flops",
-            "machine",
-            "samples_per_second",
-            "num_runs",
+            "Machine info",
+            "batches_per_second",
         ]:
             assert any([check in msg for msg in caplog.messages])
 

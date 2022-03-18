@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.7.0] - 2022-03-18
+
+### Added
+- Defensive fallback for FLOPs measurement.
+- Add MultiStepLR optimizers.
+
+### Changed
+- Profiling to use `pytorch_benchmark` package.
+
+### Fixed
+- WandB logger log_dir extraction.
+
+
 ## [0.6.1] - 2022-02-07
 ### Changed
 - Profile only warms up on first inference.

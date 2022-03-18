@@ -51,7 +51,7 @@ def singleton_experiment_logger() -> ExperimentLoggerCreator:
                     project=project_name,
                 )
                 _loggers[logging_backend].log_dir = getattr(
-                    _loggers[logging_backend].experiment._settings, "_sync_dir", None
+                    _loggers[logging_backend].experiment._settings, "log_dir", None
                 )
             else:
                 logger.warn("No valid logger selected.")
