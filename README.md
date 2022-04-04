@@ -348,10 +348,10 @@ Library Examples:
 - [MNIST Dataloader](https://github.com/LukasHedegaard/ride/blob/main/examples/mnist_dataset.py)
 
 Community Examples:
-- [I3D]()
+- [I3D](https://github.com/LukasHedegaard/co3d/tree/main/models/i3d)
 - [R(2+1)D](https://github.com/LukasHedegaard/co3d/tree/main/models/r2plus1d)
 - [SlowFast](https://github.com/LukasHedegaard/co3d/tree/main/models/slowfast)
-- [CoSlow](https://github.com/LukasHedegaard/co3d/tree/main/models/coresnet)
+- [CoSlow](https://github.com/LukasHedegaard/co3d/tree/main/models/coslow)
 - [X3D](https://github.com/LukasHedegaard/co3d/tree/main/models/x3d)
 - [CoX3D](https://github.com/LukasHedegaard/co3d/tree/main/models/cox3d)
 
