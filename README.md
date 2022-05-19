@@ -10,7 +10,7 @@
     <img src="https://badge.fury.io/py/ride.svg" height="20" >
   </a>
   <a href="https://pepy.tech/project/ride">
-    <img src="https://pepy.tech/badge/ride/month" height="20">
+    <img src="https://pepy.tech/badge/ride" height="20">
   </a>
   <a href="https://www.codefactor.io/repository/github/lukashedegaard/ride">
     <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" height="20" />
