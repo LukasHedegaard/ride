@@ -10,7 +10,7 @@
     <img src="https://badge.fury.io/py/ride.svg" height="20" >
   </a>
   <a href="https://pepy.tech/project/ride">
-    <img src="https://pepy.tech/badge/ride/month" height="20">
+    <img src="https://pepy.tech/badge/ride" height="20">
   </a>
   <a href="https://www.codefactor.io/repository/github/lukashedegaard/ride">
     <img src="https://www.codefactor.io/repository/github/lukashedegaard/ride/badge" alt="CodeFactor" height="20" />
@@ -348,10 +348,10 @@ Library Examples:
 - [MNIST Dataloader](https://github.com/LukasHedegaard/ride/blob/main/examples/mnist_dataset.py)
 
 Community Examples:
-- [I3D]()
+- [I3D](https://github.com/LukasHedegaard/co3d/tree/main/models/i3d)
 - [R(2+1)D](https://github.com/LukasHedegaard/co3d/tree/main/models/r2plus1d)
 - [SlowFast](https://github.com/LukasHedegaard/co3d/tree/main/models/slowfast)
-- [CoSlow](https://github.com/LukasHedegaard/co3d/tree/main/models/coresnet)
+- [CoSlow](https://github.com/LukasHedegaard/co3d/tree/main/models/coslow)
 - [X3D](https://github.com/LukasHedegaard/co3d/tree/main/models/x3d)
 - [CoX3D](https://github.com/LukasHedegaard/co3d/tree/main/models/cox3d)
 
