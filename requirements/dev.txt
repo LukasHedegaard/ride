@@ -11,5 +11,6 @@ pytest-xdist
 scikit-learn
 umap-learn
 ray[tune]>=1.2,<2.0
+redis; sys_platform == 'win32'
 torchvision
 lightning-bolts
