@@ -221,7 +221,7 @@ class Runner:
         elogger.log_metrics(
             {
                 k: v
-                for k, v in flatten_dict(results, sep="__").items()
+                for k, v in flatten_dict(results, sep="/").items()
                 if isinstance(v, Number)
             }
         )
