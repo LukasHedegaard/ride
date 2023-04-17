@@ -343,11 +343,13 @@ LOG_LEVEL="INFO"          # One of "DEBUG", "INFO", "WARNING", "ERROR", "CRITICA
 
 
 ## Examples
-Library Examples:
+### Library Examples
 - [SimpleClassifier](https://github.com/LukasHedegaard/ride/blob/main/examples/simple_classifier.py)
 - [MNIST Dataloader](https://github.com/LukasHedegaard/ride/blob/main/examples/mnist_dataset.py)
 
-Community Examples:
+### Community Examples
+
+Video-based human action recognition:
 - [I3D](https://github.com/LukasHedegaard/co3d/tree/main/models/i3d)
 - [R(2+1)D](https://github.com/LukasHedegaard/co3d/tree/main/models/r2plus1d)
 - [SlowFast](https://github.com/LukasHedegaard/co3d/tree/main/models/slowfast)
@@ -355,6 +357,13 @@ Community Examples:
 - [X3D](https://github.com/LukasHedegaard/co3d/tree/main/models/x3d)
 - [CoX3D](https://github.com/LukasHedegaard/co3d/tree/main/models/cox3d)
 
+Skeleton-based human action recognition:
+- [ST-GCN](https://github.com/LukasHedegaard/continual-skeletons/blob/main/models/st_gcn/st_gcn.py)
+- [CoST-GCN](https://github.com/LukasHedegaard/continual-skeletons/blob/main/models/cost_gcn/cost_gcn.py)
+- [A-GCN](https://github.com/LukasHedegaard/continual-skeletons/blob/main/models/a_gcn/a_gcn.py)
+- [CoA-GCN](https://github.com/LukasHedegaard/continual-skeletons/blob/main/models/coa_gcn/coa_gcn.py)
+- [S-Tr](https://github.com/LukasHedegaard/continual-skeletons/blob/main/models/s_tr/s_tr.py)
+- [CoS-Tr](https://github.com/LukasHedegaard/continual-skeletons/blob/main/models/cos_tr/cos_tr.py)
 
 
 ## Citation
