@@ -9,7 +9,7 @@ import torch
 
 from ride.core import RideModule
 from ride.finetune import Finetunable
-from ride.optimizers import AdamWCyclicLrOptimizer
+from ride.optimizers import SgdReduceLrOnPlateauOptimizer
 from ride.utils.checkpoints import get_latest_checkpoint
 from ride.utils.utils import AttributeDict
 
@@ -20,7 +20,7 @@ from ride import Main, Configs  # noqa: F401  # isort:skip
 
 
 class DummyModule(
-    RideModule, Finetunable, DummyRegressionDataLoader, AdamWCyclicLrOptimizer
+    RideModule, Finetunable, DummyRegressionDataLoader, SgdReduceLrOnPlateauOptimizer
 ):
     def __init__(self, hparams):
         self.l1 = torch.nn.Linear(self.input_shape[0], self.hparams.hidden_dim)
