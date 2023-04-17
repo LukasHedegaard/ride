@@ -106,7 +106,7 @@ def freeze_layers_except_names(
         n.replace(".weight", "").replace(".bias", "") for n in names_to_unfreeze
     ]
     unfrozen_names = []
-    for (name, layer) in parent_module.named_modules():
+    for name, layer in parent_module.named_modules():
         requires_grad = any(n in name for n in names_to_unfreeze)
         if requires_grad:
             unfrozen_names.append(name)

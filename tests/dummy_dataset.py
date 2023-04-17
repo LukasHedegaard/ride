@@ -137,21 +137,21 @@ class DummyClassificationDataLoader(RideClassificationDataset):
         self.classes = ["fee", "fei"]
 
         self._train_dataloader = DataLoader(
-            OverOneDataset(self.input_shape, num_samples=65),
+            OverOneDataset(self.input_shape, num_samples=60),
             batch_size=hparams.batch_size,
             num_workers=num_workers,
             shuffle=True,
             pin_memory=num_workers > 1,
         )
         self._val_dataloader = DataLoader(
-            OverOneDataset(self.input_shape, num_samples=4),
+            OverOneDataset(self.input_shape, num_samples=60),
             batch_size=hparams.batch_size,
             num_workers=num_workers,
             shuffle=False,
             pin_memory=num_workers > 1,
         )
         self._test_dataloader = DataLoader(
-            OverOneDataset(self.input_shape, num_samples=10),
+            OverOneDataset(self.input_shape, num_samples=60),
             batch_size=hparams.batch_size,
             num_workers=num_workers,
             shuffle=False,

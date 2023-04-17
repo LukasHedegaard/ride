@@ -150,8 +150,8 @@ class TestRunner:
             # May throw error on Windows:
             # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process
             shutil.rmtree(d)
+
+            if platform.system() != "Windows":
+                assert not d.exists()
         except Exception:
             pass
-
-        if platform.system() != "Windows":
-            assert not d.exists()

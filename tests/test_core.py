@@ -42,7 +42,6 @@ class InitOrderModule(
 
 
 def test_init_order():
-
     module = InitOrderModule({"msg": []})
 
     assert module.hparams.msg == [
