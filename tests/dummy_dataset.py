@@ -144,14 +144,14 @@ class DummyClassificationDataLoader(RideClassificationDataset):
             pin_memory=num_workers > 1,
         )
         self._val_dataloader = DataLoader(
-            OverOneDataset(self.input_shape, num_samples=30),
+            OverOneDataset(self.input_shape, num_samples=60),
             batch_size=hparams.batch_size,
             num_workers=num_workers,
             shuffle=False,
             pin_memory=num_workers > 1,
         )
         self._test_dataloader = DataLoader(
-            OverOneDataset(self.input_shape, num_samples=30),
+            OverOneDataset(self.input_shape, num_samples=60),
             batch_size=hparams.batch_size,
             num_workers=num_workers,
             shuffle=False,
