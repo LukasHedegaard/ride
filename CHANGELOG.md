@@ -6,10 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7.2] - 2023-05-17
+## [0.7.3] - 2023-05-17
 
 ### Fixed
 - Compatibility with newer PyTorch Benchmark version.
+
+
+## [0.7.2] - 2022-06-03
+
+### Added
+- Version for protobuf during build.
+- Conditional install of redis on win platforms
 
 
 ## [0.7.1] - 2022-03-18
