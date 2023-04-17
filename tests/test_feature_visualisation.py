@@ -131,7 +131,7 @@ class TestFeatureExtraction:
         assert is_nonempty_file(d / "features" / "test" / "conv_pca.npy")
         assert is_nonempty_file(d / "figures" / "test" / "conv_pca.png")
 
-    def test_1d_feat_tse(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
+    def test_1d_feat_tsne(self, caplog, main_and_args: Tuple[Main, AttributeDict]):
         m, args = main_and_args
         args.test = True
         args.extract_features_after_layer = "lin"
