@@ -140,8 +140,8 @@ class Main:
         gen_configs.add(
             "profile_model_num_runs",
             type=int,
-            default=0,
-            description="Number of runs to perform when profiling model. If `0`, model will be profiled to max 10 seconds.",
+            default=100,
+            description="Number of runs to perform when profiling model.",
         )
         gen_settings_parser = gen_configs.add_argparse_args(gen_settings_parser)
 
