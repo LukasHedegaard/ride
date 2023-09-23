@@ -323,7 +323,7 @@ $ python simple_classifier.py --help
     ```
     Though the above `--help` printout was truncated for readibility, there's still a lot going on! 
     The general structure is a follows:
-    First, there are flags for controlling the programme flow (e.g. whether to run hparamsearch or training), then some general parameters (id, seed, etc.), all the parameters from Pytorch Lightning, hparamsearch-related arguments, and finally the Module-specific arguments, which we either in the `SimpleClassifier` or inherited from the RideModule and mixins. 
+    First, there are flags for controlling the programme flow (e.g. whether to run hparamsearch or training), then some general parameters (id, seed, etc.), all the parameters from Pytorch Lightning, hparamsearch-related arguments, and finally the Module-specific arguments, which we either specified in the `SimpleClassifier` or inherited from the RideModule and mixins. 
 
 
 
